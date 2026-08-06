@@ -1,0 +1,42 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt.android)
+}
+
+android {
+    namespace = "com.shrikantbadwaik.landingkit.core.data"
+    compileSdk = libs.versions.compile.sdk.get().toInt()
+
+    defaultConfig { minSdk = libs.versions.min.sdk.get().toInt() }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.fromTarget(libs.versions.jvm.target.get())
+    }
+}
+
+dependencies {
+    implementation(project(":core:model"))
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.hilt.android)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+    ksp(libs.hilt.android.compiler)
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
