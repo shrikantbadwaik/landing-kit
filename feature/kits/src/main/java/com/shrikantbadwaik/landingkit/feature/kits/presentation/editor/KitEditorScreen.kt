@@ -1,4 +1,4 @@
-package com.shrikantbadwaik.landingkit.feature.kits.presentation.create
+package com.shrikantbadwaik.landingkit.feature.kits.presentation.editor
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,11 +34,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
+import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.MotionReveal
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.create.component.ArrivalDateField
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.create.component.FormSection
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.create.component.LandingTextField
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component.ArrivalDateField
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component.FormSection
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component.LandingTextField
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.KitForm
 import java.time.Instant
 import java.time.LocalDate
@@ -47,13 +48,17 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun CreateKitScreen(
+internal fun KitEditorScreen(
+    trip: Trip?,
     animateEntrance: Boolean,
     onEntrancePlayed: () -> Unit,
     onBack: () -> Unit,
     onSave: (KitForm) -> Unit,
 ) {
-    var form by remember { mutableStateOf(KitForm()) }
+    val isEditing = trip != null
+    var form by remember(trip?.id) {
+        mutableStateOf(trip?.let { KitForm.fromTrip(it) } ?: KitForm())
+    }
     var showDatePicker by remember { mutableStateOf(false) }
     val requiredReady = form.destination.isNotBlank() &&
         form.stayName.isNotBlank() &&
@@ -121,7 +126,10 @@ internal fun CreateKitScreen(
                         disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     ),
                 ) {
-                    Text("Save offline kit  →", style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        text = if (isEditing) "Save changes  →" else "Save offline kit  →",
+                        style = MaterialTheme.typography.labelLarge,
+                    )
                 }
             }
         },
@@ -134,28 +142,36 @@ internal fun CreateKitScreen(
             contentPadding = PaddingValues(start = 22.dp, top = 18.dp, end = 22.dp, bottom = 30.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            item(key = "create_header") {
+            item(key = "editor_header") {
                 MotionReveal(index = 0, animate = animateEntrance) {
-                    ScreenHeader(onBack = onBack, label = "NEW ARRIVAL KIT", badge = "3 steps")
+                    ScreenHeader(
+                        onBack = onBack,
+                        label = if (isEditing) "EDIT ARRIVAL KIT" else "NEW ARRIVAL KIT",
+                        badge = "3 steps",
+                    )
                 }
             }
-            item(key = "create_intro") {
+            item(key = "editor_intro") {
                 MotionReveal(index = 1, animate = animateEntrance) {
                     Column {
                         Text(
-                            text = "Build a calmer\narrival.",
+                            text = if (isEditing) "Keep your arrival\nup to date." else "Build a calmer\narrival.",
                             style = MaterialTheme.typography.headlineLarge,
                         )
                         Spacer(Modifier.height(9.dp))
                         Text(
-                            "Just the details you’ll need when your battery, signal or brain is running low.",
+                            text = if (isEditing) {
+                                "Update the details you’ll want close at hand when you land."
+                            } else {
+                                "Just the details you’ll need when your battery, signal or brain is running low."
+                            },
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
             }
-            item(key = "create_trip_details") {
+            item(key = "editor_trip_details") {
                 MotionReveal(index = 2, animate = animateEntrance) {
                     FormSection(number = "01", title = "Trip details", accent = LandingKitColors.Sky) {
                         LandingTextField(
@@ -171,7 +187,7 @@ internal fun CreateKitScreen(
                     }
                 }
             }
-            item(key = "create_stay") {
+            item(key = "editor_stay") {
                 MotionReveal(index = 3, animate = animateEntrance) {
                     FormSection(
                         number = "02",
@@ -207,7 +223,7 @@ internal fun CreateKitScreen(
                     }
                 }
             }
-            item(key = "create_first_90_minutes") {
+            item(key = "editor_first_90_minutes") {
                 MotionReveal(index = 4, animate = animateEntrance) {
                     FormSection(
                         number = "03",
@@ -245,7 +261,7 @@ internal fun CreateKitScreen(
                     }
                 }
             }
-            item(key = "create_required_note") {
+            item(key = "editor_required_note") {
                 Text(
                     "Required: destination, stay name and address. Everything else can be added when you have it.",
                     style = MaterialTheme.typography.bodySmall,

@@ -23,8 +23,8 @@ class LandingKitViewModel @Inject constructor(
         initialValue = emptyList(),
     )
 
-    internal fun createKit(form: KitForm, onSaved: (String) -> Unit) {
-        val trip = form.toTrip()
+    internal fun saveKit(form: KitForm, existingTrip: Trip? = null, onSaved: (String) -> Unit) {
+        val trip = form.toTrip(existingTrip)
         viewModelScope.launch {
             repository.saveTrip(trip)
             onSaved(trip.id)
@@ -41,5 +41,16 @@ class LandingKitViewModel @Inject constructor(
 
     internal fun setComplete(tripId: String, itemId: String, complete: Boolean) {
         viewModelScope.launch { repository.setItemComplete(tripId, itemId, complete) }
+    }
+
+    internal fun deleteKit(tripId: String, onDeleted: () -> Unit) {
+        viewModelScope.launch {
+            repository.deleteTrip(tripId)
+            onDeleted()
+        }
+    }
+
+    internal fun restoreKit(trip: Trip) {
+        viewModelScope.launch { repository.saveTrip(trip) }
     }
 }

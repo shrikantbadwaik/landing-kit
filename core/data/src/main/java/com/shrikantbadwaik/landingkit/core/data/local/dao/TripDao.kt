@@ -29,6 +29,9 @@ interface TripDao {
     @Query("DELETE FROM items WHERE trip_id = :tripId")
     suspend fun deleteItems(tripId: String)
 
+    @Query("DELETE FROM trips WHERE id = :tripId")
+    suspend fun deleteTrip(tripId: String)
+
     @Query(
         """UPDATE items
             SET is_complete = :complete

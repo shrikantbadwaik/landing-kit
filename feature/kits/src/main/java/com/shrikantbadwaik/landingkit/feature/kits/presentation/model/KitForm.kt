@@ -18,11 +18,10 @@ internal data class KitForm(
     val emergencyContact: String = "",
     val dietaryPhrase: String = "",
 ) {
-    fun toTrip() = Trip(
-        destination = destination.trim(),
-        arrivalDate = runCatching { LocalDate.parse(arrivalDate.trim()) }
-            .getOrElse { LocalDate.now().plusDays(7) },
-        arrivalCard = ArrivalCard(
+    fun toTrip(existingTrip: Trip? = null): Trip {
+        val parsedArrivalDate = runCatching { LocalDate.parse(arrivalDate.trim()) }
+            .getOrElse { LocalDate.now().plusDays(7) }
+        val updatedArrivalCard = ArrivalCard(
             accommodationName = stayName.trim(),
             address = address.trim(),
             localAddress = localAddress.trim(),
@@ -31,9 +30,34 @@ internal data class KitForm(
             currencyNote = currency.trim(),
             emergencyContact = emergencyContact.trim(),
             dietaryPhrase = dietaryPhrase.trim(),
-        ),
-        items = defaultChecklist(),
-    )
+        )
+
+        return existingTrip?.copy(
+            destination = destination.trim(),
+            arrivalDate = parsedArrivalDate,
+            arrivalCard = updatedArrivalCard,
+        ) ?: Trip(
+            destination = destination.trim(),
+            arrivalDate = parsedArrivalDate,
+            arrivalCard = updatedArrivalCard,
+            items = defaultChecklist(),
+        )
+    }
+
+    companion object {
+        fun fromTrip(trip: Trip) = KitForm(
+            destination = trip.destination,
+            arrivalDate = trip.arrivalDate.toString(),
+            stayName = trip.arrivalCard.accommodationName,
+            address = trip.arrivalCard.address,
+            localAddress = trip.arrivalCard.localAddress,
+            bookingReference = trip.arrivalCard.bookingReference,
+            transfer = trip.arrivalCard.transferInstructions,
+            currency = trip.arrivalCard.currencyNote,
+            emergencyContact = trip.arrivalCard.emergencyContact,
+            dietaryPhrase = trip.arrivalCard.dietaryPhrase,
+        )
+    }
 }
 
 internal fun defaultChecklist() = listOf(

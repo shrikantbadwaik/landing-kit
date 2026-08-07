@@ -2,9 +2,11 @@
 
 Landing Kit is an offline-first Android companion for the first 90 minutes after arriving somewhere new. It keeps the address to show a driver, booking details, transfer instructions, a currency note, emergency information, a dietary phrase, and a short readiness checklist in one device-local card.
 
+The durable product vision, research findings, roadmap, non-goals, and decision history live in [`docs/product-plan.md`](docs/product-plan.md).
+
 ## Current milestone
 
-- Create and view arrival kits.
+- Create, edit, view, and delete arrival kits.
 - Explore a polished sample kit for Kyoto.
 - Persist trips and checklist progress in an app-private Room database.
 - Persist lightweight user preferences with AndroidX DataStore.

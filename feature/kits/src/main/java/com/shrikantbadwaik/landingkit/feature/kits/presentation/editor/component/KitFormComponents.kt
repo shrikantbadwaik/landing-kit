@@ -1,4 +1,4 @@
-package com.shrikantbadwaik.landingkit.feature.kits.presentation.create.component
+package com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
