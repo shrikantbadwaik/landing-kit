@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
@@ -89,7 +90,7 @@ internal fun EditKitAction(
                 contentDescription = null,
                 modifier = Modifier.size(18.dp).graphicsLayer { rotationZ = iconRotation },
             )
-            Text("Edit kit", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.kit_edit), style = MaterialTheme.typography.labelLarge)
         }
     }
 }
@@ -104,7 +105,7 @@ internal fun KitDangerZone(onDelete: () -> Unit) {
     ) {
         Column(Modifier.padding(18.dp)) {
             Text(
-                text = "MANAGE THIS KIT",
+                text = stringResource(R.string.kit_manage_label),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary,
             )
@@ -129,12 +130,12 @@ internal fun KitDangerZone(onDelete: () -> Unit) {
                 }
                 Column(Modifier.weight(1f)) {
                     Text(
-                        text = "Remove this offline kit",
+                        text = stringResource(R.string.kit_remove_title),
                         style = MaterialTheme.typography.titleSmall,
                     )
                     Spacer(Modifier.height(3.dp))
                     Text(
-                        text = "Deletes the copy stored on this device.",
+                        text = stringResource(R.string.kit_remove_description),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -147,7 +148,7 @@ internal fun KitDangerZone(onDelete: () -> Unit) {
                     contentColor = MaterialTheme.colorScheme.error,
                 ),
             ) {
-                Text("Delete kit  →", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.kit_delete_action), style = MaterialTheme.typography.labelLarge)
             }
         }
     }
@@ -202,18 +203,18 @@ internal fun DeleteKitDialog(
                 }
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    text = "REMOVE OFFLINE KIT",
+                    text = stringResource(R.string.kit_delete_dialog_label),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "Let this kit go?",
+                    text = stringResource(R.string.kit_delete_dialog_title),
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    text = "$destination and its checklist will be removed from this device. This can’t be undone.",
+                    text = stringResource(R.string.kit_delete_dialog_description, destination),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -223,7 +224,7 @@ internal fun DeleteKitDialog(
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(17.dp),
                 ) {
-                    Text("Keep my kit")
+                    Text(stringResource(R.string.kit_keep_action))
                 }
                 Spacer(Modifier.height(4.dp))
                 TextButton(
@@ -233,7 +234,7 @@ internal fun DeleteKitDialog(
                         contentColor = MaterialTheme.colorScheme.error,
                     ),
                 ) {
-                    Text("Delete permanently")
+                    Text(stringResource(R.string.kit_delete_permanently))
                 }
             }
         }
@@ -281,6 +282,52 @@ internal fun AnimatedChecklistItem(item: ArrivalItem, onCheck: (Boolean) -> Unit
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+internal fun EmptyChecklistCard() {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = LandingKitColors.Sky.copy(alpha = .24f),
+        border = BorderStroke(1.dp, LandingKitColors.Sky.copy(alpha = .58f)),
+    ) {
+        Text(
+            text = stringResource(R.string.detail_checklist_empty),
+            modifier = Modifier.padding(18.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+internal fun PastArrivalNotice() {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = LandingKitColors.Lavender.copy(alpha = .42f),
+        border = BorderStroke(1.dp, LandingKitColors.Lavender.copy(alpha = .82f)),
+    ) {
+        Column(Modifier.padding(18.dp)) {
+            Text(
+                text = stringResource(R.string.detail_past_notice_label),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+            Spacer(Modifier.height(5.dp))
+            Text(
+                text = stringResource(R.string.detail_past_notice_title),
+                style = MaterialTheme.typography.titleSmall,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.detail_past_notice_description),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

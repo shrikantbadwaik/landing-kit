@@ -30,6 +30,18 @@ data class ArrivalItem(
     val isComplete: Boolean = false,
 )
 
+data class ChecklistTemplate(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String,
+    val items: List<ChecklistTemplateItem>,
+)
+
+data class ChecklistTemplateItem(
+    val title: String,
+    val detail: String = "",
+    val category: ItemCategory = ItemCategory.CHECKLIST,
+)
+
 enum class ItemCategory { CHECKLIST, DOCUMENT, TRANSPORT, MONEY, SAFETY }
 
 object TripValidator {

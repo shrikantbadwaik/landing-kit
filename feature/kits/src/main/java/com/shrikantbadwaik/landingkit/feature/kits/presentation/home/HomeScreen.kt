@@ -16,16 +16,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.model.Trip
+import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.MotionReveal
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.ArrivalTicketCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.BrandHeader
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.CoralButton
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.EmptyKitCard
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.NoUpcomingArrivalsCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.PrivacyNote
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPhase
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.toHomeTripSections
+import java.time.LocalDate
 import kotlinx.coroutines.delay
 
 @Composable
@@ -39,6 +46,9 @@ internal fun HomeScreen(
     onSample: () -> Unit,
     onOpen: (String) -> Unit,
 ) {
+    val today = remember { LocalDate.now() }
+    val sections = remember(trips, today) { trips.toHomeTripSections(today) }
+
     LaunchedEffect(animateEntrance) {
         if (animateEntrance) {
             delay(950)
@@ -61,13 +71,13 @@ internal fun HomeScreen(
             MotionReveal(index = 1, animate = animateEntrance) {
                 Column {
                     Text(
-                        text = "Land ready.\nTravel lighter.",
+                        text = stringResource(R.string.home_headline),
                         style = MaterialTheme.typography.displayLarge,
                         color = MaterialTheme.colorScheme.onBackground,
                     )
                     Spacer(Modifier.height(14.dp))
                     Text(
-                        text = "Your first 90 minutes, collected in one calm place — even when the signal disappears.",
+                        text = stringResource(R.string.home_intro),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -85,16 +95,24 @@ internal fun HomeScreen(
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            text = if (trips.isEmpty()) "START HERE" else "UP NEXT",
+                            text = stringResource(
+                                if (trips.isEmpty()) R.string.home_start_here else R.string.home_up_next,
+                            ),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.secondary,
                         )
                         Text(
-                            text = if (trips.isEmpty()) "Your first arrival" else "Your arrivals",
+                            text = stringResource(
+                                when {
+                                    trips.isEmpty() -> R.string.home_first_arrival
+                                    sections.active.isEmpty() -> R.string.home_next_arrival
+                                    else -> R.string.home_arrivals
+                                },
+                            ),
                             style = MaterialTheme.typography.titleLarge,
                         )
                     }
-                    CoralButton(label = "+  New kit", onClick = onCreate)
+                    CoralButton(label = stringResource(R.string.home_new_kit), onClick = onCreate)
                 }
             }
         }
@@ -105,21 +123,61 @@ internal fun HomeScreen(
                 }
             }
         } else {
-            itemsIndexed(trips, key = { _, trip -> trip.id }) { index, trip ->
+            if (sections.active.isEmpty()) {
+                item(key = "home_no_upcoming") {
+                    NoUpcomingArrivalsCard()
+                }
+            }
+            itemsIndexed(sections.active, key = { _, trip -> trip.id }) { index, trip ->
                 val animateTrip = animateEntrance || trip.id !in animatedTripIds
                 MotionReveal(
                     index = if (animateEntrance) 4 + index.coerceAtMost(3) else 0,
                     animate = animateTrip,
                     onFinished = { onTripAnimated(trip.id) },
                 ) {
-                    ArrivalTicketCard(trip = trip, onClick = { onOpen(trip.id) })
+                    ArrivalTicketCard(
+                        trip = trip,
+                        phase = trip.arrivalDate.let {
+                            if (it.isEqual(today)) ArrivalPhase.TODAY else ArrivalPhase.UPCOMING
+                        },
+                        onClick = { onOpen(trip.id) },
+                    )
+                }
+            }
+            if (sections.past.isNotEmpty()) {
+                item(key = "home_past_header") {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.home_kept_for_reference),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                        )
+                        Text(
+                            text = stringResource(R.string.home_past_arrivals),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                    }
+                }
+            }
+            itemsIndexed(sections.past, key = { _, trip -> trip.id }) { index, trip ->
+                val animateTrip = animateEntrance || trip.id !in animatedTripIds
+                MotionReveal(
+                    index = if (animateEntrance) 5 + index.coerceAtMost(2) else 0,
+                    animate = animateTrip,
+                    onFinished = { onTripAnimated(trip.id) },
+                ) {
+                    ArrivalTicketCard(
+                        trip = trip,
+                        phase = ArrivalPhase.PAST,
+                        onClick = { onOpen(trip.id) },
+                    )
                 }
             }
         }
         item(key = "home_privacy_footer") {
             MotionReveal(index = 5, animate = animateEntrance) {
                 Text(
-                    text = "NO ACCOUNT  •  NO ADS  •  DEVICE-LOCAL",
+                    text = stringResource(R.string.home_privacy_footer),
                     modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

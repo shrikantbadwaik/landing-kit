@@ -16,9 +16,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
+import com.shrikantbadwaik.landingkit.feature.kits.R
 
 @Composable
 internal fun CoralButton(label: String, onClick: () -> Unit) {
@@ -44,12 +46,16 @@ internal fun EmptyKitCard(onCreate: () -> Unit, onSample: () -> Unit) {
         shape = RoundedCornerShape(30.dp),
     ) {
         Column(Modifier.padding(24.dp)) {
-            Text("✦", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.secondary)
+            Text(
+                stringResource(R.string.symbol_sparkle),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.secondary,
+            )
             Spacer(Modifier.height(12.dp))
-            Text("A softer first landing starts here.", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.home_empty_title), style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(8.dp))
             Text(
-                "Save your stay, transfer, money notes and emergency details before take-off.",
+                stringResource(R.string.home_empty_description),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(22.dp))
@@ -57,7 +63,7 @@ internal fun EmptyKitCard(onCreate: () -> Unit, onSample: () -> Unit) {
                 onClick = onCreate,
                 modifier = Modifier.fillMaxWidth().height(54.dp),
                 shape = RoundedCornerShape(17.dp),
-            ) { Text("Create my first kit") }
+            ) { Text(stringResource(R.string.home_create_first_kit)) }
             Spacer(Modifier.height(8.dp))
             Surface(
                 onClick = onSample,
@@ -66,11 +72,34 @@ internal fun EmptyKitCard(onCreate: () -> Unit, onSample: () -> Unit) {
                 contentColor = MaterialTheme.colorScheme.primary,
             ) {
                 Text(
-                    "Explore a Kyoto sample  →",
+                    stringResource(R.string.home_explore_sample),
                     modifier = Modifier.padding(12.dp),
                     style = MaterialTheme.typography.labelLarge,
                 )
             }
+        }
+    }
+}
+
+@Composable
+internal fun NoUpcomingArrivalsCard() {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = LandingKitColors.Seafoam.copy(alpha = .28f),
+        ),
+        shape = RoundedCornerShape(24.dp),
+    ) {
+        Column(Modifier.padding(20.dp)) {
+            Text(
+                text = stringResource(R.string.home_no_upcoming_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Spacer(Modifier.height(5.dp))
+            Text(
+                text = stringResource(R.string.home_no_upcoming_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

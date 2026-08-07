@@ -30,34 +30,47 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.Trip
+import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.TicketIllustration
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPhase
 import java.time.format.DateTimeFormatter
 
 @Composable
-internal fun ArrivalTicketCard(trip: Trip, onClick: () -> Unit) {
+internal fun ArrivalTicketCard(
+    trip: Trip,
+    phase: ArrivalPhase,
+    onClick: () -> Unit,
+) {
     val completed = trip.items.count { it.isComplete }
     val progress = if (trip.items.isEmpty()) 0f else completed.toFloat() / trip.items.size
+    val dateFormatter = DateTimeFormatter.ofPattern(stringResource(R.string.date_format_card))
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
         animationSpec = tween(650, easing = FastOutSlowInEasing),
         label = "Arrival readiness",
     )
+    val backgroundColor = if (phase == ArrivalPhase.PAST) {
+        LandingKitColors.Ink
+    } else {
+        LandingKitColors.Forest
+    }
 
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(30.dp),
-        colors = CardDefaults.cardColors(containerColor = LandingKitColors.Forest),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
     ) {
         Box(
             Modifier.background(
                 Brush.linearGradient(
-                    colors = listOf(LandingKitColors.Forest, Color(0xFF0D3634)),
+                    colors = listOf(backgroundColor, Color(0xFF0D3634)),
                     start = Offset.Zero,
                     end = Offset.Infinite,
                 ),
@@ -67,12 +80,26 @@ internal fun ArrivalTicketCard(trip: Trip, onClick: () -> Unit) {
             Column(Modifier.padding(24.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "ARRIVAL CARD",
+                        stringResource(
+                            when (phase) {
+                                ArrivalPhase.UPCOMING -> R.string.arrival_card_label
+                                ArrivalPhase.TODAY -> R.string.arrival_card_today
+                                ArrivalPhase.PAST -> R.string.arrival_card_past
+                            },
+                        ),
                         style = MaterialTheme.typography.labelSmall,
-                        color = LandingKitColors.Seafoam,
+                        color = if (phase == ArrivalPhase.PAST) {
+                            LandingKitColors.Coral
+                        } else {
+                            LandingKitColors.Seafoam
+                        },
                         modifier = Modifier.weight(1f),
                     )
-                    Text("↗", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                    Text(
+                        stringResource(R.string.symbol_open),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                    )
                 }
                 Spacer(Modifier.height(34.dp))
                 Text(
@@ -84,14 +111,25 @@ internal fun ArrivalTicketCard(trip: Trip, onClick: () -> Unit) {
                 )
                 Spacer(Modifier.height(7.dp))
                 Text(
-                    text = trip.arrivalDate.format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy")),
+                    text = when (phase) {
+                        ArrivalPhase.PAST -> stringResource(
+                            R.string.arrival_card_arrived_date,
+                            trip.arrivalDate.format(dateFormatter),
+                        )
+                        ArrivalPhase.TODAY -> stringResource(R.string.arrival_card_arriving_today)
+                        ArrivalPhase.UPCOMING -> trip.arrivalDate.format(dateFormatter)
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = .78f),
                 )
                 Spacer(Modifier.height(23.dp))
                 DashedDivider()
                 Spacer(Modifier.height(18.dp))
-                Text("STAY", style = MaterialTheme.typography.labelSmall, color = LandingKitColors.Seafoam)
+                Text(
+                    stringResource(R.string.arrival_card_stay),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = LandingKitColors.Seafoam,
+                )
                 Text(
                     text = trip.arrivalCard.accommodationName,
                     style = MaterialTheme.typography.titleMedium,
@@ -100,19 +138,27 @@ internal fun ArrivalTicketCard(trip: Trip, onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(18.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    LinearProgressIndicator(
-                        progress = { animatedProgress },
-                        modifier = Modifier.weight(1f).height(7.dp).clip(CircleShape),
-                        color = LandingKitColors.Sun,
-                        trackColor = Color.White.copy(alpha = .17f),
-                    )
-                    Spacer(Modifier.width(13.dp))
+                if (trip.items.isEmpty()) {
                     Text(
-                        "$completed/${trip.items.size} ready",
+                        text = stringResource(R.string.arrival_no_tasks),
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color.White,
+                        color = Color.White.copy(alpha = .78f),
                     )
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        LinearProgressIndicator(
+                            progress = { animatedProgress },
+                            modifier = Modifier.weight(1f).height(7.dp).clip(CircleShape),
+                            color = LandingKitColors.Sun,
+                            trackColor = Color.White.copy(alpha = .17f),
+                        )
+                        Spacer(Modifier.width(13.dp))
+                        Text(
+                            stringResource(R.string.arrival_readiness, completed, trip.items.size),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.White,
+                        )
+                    }
                 }
             }
         }

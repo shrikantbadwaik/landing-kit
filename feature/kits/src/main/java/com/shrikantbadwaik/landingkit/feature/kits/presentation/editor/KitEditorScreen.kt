@@ -1,5 +1,10 @@
 package com.shrikantbadwaik.landingkit.feature.kits.presentation.editor
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,14 +17,17 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,42 +35,67 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
+import com.shrikantbadwaik.landingkit.core.model.ChecklistTemplate
 import com.shrikantbadwaik.landingkit.core.model.Trip
+import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.MotionReveal
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component.ArrivalDateField
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component.ChecklistEditor
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component.ChecklistTemplatePanel
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component.FormSection
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component.FormValidationSummary
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component.LandingTextField
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.DefaultChecklistContent
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.KitForm
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.isArrivalDateSelectable
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun KitEditorScreen(
     trip: Trip?,
+    defaultChecklistContent: DefaultChecklistContent,
+    curatedTemplates: List<ChecklistTemplate>,
+    personalTemplates: List<ChecklistTemplate>,
     animateEntrance: Boolean,
     onEntrancePlayed: () -> Unit,
     onBack: () -> Unit,
+    onSaveTemplate: (ChecklistTemplate) -> Unit,
+    onDeleteTemplate: (ChecklistTemplate) -> Unit,
     onSave: (KitForm) -> Unit,
 ) {
     val isEditing = trip != null
     var form by remember(trip?.id) {
-        mutableStateOf(trip?.let { KitForm.fromTrip(it) } ?: KitForm())
+        mutableStateOf(
+            trip?.let(KitForm::fromTrip) ?: KitForm.newKit(defaultChecklistContent),
+        )
     }
     var showDatePicker by remember { mutableStateOf(false) }
-    val requiredReady = form.destination.isNotBlank() &&
-        form.stayName.isNotBlank() &&
-        form.address.isNotBlank()
+    var templateFeedback by remember(trip?.id) {
+        mutableStateOf<TemplateFeedback?>(null)
+    }
+    var templateFeedbackEvent by remember(trip?.id) { mutableIntStateOf(0) }
+    var hasAttemptedSave by remember(trip?.id) { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val validation = form.validate()
+    val today = remember { LocalDate.now() }
+    val isPastArrival = validation.arrivalDate?.isBefore(today) == true
 
     LaunchedEffect(animateEntrance) {
         if (animateEntrance) {
@@ -71,14 +104,27 @@ internal fun KitEditorScreen(
         }
     }
 
+    LaunchedEffect(templateFeedbackEvent) {
+        if (templateFeedback != null) {
+            delay(TEMPLATE_FEEDBACK_DURATION_MILLIS)
+            templateFeedback = null
+        }
+    }
+
     if (showDatePicker) {
         val initialDate = runCatching { LocalDate.parse(form.arrivalDate) }
-            .getOrElse { LocalDate.now().plusDays(7) }
+            .getOrElse { today.plusDays(7) }
+        val initialDateMillis = initialDate.toUtcMillis()
+        val initialDisplayedDateMillis = if (initialDate.isBefore(today)) {
+            today.toUtcMillis()
+        } else {
+            initialDateMillis
+        }
+        val selectableDates = remember(today) { ArrivalSelectableDates(today) }
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = initialDate
-                .atStartOfDay(ZoneOffset.UTC)
-                .toInstant()
-                .toEpochMilli(),
+            initialSelectedDateMillis = initialDateMillis,
+            initialDisplayedMonthMillis = initialDisplayedDateMillis,
+            selectableDates = selectableDates,
         )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -92,10 +138,12 @@ internal fun KitEditorScreen(
                         }
                         showDatePicker = false
                     },
-                ) { Text("Done") }
+                ) { Text(stringResource(R.string.editor_date_done)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(stringResource(R.string.editor_date_cancel))
+                }
             },
         ) {
             DatePicker(state = datePickerState)
@@ -110,8 +158,16 @@ internal fun KitEditorScreen(
                 shadowElevation = 12.dp,
             ) {
                 Button(
-                    onClick = { onSave(form) },
-                    enabled = requiredReady,
+                    onClick = {
+                        if (validation.isValid) {
+                            onSave(form)
+                        } else {
+                            hasAttemptedSave = true
+                            coroutineScope.launch {
+                                listState.animateScrollToItem(validation.firstInvalidSectionIndex)
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
@@ -127,7 +183,13 @@ internal fun KitEditorScreen(
                     ),
                 ) {
                     Text(
-                        text = if (isEditing) "Save changes  →" else "Save offline kit  →",
+                        text = stringResource(
+                            if (isEditing) {
+                                R.string.editor_save_changes
+                            } else {
+                                R.string.editor_save_offline_kit
+                            },
+                        ),
                         style = MaterialTheme.typography.labelLarge,
                     )
                 }
@@ -135,6 +197,7 @@ internal fun KitEditorScreen(
         },
     ) { scaffoldPadding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
@@ -146,8 +209,10 @@ internal fun KitEditorScreen(
                 MotionReveal(index = 0, animate = animateEntrance) {
                     ScreenHeader(
                         onBack = onBack,
-                        label = if (isEditing) "EDIT ARRIVAL KIT" else "NEW ARRIVAL KIT",
-                        badge = "3 steps",
+                        label = stringResource(
+                            if (isEditing) R.string.editor_header_edit else R.string.editor_header_new,
+                        ),
+                        badge = stringResource(R.string.editor_step_count),
                     )
                 }
             }
@@ -155,33 +220,73 @@ internal fun KitEditorScreen(
                 MotionReveal(index = 1, animate = animateEntrance) {
                     Column {
                         Text(
-                            text = if (isEditing) "Keep your arrival\nup to date." else "Build a calmer\narrival.",
+                            text = stringResource(
+                                if (isEditing) {
+                                    R.string.editor_edit_headline
+                                } else {
+                                    R.string.editor_create_headline
+                                },
+                            ),
                             style = MaterialTheme.typography.headlineLarge,
                         )
                         Spacer(Modifier.height(9.dp))
                         Text(
-                            text = if (isEditing) {
-                                "Update the details you’ll want close at hand when you land."
-                            } else {
-                                "Just the details you’ll need when your battery, signal or brain is running low."
-                            },
+                            text = stringResource(
+                                if (isEditing) R.string.editor_edit_intro else R.string.editor_create_intro,
+                            ),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        AnimatedVisibility(
+                            visible = hasAttemptedSave && !validation.isValid,
+                            enter = fadeIn() + expandVertically(),
+                            exit = fadeOut() + shrinkVertically(),
+                        ) {
+                            Column {
+                                Spacer(Modifier.height(14.dp))
+                                FormValidationSummary(errorCount = validation.errorCount)
+                            }
+                        }
                     }
                 }
             }
             item(key = "editor_trip_details") {
                 MotionReveal(index = 2, animate = animateEntrance) {
-                    FormSection(number = "01", title = "Trip details", accent = LandingKitColors.Sky) {
+                    FormSection(
+                        number = stringResource(R.string.editor_step_trip),
+                        title = stringResource(R.string.editor_trip_details),
+                        accent = LandingKitColors.Sky,
+                    ) {
                         LandingTextField(
-                            label = "Destination *",
+                            label = stringResource(R.string.editor_destination_label),
                             value = form.destination,
-                            placeholder = "e.g. Kyoto, Japan",
+                            placeholder = stringResource(R.string.editor_destination_placeholder),
+                            error = if (hasAttemptedSave && validation.destinationMissing) {
+                                stringResource(R.string.editor_destination_required)
+                            } else {
+                                null
+                            },
                             onChange = { form = form.copy(destination = it) },
                         )
                         ArrivalDateField(
                             value = form.arrivalDate,
+                            error = when {
+                                !hasAttemptedSave -> null
+                                validation.arrivalDateMissing -> stringResource(
+                                    R.string.editor_arrival_date_required_error,
+                                )
+
+                                validation.arrivalDateInvalid -> stringResource(
+                                    R.string.editor_arrival_date_invalid,
+                                )
+
+                                else -> null
+                            },
+                            supporting = if (isPastArrival) {
+                                stringResource(R.string.editor_past_arrival_notice)
+                            } else {
+                                null
+                            },
                             onClick = { showDatePicker = true },
                         )
                     }
@@ -190,34 +295,44 @@ internal fun KitEditorScreen(
             item(key = "editor_stay") {
                 MotionReveal(index = 3, animate = animateEntrance) {
                     FormSection(
-                        number = "02",
-                        title = "Where you’re staying",
+                        number = stringResource(R.string.editor_step_stay),
+                        title = stringResource(R.string.editor_stay_section),
                         accent = LandingKitColors.Seafoam,
                     ) {
                         LandingTextField(
-                            label = "Stay name *",
+                            label = stringResource(R.string.editor_stay_name_label),
                             value = form.stayName,
-                            placeholder = "Hotel, hostel or host",
+                            placeholder = stringResource(R.string.editor_stay_name_placeholder),
+                            error = if (hasAttemptedSave && validation.stayNameMissing) {
+                                stringResource(R.string.editor_stay_name_required)
+                            } else {
+                                null
+                            },
                             onChange = { form = form.copy(stayName = it) },
                         )
                         LandingTextField(
-                            label = "Address *",
+                            label = stringResource(R.string.editor_address_label),
                             value = form.address,
-                            placeholder = "Street address",
+                            placeholder = stringResource(R.string.editor_address_placeholder),
+                            error = if (hasAttemptedSave && validation.addressMissing) {
+                                stringResource(R.string.editor_address_required)
+                            } else {
+                                null
+                            },
                             multiline = true,
                             onChange = { form = form.copy(address = it) },
                         )
                         LandingTextField(
-                            label = "Address in local language",
+                            label = stringResource(R.string.editor_local_address_label),
                             value = form.localAddress,
-                            placeholder = "The version to show a driver",
+                            placeholder = stringResource(R.string.editor_local_address_placeholder),
                             multiline = true,
                             onChange = { form = form.copy(localAddress = it) },
                         )
                         LandingTextField(
-                            label = "Booking reference",
+                            label = stringResource(R.string.editor_booking_reference_label),
                             value = form.bookingReference,
-                            placeholder = "Optional",
+                            placeholder = stringResource(R.string.editor_optional_placeholder),
                             onChange = { form = form.copy(bookingReference = it) },
                         )
                     }
@@ -226,44 +341,136 @@ internal fun KitEditorScreen(
             item(key = "editor_first_90_minutes") {
                 MotionReveal(index = 4, animate = animateEntrance) {
                     FormSection(
-                        number = "03",
-                        title = "First 90 minutes",
+                        number = stringResource(R.string.editor_step_first_minutes),
+                        title = stringResource(R.string.editor_first_minutes_section),
                         accent = LandingKitColors.Lavender,
                     ) {
                         LandingTextField(
-                            label = "Transfer instructions",
+                            label = stringResource(R.string.editor_transfer_label),
                             value = form.transfer,
-                            placeholder = "Train, taxi, meeting point…",
+                            placeholder = stringResource(R.string.editor_transfer_placeholder),
                             multiline = true,
                             onChange = { form = form.copy(transfer = it) },
                         )
                         LandingTextField(
-                            label = "Currency cheat sheet",
+                            label = stringResource(R.string.editor_currency_label),
                             value = form.currency,
-                            placeholder = "e.g. ¥1,000 ≈ ₹570",
+                            placeholder = stringResource(R.string.editor_currency_placeholder),
                             multiline = true,
                             onChange = { form = form.copy(currency = it) },
                         )
                         LandingTextField(
-                            label = "Emergency contact",
+                            label = stringResource(R.string.editor_emergency_label),
                             value = form.emergencyContact,
-                            placeholder = "Local emergency or trusted person",
+                            placeholder = stringResource(R.string.editor_emergency_placeholder),
                             multiline = true,
                             onChange = { form = form.copy(emergencyContact = it) },
                         )
                         LandingTextField(
-                            label = "Dietary phrase",
+                            label = stringResource(R.string.editor_dietary_label),
                             value = form.dietaryPhrase,
-                            placeholder = "A phrase you may need to show",
+                            placeholder = stringResource(R.string.editor_dietary_placeholder),
                             multiline = true,
                             onChange = { form = form.copy(dietaryPhrase = it) },
                         )
                     }
                 }
             }
+            item(key = "editor_checklist") {
+                MotionReveal(index = 5, animate = animateEntrance) {
+                    FormSection(
+                        number = stringResource(R.string.editor_step_checklist),
+                        title = stringResource(R.string.editor_checklist_section),
+                        accent = LandingKitColors.Sun,
+                    ) {
+                        val feedbackText = when (val feedback = templateFeedback) {
+                            is TemplateFeedback.Applied -> if (feedback.addedCount == 0) {
+                                stringResource(
+                                    R.string.template_already_applied,
+                                    feedback.templateName,
+                                )
+                            } else {
+                                androidx.compose.ui.res.pluralStringResource(
+                                    R.plurals.template_tasks_added,
+                                    feedback.addedCount,
+                                    feedback.addedCount,
+                                    feedback.templateName,
+                                )
+                            }
+
+                            is TemplateFeedback.Saved -> stringResource(
+                                R.string.template_saved,
+                                feedback.templateName,
+                            )
+
+                            is TemplateFeedback.Deleted -> stringResource(
+                                R.string.template_deleted,
+                                feedback.templateName,
+                            )
+
+                            null -> null
+                        }
+                        ChecklistTemplatePanel(
+                            curatedTemplates = curatedTemplates,
+                            personalTemplates = personalTemplates,
+                            currentChecklist = form.checklist,
+                            feedback = feedbackText,
+                            onApply = { template ->
+                                val result = form.applyTemplate(template)
+                                form = result.form
+                                templateFeedback = TemplateFeedback.Applied(
+                                    templateName = template.name,
+                                    addedCount = result.addedCount,
+                                )
+                                templateFeedbackEvent++
+                            },
+                            onSave = { name ->
+                                val template = form.toChecklistTemplate(name)
+                                onSaveTemplate(template)
+                                templateFeedback = TemplateFeedback.Saved(template.name)
+                                templateFeedbackEvent++
+                            },
+                            onDelete = { template ->
+                                onDeleteTemplate(template)
+                                templateFeedback = TemplateFeedback.Deleted(template.name)
+                                templateFeedbackEvent++
+                            },
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        ChecklistEditor(
+                            items = form.checklist,
+                            onTitleChange = { itemId, title ->
+                                form = form.updateChecklistTitle(itemId, title)
+                            },
+                            onCheckedChange = { itemId, checked ->
+                                form = form.setChecklistComplete(itemId, checked)
+                            },
+                            onMoveUp = { itemId ->
+                                form = form.moveChecklistItem(itemId, offset = -1)
+                            },
+                            onMoveDown = { itemId ->
+                                form = form.moveChecklistItem(itemId, offset = 1)
+                            },
+                            onRemove = { itemId ->
+                                form = form.removeChecklistItem(itemId)
+                            },
+                            onAdd = { title ->
+                                form = form.addChecklistItem(title)
+                            },
+                        )
+                        if (form.checklist.any { it.title.isBlank() }) {
+                            Text(
+                                text = stringResource(R.string.editor_checklist_title_required),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                }
+            }
             item(key = "editor_required_note") {
                 Text(
-                    "Required: destination, stay name and address. Everything else can be added when you have it.",
+                    stringResource(R.string.editor_required_note),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -271,3 +478,27 @@ internal fun KitEditorScreen(
         }
     }
 }
+
+private sealed interface TemplateFeedback {
+    data class Applied(
+        val templateName: String,
+        val addedCount: Int,
+    ) : TemplateFeedback
+
+    data class Saved(val templateName: String) : TemplateFeedback
+    data class Deleted(val templateName: String) : TemplateFeedback
+}
+
+private const val TEMPLATE_FEEDBACK_DURATION_MILLIS = 4_000L
+
+@OptIn(ExperimentalMaterial3Api::class)
+private class ArrivalSelectableDates(private val today: LocalDate) : SelectableDates {
+    override fun isSelectableDate(utcTimeMillis: Long): Boolean = isArrivalDateSelectable(
+        candidate = Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneOffset.UTC).toLocalDate(),
+        today = today,
+    )
+
+    override fun isSelectableYear(year: Int): Boolean = year >= today.year
+}
+
+private fun LocalDate.toUtcMillis(): Long = atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()

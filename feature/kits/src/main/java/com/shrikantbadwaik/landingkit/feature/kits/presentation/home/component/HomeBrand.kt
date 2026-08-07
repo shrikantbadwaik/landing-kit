@@ -20,8 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
+import com.shrikantbadwaik.landingkit.feature.kits.R
 
 @Composable
 internal fun BrandHeader() {
@@ -30,12 +32,12 @@ internal fun BrandHeader() {
         Spacer(Modifier.width(11.dp))
         Column {
             Text(
-                text = "LANDING KIT",
+                text = stringResource(R.string.brand_name),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = "OFFLINE TRAVEL COMPANION",
+                text = stringResource(R.string.brand_tagline),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -82,7 +84,7 @@ internal fun PrivacyNote() {
         ) {
             Surface(color = LandingKitColors.Forest, shape = CircleShape) {
                 Text(
-                    text = "✓",
+                    text = stringResource(R.string.symbol_check),
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelMedium,
                     color = Color.White,
@@ -90,9 +92,9 @@ internal fun PrivacyNote() {
             }
             Spacer(Modifier.width(11.dp))
             Column {
-                Text("Private by design", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.privacy_title), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "Everything stays on this device.",
+                    stringResource(R.string.privacy_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -26,17 +26,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.ArrivalItem
 import com.shrikantbadwaik.landingkit.core.model.Trip
+import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.TicketIllustration
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AnimatedChecklistItem
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DeleteKitDialog
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DetailCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.EditKitAction
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.EmptyChecklistCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.KitDangerZone
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.PastArrivalNotice
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPhase
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.arrivalPhase
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -48,6 +55,8 @@ internal fun KitDetailScreen(
     onCheck: (ArrivalItem, Boolean) -> Unit,
 ) {
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+    val dateFormatter = DateTimeFormatter.ofPattern(stringResource(R.string.date_format_detail))
+    val phase = remember(trip.arrivalDate) { trip.arrivalPhase(LocalDate.now()) }
 
     if (showDeleteConfirmation) {
         DeleteKitDialog(
@@ -67,7 +76,17 @@ internal fun KitDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item(key = "detail_header") {
-                ScreenHeader(onBack = onBack, label = "ARRIVAL CARD", badge = "Offline")
+                ScreenHeader(
+                    onBack = onBack,
+                    label = stringResource(R.string.arrival_card_label),
+                    badge = stringResource(
+                        when (phase) {
+                            ArrivalPhase.UPCOMING -> R.string.detail_badge_offline
+                            ArrivalPhase.TODAY -> R.string.detail_badge_today
+                            ArrivalPhase.PAST -> R.string.detail_badge_past
+                        },
+                    ),
+                )
             }
             item(key = "detail_hero") {
                 Card(
@@ -81,7 +100,13 @@ internal fun KitDetailScreen(
                         )
                         Column(Modifier.fillMaxWidth().padding(24.dp)) {
                             Text(
-                                "ARRIVING IN",
+                                stringResource(
+                                    when (phase) {
+                                        ArrivalPhase.UPCOMING -> R.string.detail_arriving_in
+                                        ArrivalPhase.TODAY -> R.string.detail_arriving_today
+                                        ArrivalPhase.PAST -> R.string.detail_arrived_in
+                                    },
+                                ),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = LandingKitColors.Seafoam,
                             )
@@ -93,9 +118,7 @@ internal fun KitDetailScreen(
                             )
                             Spacer(Modifier.height(10.dp))
                             Text(
-                                trip.arrivalDate.format(
-                                    DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy"),
-                                ),
+                                trip.arrivalDate.format(dateFormatter),
                                 color = Color.White.copy(alpha = .78f),
                             )
                             Spacer(Modifier.height(22.dp))
@@ -107,24 +130,33 @@ internal fun KitDetailScreen(
                     }
                 }
             }
+            if (phase == ArrivalPhase.PAST) {
+                item(key = "detail_past_notice") {
+                    PastArrivalNotice()
+                }
+            }
             item(key = "detail_driver_address") {
                 DetailCard(
-                    "Show your driver",
+                    stringResource(R.string.detail_show_driver),
                     trip.arrivalCard.localAddress.ifBlank { trip.arrivalCard.address },
                     LandingKitColors.Sun,
                 )
             }
             item(key = "detail_stay") {
                 DetailCard(
-                    "Stay",
-                    "${trip.arrivalCard.accommodationName}\n${trip.arrivalCard.address}",
+                    stringResource(R.string.detail_stay),
+                    stringResource(
+                        R.string.detail_stay_value,
+                        trip.arrivalCard.accommodationName,
+                        trip.arrivalCard.address,
+                    ),
                     LandingKitColors.Seafoam,
                 )
             }
             if (trip.arrivalCard.bookingReference.isNotBlank()) {
                 item(key = "detail_booking") {
                     DetailCard(
-                        "Booking reference",
+                        stringResource(R.string.detail_booking_reference),
                         trip.arrivalCard.bookingReference,
                         LandingKitColors.Sky,
                     )
@@ -133,7 +165,7 @@ internal fun KitDetailScreen(
             if (trip.arrivalCard.transferInstructions.isNotBlank()) {
                 item(key = "detail_transfer") {
                     DetailCard(
-                        "From the airport",
+                        stringResource(R.string.detail_from_airport),
                         trip.arrivalCard.transferInstructions,
                         LandingKitColors.Coral.copy(alpha = .55f),
                     )
@@ -141,13 +173,17 @@ internal fun KitDetailScreen(
             }
             if (trip.arrivalCard.currencyNote.isNotBlank()) {
                 item(key = "detail_money") {
-                    DetailCard("Money", trip.arrivalCard.currencyNote, LandingKitColors.Sun)
+                    DetailCard(
+                        stringResource(R.string.detail_money),
+                        trip.arrivalCard.currencyNote,
+                        LandingKitColors.Sun,
+                    )
                 }
             }
             if (trip.arrivalCard.emergencyContact.isNotBlank()) {
                 item(key = "detail_emergency") {
                     DetailCard(
-                        "Emergency",
+                        stringResource(R.string.detail_emergency),
                         trip.arrivalCard.emergencyContact,
                         LandingKitColors.Lavender,
                     )
@@ -156,24 +192,39 @@ internal fun KitDetailScreen(
             if (trip.arrivalCard.dietaryPhrase.isNotBlank()) {
                 item(key = "detail_dietary") {
                     DetailCard(
-                        "Dietary phrase",
+                        stringResource(R.string.detail_dietary_phrase),
                         trip.arrivalCard.dietaryPhrase,
                         LandingKitColors.Seafoam,
                     )
                 }
             }
             item(key = "detail_checklist_header") {
-                Text("Ready before landing", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    stringResource(
+                        if (phase == ArrivalPhase.PAST) {
+                            R.string.detail_arrival_checklist
+                        } else {
+                            R.string.detail_ready_before_landing
+                        },
+                    ),
+                    style = MaterialTheme.typography.titleLarge,
+                )
             }
-            items(trip.items, key = { it.id }) { item ->
-                AnimatedChecklistItem(item = item, onCheck = { onCheck(item, it) })
+            if (trip.items.isEmpty()) {
+                item(key = "detail_checklist_empty") {
+                    EmptyChecklistCard()
+                }
+            } else {
+                items(trip.items, key = { it.id }) { item ->
+                    AnimatedChecklistItem(item = item, onCheck = { onCheck(item, it) })
+                }
             }
             item(key = "detail_danger_zone") {
                 KitDangerZone(onDelete = { showDeleteConfirmation = true })
             }
             item(key = "detail_privacy_footer") {
                 Text(
-                    "AVAILABLE WITHOUT SIGNAL  •  STORED ON THIS DEVICE",
+                    stringResource(R.string.detail_privacy_footer),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

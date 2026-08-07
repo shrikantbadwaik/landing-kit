@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared symbols and status copy -->
+    <string name="symbol_back" translatable="false">←</string>
+    <string name="symbol_forward" translatable="false">›</string>
+    <string name="symbol_open" translatable="false">↗</string>
+    <string name="symbol_check" translatable="false">✓</string>
+    <string name="symbol_sparkle" translatable="false">✦</string>
+    <string name="symbol_move_up" translatable="false">↑</string>
+    <string name="symbol_move_down" translatable="false">↓</string>
+    <string name="loading_offline_kit">Preparing your offline kit…</string>
+    <string name="missing_kit_header">ARRIVAL UNAVAILABLE</string>
+    <string name="missing_kit_badge">Device local</string>
+    <string name="missing_kit_title">This kit isn’t on this device.</string>
+    <string name="missing_kit_description">It may have been deleted, or this link may be out of date. Your other offline arrivals are still safe.</string>
+    <string name="missing_kit_home_action">Back to my arrivals</string>
+
+    <!-- Home -->
+    <string name="brand_name">LANDING KIT</string>
+    <string name="brand_tagline">OFFLINE TRAVEL COMPANION</string>
+    <string name="home_headline">Land ready.\nTravel lighter.</string>
+    <string name="home_intro">Your first 90 minutes, collected in one calm place — even when the signal disappears.</string>
+    <string name="privacy_title">Private by design</string>
+    <string name="privacy_description">Everything stays on this device.</string>
+    <string name="home_start_here">START HERE</string>
+    <string name="home_up_next">UP NEXT</string>
+    <string name="home_first_arrival">Your first arrival</string>
+    <string name="home_next_arrival">Your next arrival</string>
+    <string name="home_arrivals">Your arrivals</string>
+    <string name="home_new_kit">+  New kit</string>
+    <string name="home_empty_title">A softer first landing starts here.</string>
+    <string name="home_empty_description">Save your stay, transfer, money notes and emergency details before take-off.</string>
+    <string name="home_create_first_kit">Create my first kit</string>
+    <string name="home_explore_sample">Explore a Kyoto sample  →</string>
+    <string name="home_privacy_footer">NO ACCOUNT  •  NO ADS  •  DEVICE-LOCAL</string>
+    <string name="home_kept_for_reference">KEPT FOR REFERENCE</string>
+    <string name="home_past_arrivals">Past arrivals</string>
+    <string name="home_no_upcoming_title">Nothing upcoming — and nothing lost.</string>
+    <string name="home_no_upcoming_description">Your previous kits stay below for reference. Start a new one whenever the next trip takes shape.</string>
+
+    <!-- Arrival card -->
+    <string name="arrival_card_label">ARRIVAL CARD</string>
+    <string name="arrival_card_today">ARRIVING TODAY</string>
+    <string name="arrival_card_past">PAST ARRIVAL</string>
+    <string name="arrival_card_arriving_today">Today</string>
+    <string name="arrival_card_arrived_date">Arrived %1$s</string>
+    <string name="arrival_card_stay">STAY</string>
+    <string name="arrival_readiness">%1$d/%2$d ready</string>
+    <string name="arrival_no_tasks">No preparation tasks yet</string>
+    <string name="date_format_card">EEE, d MMM yyyy</string>
+
+    <!-- Kit editor -->
+    <string name="editor_date_done">Done</string>
+    <string name="editor_date_cancel">Cancel</string>
+    <string name="editor_save_changes">Save changes  →</string>
+    <string name="editor_save_offline_kit">Save offline kit  →</string>
+    <string name="editor_header_edit">EDIT ARRIVAL KIT</string>
+    <string name="editor_header_new">NEW ARRIVAL KIT</string>
+    <string name="editor_step_count">4 steps</string>
+    <string name="editor_edit_headline">Keep your arrival\nup to date.</string>
+    <string name="editor_create_headline">Build a calmer\narrival.</string>
+    <string name="editor_edit_intro">Update the details you’ll want close at hand when you land.</string>
+    <string name="editor_create_intro">Just the details you’ll need when your battery, signal or brain is running low.</string>
+    <string name="editor_step_trip" translatable="false">01</string>
+    <string name="editor_step_stay" translatable="false">02</string>
+    <string name="editor_step_first_minutes" translatable="false">03</string>
+    <string name="editor_step_checklist" translatable="false">04</string>
+    <string name="editor_trip_details">Trip details</string>
+    <string name="editor_destination_label">Destination *</string>
+    <string name="editor_destination_placeholder">e.g. Kyoto, Japan</string>
+    <string name="editor_arrival_date_required">Arrival date *</string>
+    <string name="editor_choose_arrival_date">Choose arrival date</string>
+    <string name="editor_destination_required">Add a destination.</string>
+    <string name="editor_arrival_date_required_error">Choose an arrival date.</string>
+    <string name="editor_arrival_date_invalid">Choose a valid arrival date.</string>
+    <string name="editor_stay_name_required">Add the name of your stay.</string>
+    <string name="editor_address_required">Add the address you’ll need on arrival.</string>
+    <string name="editor_past_arrival_notice">This date has passed. The kit will stay available under Past arrivals.</string>
+    <string name="editor_validation_title">A few details still need you</string>
+    <plurals name="editor_validation_summary">
+        <item quantity="one">Complete %d required detail before saving.</item>
+        <item quantity="other">Complete %d required details before saving.</item>
+    </plurals>
+    <string name="editor_stay_section">Where you’re staying</string>
+    <string name="editor_stay_name_label">Stay name *</string>
+    <string name="editor_stay_name_placeholder">Hotel, hostel or host</string>
+    <string name="editor_address_label">Address *</string>
+    <string name="editor_address_placeholder">Street address</string>
+    <string name="editor_local_address_label">Address in local language</string>
+    <string name="editor_local_address_placeholder">The version to show a driver</string>
+    <string name="editor_booking_reference_label">Booking reference</string>
+    <string name="editor_optional_placeholder">Optional</string>
+    <string name="editor_first_minutes_section">First 90 minutes</string>
+    <string name="editor_transfer_label">Transfer instructions</string>
+    <string name="editor_transfer_placeholder">Train, taxi, meeting point…</string>
+    <string name="editor_currency_label">Currency cheat sheet</string>
+    <string name="editor_currency_placeholder">e.g. ¥1,000 ≈ ₹570</string>
+    <string name="editor_emergency_label">Emergency contact</string>
+    <string name="editor_emergency_placeholder">Local emergency or trusted person</string>
+    <string name="editor_dietary_label">Dietary phrase</string>
+    <string name="editor_dietary_placeholder">A phrase you may need to show</string>
+    <string name="editor_checklist_section">Ready before landing</string>
+    <string name="editor_checklist_description">Shape this list around your arrival. Tap a task to rename it, tick what’s handled and arrange the order that helps you most.</string>
+    <plurals name="editor_checklist_task_count">
+        <item quantity="one">%d task</item>
+        <item quantity="other">%d tasks</item>
+    </plurals>
+    <string name="editor_checklist_empty_title">Your checklist is clear</string>
+    <string name="editor_checklist_empty_description">Add only the preparation you want to remember.</string>
+    <string name="editor_checklist_item_label">Checklist item</string>
+    <string name="editor_checklist_add_placeholder">Add a task for this arrival</string>
+    <string name="editor_checklist_add_action">Add task</string>
+    <string name="editor_checklist_move_up">Move %1$s up</string>
+    <string name="editor_checklist_move_down">Move %1$s down</string>
+    <string name="editor_checklist_mark_complete">Mark %1$s complete</string>
+    <string name="editor_checklist_mark_incomplete">Mark %1$s incomplete</string>
+    <string name="editor_checklist_remove">Remove %1$s</string>
+    <string name="editor_checklist_title_required">Give every task a name or remove it before saving.</string>
+
+    <!-- Reusable checklist templates -->
+    <string name="template_section_title">Reusable templates</string>
+    <string name="template_section_description">Add a calm starting point without replacing anything already on your list.</string>
+    <string name="template_save_current">Save this list</string>
+    <string name="template_curated_label">CURATED</string>
+    <string name="template_personal_label">YOUR TEMPLATE</string>
+    <string name="template_add_missing">Add missing tasks</string>
+    <plurals name="template_more_tasks">
+        <item quantity="one">+%d more task</item>
+        <item quantity="other">+%d more tasks</item>
+    </plurals>
+    <string name="template_delete_description">Delete %1$s</string>
+    <string name="template_saved">%1$s saved for future kits</string>
+    <string name="template_deleted">%1$s deleted</string>
+    <string name="template_already_applied">Everything from %1$s is already on this list.</string>
+    <plurals name="template_tasks_added">
+        <item quantity="one">Added %1$d task from %2$s.</item>
+        <item quantity="other">Added %1$d tasks from %2$s.</item>
+    </plurals>
+    <string name="template_save_dialog_label">PERSONAL TEMPLATE</string>
+    <string name="template_save_dialog_title">Reuse this calm start</string>
+    <string name="template_save_dialog_description">Save these task names and their order on this device. Completion stays specific to each trip.</string>
+    <string name="template_name_label">Template name</string>
+    <string name="template_name_placeholder">e.g. My international routine</string>
+    <string name="template_cancel">Cancel</string>
+    <string name="template_save_action">Save template</string>
+    <string name="template_empty_checklist">Add at least one named task before saving a template.</string>
+    <string name="template_invalid_checklist">Give every task a name or remove it before saving this list.</string>
+    <string name="template_delete_dialog_title">Delete this template?</string>
+    <string name="template_delete_dialog_description">%1$s will be removed from this device. Tasks already added to kits won’t change.</string>
+    <string name="template_keep_action">Keep template</string>
+    <string name="template_delete_action">Delete template</string>
+
+    <string name="template_international_name">International arrival</string>
+    <string name="template_international_map">Download an offline map</string>
+    <string name="template_international_connectivity">Set up eSIM or roaming</string>
+    <string name="template_international_insurance">Save travel insurance details</string>
+    <string name="template_international_emergency">Learn the local emergency numbers</string>
+
+    <string name="template_solo_name">Solo and steady</string>
+    <string name="template_solo_share_stay">Share stay details with someone I trust</string>
+    <string name="template_solo_check_in">Schedule a safe-arrival check-in</string>
+    <string name="template_solo_transport">Confirm a licensed transfer option</string>
+    <string name="template_solo_backup">Keep a paper backup of key details</string>
+
+    <string name="template_carry_on_name">Carry-on ready</string>
+    <string name="template_carry_on_power">Pack a charged power bank</string>
+    <string name="template_carry_on_medication">Keep medication in my carry-on</string>
+    <string name="template_carry_on_pen">Keep a pen for arrival forms</string>
+    <string name="template_carry_on_baggage">Save baggage claim details</string>
+    <string name="editor_required_note">Required: destination, arrival date, stay name and address. Everything else can be added when you have it.</string>
+
+    <!-- Kit detail -->
+    <string name="detail_badge_offline">Offline</string>
+    <string name="detail_badge_today">Today</string>
+    <string name="detail_badge_past">Past</string>
+    <string name="detail_arriving_in">ARRIVING IN</string>
+    <string name="detail_arriving_today">ARRIVING TODAY</string>
+    <string name="detail_arrived_in">ARRIVED IN</string>
+    <string name="detail_show_driver">Show your driver</string>
+    <string name="detail_stay">Stay</string>
+    <string name="detail_stay_value">%1$s\n%2$s</string>
+    <string name="detail_booking_reference">Booking reference</string>
+    <string name="detail_from_airport">From the airport</string>
+    <string name="detail_money">Money</string>
+    <string name="detail_emergency">Emergency</string>
+    <string name="detail_dietary_phrase">Dietary phrase</string>
+    <string name="detail_ready_before_landing">Ready before landing</string>
+    <string name="detail_arrival_checklist">Arrival checklist</string>
+    <string name="detail_checklist_empty">No preparation tasks yet. Add the ones that matter from Edit kit.</string>
+    <string name="detail_past_notice_label">KEPT FOR REFERENCE</string>
+    <string name="detail_past_notice_title">This arrival has passed.</string>
+    <string name="detail_past_notice_description">Everything remains available offline. Edit the date to reuse this kit, or delete it when you no longer need it.</string>
+    <string name="detail_privacy_footer">AVAILABLE WITHOUT SIGNAL  •  STORED ON THIS DEVICE</string>
+    <string name="date_format_detail">EEEE, d MMMM yyyy</string>
+
+    <!-- Kit management -->
+    <string name="kit_edit">Edit kit</string>
+    <string name="kit_manage_label">MANAGE THIS KIT</string>
+    <string name="kit_remove_title">Remove this offline kit</string>
+    <string name="kit_remove_description">Deletes the copy stored on this device.</string>
+    <string name="kit_delete_action">Delete kit  →</string>
+    <string name="kit_delete_dialog_label">REMOVE OFFLINE KIT</string>
+    <string name="kit_delete_dialog_title">Let this kit go?</string>
+    <string name="kit_delete_dialog_description">%1$s and its checklist will be removed from this device. This can’t be undone.</string>
+    <string name="kit_keep_action">Keep my kit</string>
+    <string name="kit_delete_permanently">Delete permanently</string>
+    <string name="kit_deleted_message">%1$s kit deleted</string>
+    <string name="kit_undo_action">UNDO</string>
+
+    <!-- Default checklist content persisted with a new kit -->
+    <string name="checklist_download_tickets">Download tickets and booking</string>
+    <string name="checklist_save_address">Save the stay address offline</string>
+    <string name="checklist_confirm_transfer">Confirm airport transfer</string>
+    <string name="checklist_local_currency">Keep a little local currency</string>
+
+    <!-- Sample kit content -->
+    <string name="sample_destination">Kyoto, Japan</string>
+    <string name="sample_stay_name">Machiya Stay Gion</string>
+    <string name="sample_address">2F, 570-123 Gionmachi Minamigawa, Higashiyama-ku, Kyoto</string>
+    <string name="sample_local_address" translatable="false">京都市東山区祇園町南側 570-123 2F</string>
+    <string name="sample_booking_reference" translatable="false">LK-4821</string>
+    <string name="sample_transfer">Take the JR Haruka to Kyoto Station, then taxi to Gion. Show the local-language address.</string>
+    <string name="sample_currency">¥1,000 ≈ ₹570 · Keep ¥5,000 for the first evening</string>
+    <string name="sample_emergency">Japan emergency: 110 police · 119 ambulance/fire</string>
+    <string name="sample_dietary">Watashi wa tamago to nattsu o taberaremasen — I cannot eat eggs or nuts.</string>
+</resources>

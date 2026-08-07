@@ -23,6 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +32,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -38,17 +40,25 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
+import com.shrikantbadwaik.landingkit.core.model.ChecklistTemplate
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.LandingKitViewModel
+import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.LoadingScreen
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.MissingKitScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.KitDetailScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.KitEditorScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.HomeScreen
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.curatedChecklistTemplates
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.defaultChecklistContent
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.sampleTripContent
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 internal fun LandingKitNavHost(
     trips: List<Trip>,
+    personalTemplates: List<ChecklistTemplate>,
     viewModel: LandingKitViewModel,
     navController: NavHostController = rememberNavController(),
 ) {
@@ -57,6 +67,18 @@ internal fun LandingKitNavHost(
     var animatedTripIds by remember { mutableStateOf(emptySet<String>()) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val checklistContent = defaultChecklistContent()
+    val curatedTemplates = curatedChecklistTemplates()
+    val sampleContent = sampleTripContent(checklistContent)
+    val undoLabel = stringResource(R.string.kit_undo_action)
+    val returnHome = {
+        if (!navController.popBackStack(KitRoute.Home, inclusive = false)) {
+            navController.navigate(KitRoute.Home) {
+                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
     Box(Modifier.fillMaxSize()) {
         NavHost(
@@ -104,7 +126,7 @@ internal fun LandingKitNavHost(
                     onTripAnimated = { tripId -> animatedTripIds = animatedTripIds + tripId },
                     onCreate = { navController.navigate(KitRoute.Create) },
                     onSample = {
-                        viewModel.addSample { tripId ->
+                        viewModel.addSample(sampleContent) { tripId ->
                             navController.navigate(KitRoute.Detail(tripId))
                         }
                     },
@@ -115,9 +137,14 @@ internal fun LandingKitNavHost(
             composable<KitRoute.Create> {
                 KitEditorScreen(
                     trip = null,
+                    defaultChecklistContent = checklistContent,
+                    curatedTemplates = curatedTemplates,
+                    personalTemplates = personalTemplates,
                     animateEntrance = !hasPlayedEditorEntrance,
                     onEntrancePlayed = { hasPlayedEditorEntrance = true },
                     onBack = { navController.popBackStack() },
+                    onSaveTemplate = viewModel::saveTemplate,
+                    onDeleteTemplate = { template -> viewModel.deleteTemplate(template.id) },
                     onSave = { form ->
                         viewModel.saveKit(form) { tripId ->
                             navController.navigate(KitRoute.Detail(tripId)) {
@@ -131,9 +158,26 @@ internal fun LandingKitNavHost(
             composable<KitRoute.Detail> { backStackEntry ->
                 val route = backStackEntry.toRoute<KitRoute.Detail>()
                 val trip = trips.firstOrNull { it.id == route.tripId }
+                var missingRouteConfirmed by remember(route.tripId) { mutableStateOf(false) }
+                val deletedMessage = trip?.let {
+                    stringResource(R.string.kit_deleted_message, it.destination)
+                }
+
+                LaunchedEffect(route.tripId, trip) {
+                    if (trip == null) {
+                        delay(MISSING_ROUTE_GRACE_MILLIS)
+                        missingRouteConfirmed = true
+                    } else {
+                        missingRouteConfirmed = false
+                    }
+                }
 
                 if (trip == null) {
-                    LoadingScreen()
+                    if (missingRouteConfirmed) {
+                        MissingKitScreen(onHome = returnHome)
+                    } else {
+                        LoadingScreen()
+                    }
                 } else {
                     KitDetailScreen(
                         trip = trip,
@@ -145,8 +189,8 @@ internal fun LandingKitNavHost(
                                 navController.popBackStack()
                                 scope.launch {
                                     val result = snackbarHostState.showSnackbar(
-                                        message = "${trip.destination} kit deleted",
-                                        actionLabel = "Undo",
+                                        message = checkNotNull(deletedMessage),
+                                        actionLabel = undoLabel,
                                         duration = SnackbarDuration.Long,
                                     )
                                     if (result == SnackbarResult.ActionPerformed) {
@@ -165,17 +209,39 @@ internal fun LandingKitNavHost(
             composable<KitRoute.Edit> { backStackEntry ->
                 val route = backStackEntry.toRoute<KitRoute.Edit>()
                 val trip = trips.firstOrNull { it.id == route.tripId }
+                var missingRouteConfirmed by remember(route.tripId) { mutableStateOf(false) }
+
+                LaunchedEffect(route.tripId, trip) {
+                    if (trip == null) {
+                        delay(MISSING_ROUTE_GRACE_MILLIS)
+                        missingRouteConfirmed = true
+                    } else {
+                        missingRouteConfirmed = false
+                    }
+                }
 
                 if (trip == null) {
-                    LoadingScreen()
+                    if (missingRouteConfirmed) {
+                        MissingKitScreen(onHome = returnHome)
+                    } else {
+                        LoadingScreen()
+                    }
                 } else {
                     KitEditorScreen(
                         trip = trip,
+                        defaultChecklistContent = checklistContent,
+                        curatedTemplates = curatedTemplates,
+                        personalTemplates = personalTemplates,
                         animateEntrance = !hasPlayedEditorEntrance,
                         onEntrancePlayed = { hasPlayedEditorEntrance = true },
                         onBack = { navController.popBackStack() },
+                        onSaveTemplate = viewModel::saveTemplate,
+                        onDeleteTemplate = { template -> viewModel.deleteTemplate(template.id) },
                         onSave = { form ->
-                            viewModel.saveKit(form, trip) { navController.popBackStack() }
+                            viewModel.saveKit(
+                                form = form,
+                                existingTrip = trip,
+                            ) { navController.popBackStack() }
                         },
                     )
                 }
@@ -213,10 +279,12 @@ internal fun LandingKitNavHost(
                             contentColor = LandingKitColors.Sun,
                         ),
                     ) {
-                        Text("UNDO")
+                        Text(stringResource(R.string.kit_undo_action))
                     }
                 }
             }
         }
     }
 }
+
+private const val MISSING_ROUTE_GRACE_MILLIS = 450L

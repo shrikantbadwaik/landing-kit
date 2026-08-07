@@ -7,6 +7,9 @@ The durable product vision, research findings, roadmap, non-goals, and decision 
 ## Current milestone
 
 - Create, edit, view, and delete arrival kits.
+- Customise each readiness checklist by adding, renaming, completing, reordering, and removing tasks.
+- Apply curated checklist starters or save personal device-local templates for future kits.
+- Validate required arrival details explicitly, retain past kits for reference, and recover from stale local routes.
 - Explore a polished sample kit for Kyoto.
 - Persist trips and checklist progress in an app-private Room database.
 - Persist lightweight user preferences with AndroidX DataStore.
@@ -15,7 +18,7 @@ The durable product vision, research findings, roadmap, non-goals, and decision 
 - Hilt-managed dependency injection with constructor-injected ViewModels and application-scoped data services.
 - Explicit Kotlin Coroutines and Flow dependencies for main-safe asynchronous work and reactive state.
 - A custom editorial design system with locally bundled Fraunces display type and Manrope UI type.
-- Unit tests for core domain validation and item state.
+- Unit tests for core domain validation, item state, and checklist editing operations.
 
 ## Architecture
 
@@ -39,11 +42,11 @@ Within `:feature:kits`, the app shell only coordinates state and navigation. Hom
 
 ## Visual direction
 
-The interface uses a travel-journal/boarding-pass visual language: expressive editorial headlines, calm paper surfaces, deep-teal arrival cards, warm wayfinding accents, and a three-part guided form. Directional screen transitions, a once-per-session Home reveal, animated new-trip insertion, readiness progress, and checklist completion feedback add calm spatial continuity without replaying the full choreography on every return. All illustration is drawn with Compose primitives, so there are no remote image requests or image-loading dependencies.
+The interface uses a travel-journal/boarding-pass visual language: expressive editorial headlines, calm paper surfaces, deep-teal arrival cards, warm wayfinding accents, and a four-part guided form. Directional screen transitions, a once-per-session Home reveal, animated new-trip insertion, readiness progress, and checklist completion feedback add calm spatial continuity without replaying the full choreography on every return. All illustration is drawn with Compose primitives, so there are no remote image requests or image-loading dependencies.
 
 Fraunces and Manrope are bundled in `core/designsystem/src/main/res/font` and remain available offline. Their OFL license texts live in `licenses/`.
 
-Room now provides the device-local source of truth through coroutine-aware DAO operations and observable `Flow` queries. Its exported schema is checked into `core/data/schemas`, giving future database changes an explicit migration and test surface. The Room entities deliberately remain inside the data module; UI and domain code continue to depend only on `TripRepository` and domain models.
+Room now provides the device-local source of truth through coroutine-aware DAO operations and observable `Flow` queries. Trips and personal checklist templates have separate repositories, while Room migration `1 → 2` adds template tables without modifying existing trip records. Exported schemas are checked into `core/data/schemas`, giving future database changes an explicit migration and test surface. Room entities deliberately remain inside the data module; UI and domain code continue to depend only on repository contracts and domain models.
 
 Hilt owns the application dependency graph. `LandingKitViewModel` uses constructor injection, while the data module's `DataModule` provides singleton database, repository, and preferences instances. This replaces the previous handwritten service locator in `Application`, keeps data wiring beside its implementations, and keeps dependencies explicit and testable.
 
@@ -70,8 +73,7 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 ## Next product slices
 
 1. Encrypt imported documents and add QR/ticket attachments.
-2. Add editable checklist items and trip editing/deletion.
-3. Add a large-text, one-handed "arrival mode" available from a notification.
-4. Add encrypted local export/import through Android's document picker.
-5. Add accessibility, instrumentation, and screenshot tests.
-6. Validate the first-90-minutes card with frequent and anxious travellers before broad itinerary features.
+2. Add a large-text, one-handed "arrival mode" available from a notification.
+3. Add encrypted local export/import through Android's document picker.
+4. Add accessibility, instrumentation, and screenshot tests.
+5. Validate the first-90-minutes card with frequent and anxious travellers before broad itinerary features.

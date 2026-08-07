@@ -100,6 +100,11 @@ Builder and app-promotion communities were treated as competition signals rather
 - Create and view arrival kits.
 - Edit existing arrival kits while preserving checklist progress.
 - Delete arrival kits through an explicit destructive confirmation.
+- Add, rename, complete, reorder, and remove checklist items while preserving stable identity.
+- Apply curated checklist templates and save reusable personal templates on the device.
+- Guide incomplete forms with explicit inline validation and never fabricate missing arrival data.
+- Keep past arrivals available in a clearly separated reference section.
+- Recover gracefully when a saved navigation route points to a kit that is no longer on the device.
 - Store a destination and arrival date.
 - Store accommodation name and address.
 - Store an address in the local language.
@@ -121,7 +126,6 @@ Builder and app-promotion communities were treated as competition signals rather
 - Uninstalling the app removes its data.
 - Android backup is disabled.
 - No documents or images are imported yet.
-- Default checklist items cannot yet be added, edited, reordered, or removed.
 - There is no cross-device synchronisation or real-time safety check-in.
 
 ## Prioritised roadmap
@@ -132,9 +136,9 @@ Goal: make existing kits maintainable before increasing the sensitivity of store
 
 - [x] Edit an existing arrival kit.
 - [x] Delete a kit with explicit confirmation.
-- [ ] Add, edit, complete, reorder, and remove checklist items.
-- [ ] Provide reusable checklist templates.
-- [ ] Handle empty, invalid, and past-arrival states gracefully.
+- [x] Add, edit, complete, reorder, and remove checklist items.
+- [x] Provide reusable checklist templates.
+- [x] Handle empty, invalid, and past-arrival states gracefully.
 
 Success condition: a user can maintain a kit throughout its useful lifecycle without recreating it.
 
@@ -253,6 +257,10 @@ Early validation should focus on behaviour rather than download volume:
 - Kept the no-backend, no-account, and no-network-permission posture.
 - Added this document as the durable product source of truth.
 - Completed the first lifecycle slice: existing kits can be edited and deleted without losing checklist identity or completion state.
+- Completed custom checklist management with inline editing, completion, ordering, addition, removal, and transactional local persistence.
+- Added additive curated templates plus device-local personal templates with explicit deletion and a non-destructive Room 1-to-2 migration.
+- Completed the kit lifecycle with explicit required-field validation, honest missing-kit recovery, calm empty states, and retained past-arrival references ordered behind upcoming travel.
+- Limited arrival-date selection to today or later; existing kits naturally become past references over time and remain editable without allowing accidental historical dates.
 
 ## Maintaining this plan
 

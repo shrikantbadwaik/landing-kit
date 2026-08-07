@@ -14,8 +14,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
+import com.shrikantbadwaik.landingkit.feature.kits.R
 
 @Composable
 internal fun ScreenHeader(onBack: () -> Unit, label: String, badge: String) {
@@ -32,7 +34,7 @@ internal fun ScreenHeader(onBack: () -> Unit, label: String, badge: String) {
             shadowElevation = 2.dp,
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Text("←", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.symbol_back), style = MaterialTheme.typography.titleMedium)
             }
         }
         Spacer(Modifier.width(13.dp))

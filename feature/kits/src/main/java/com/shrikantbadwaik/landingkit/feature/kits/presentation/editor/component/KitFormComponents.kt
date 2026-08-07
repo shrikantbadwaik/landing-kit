@@ -1,5 +1,6 @@
 package com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,10 +23,43 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import com.shrikantbadwaik.landingkit.feature.kits.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
+@Composable
+internal fun FormValidationSummary(errorCount: Int) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = .55f),
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.error.copy(alpha = .25f),
+        ),
+    ) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 13.dp)) {
+            Text(
+                text = stringResource(R.string.editor_validation_title),
+                style = MaterialTheme.typography.labelLarge,
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = pluralStringResource(
+                    R.plurals.editor_validation_summary,
+                    errorCount,
+                    errorCount,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+}
 
 @Composable
 internal fun FormSection(
@@ -66,6 +100,7 @@ internal fun LandingTextField(
     value: String,
     placeholder: String,
     supporting: String? = null,
+    error: String? = null,
     multiline: Boolean = false,
     onChange: (String) -> Unit,
 ) {
@@ -81,6 +116,7 @@ internal fun LandingTextField(
             },
             minLines = if (multiline) 2 else 1,
             maxLines = if (multiline) 4 else 1,
+            isError = error != null,
             shape = RoundedCornerShape(16.dp),
             textStyle = MaterialTheme.typography.bodyLarge,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
@@ -92,28 +128,39 @@ internal fun LandingTextField(
                 disabledIndicatorColor = Color.Transparent,
             ),
         )
-        if (supporting != null) {
+        val supportingMessage = error ?: supporting
+        if (supportingMessage != null) {
             Spacer(Modifier.height(5.dp))
             Text(
-                supporting,
+                supportingMessage,
                 modifier = Modifier.padding(horizontal = 4.dp),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (error != null) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
             )
         }
     }
 }
 
 @Composable
-internal fun ArrivalDateField(value: String, onClick: () -> Unit) {
-    val displayValue = remember(value) {
+internal fun ArrivalDateField(
+    value: String,
+    error: String? = null,
+    supporting: String? = null,
+    onClick: () -> Unit,
+) {
+    val datePattern = stringResource(R.string.date_format_card)
+    val displayValue = remember(value, datePattern) {
         runCatching {
-            LocalDate.parse(value).format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy"))
+            LocalDate.parse(value).format(DateTimeFormatter.ofPattern(datePattern))
         }.getOrDefault("")
     }
     Column {
         Text(
-            "Arrival date",
+            stringResource(R.string.editor_arrival_date_required),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -121,7 +168,11 @@ internal fun ArrivalDateField(value: String, onClick: () -> Unit) {
         Surface(
             onClick = onClick,
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .58f),
+            color = if (error != null) {
+                MaterialTheme.colorScheme.errorContainer.copy(alpha = .45f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .58f)
+            },
             shape = RoundedCornerShape(16.dp),
         ) {
             Row(
@@ -129,7 +180,9 @@ internal fun ArrivalDateField(value: String, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = displayValue.ifBlank { "Choose arrival date" },
+                    text = displayValue.ifBlank {
+                        stringResource(R.string.editor_choose_arrival_date)
+                    },
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (displayValue.isBlank()) {
@@ -138,8 +191,26 @@ internal fun ArrivalDateField(value: String, onClick: () -> Unit) {
                         MaterialTheme.colorScheme.onSurface
                     },
                 )
-                Text("›", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                Text(
+                    stringResource(R.string.symbol_forward),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
             }
+        }
+        val supportingMessage = error ?: supporting
+        if (supportingMessage != null) {
+            Spacer(Modifier.height(5.dp))
+            Text(
+                text = supportingMessage,
+                modifier = Modifier.padding(horizontal = 4.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = if (error != null) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
         }
     }
 }
