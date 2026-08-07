@@ -3,12 +3,17 @@ package com.shrikantbadwaik.landingkit.core.data.di
 import android.content.Context
 import androidx.room.Room
 import com.shrikantbadwaik.landingkit.core.data.ChecklistTemplateRepository
+import com.shrikantbadwaik.landingkit.core.data.AttachmentRepository
 import com.shrikantbadwaik.landingkit.core.data.TripRepository
 import com.shrikantbadwaik.landingkit.core.data.local.dao.ChecklistTemplateDao
+import com.shrikantbadwaik.landingkit.core.data.local.dao.AttachmentDao
+import com.shrikantbadwaik.landingkit.core.data.local.attachment.EncryptedAttachmentStore
 import com.shrikantbadwaik.landingkit.core.data.local.dao.TripDao
 import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_1_2
+import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_2_3
 import com.shrikantbadwaik.landingkit.core.data.local.database.LandingKitDatabase
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalChecklistTemplateRepository
+import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalAttachmentRepository
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalTripRepository
 import com.shrikantbadwaik.landingkit.core.data.preferences.UserPreferences
 import dagger.Module
@@ -29,7 +34,7 @@ object DataModule {
         context,
         LandingKitDatabase::class.java,
         "landing_kit.db",
-    ).addMigrations(MIGRATION_1_2).build()
+    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
 
     @Provides
     fun provideTripDao(database: LandingKitDatabase): TripDao = database.tripDao()
@@ -40,16 +45,34 @@ object DataModule {
     ): ChecklistTemplateDao = database.checklistTemplateDao()
 
     @Provides
+    fun provideAttachmentDao(database: LandingKitDatabase): AttachmentDao = database.attachmentDao()
+
+    @Provides
+    @Singleton
+    fun provideEncryptedAttachmentStore(
+        @ApplicationContext context: Context,
+    ): EncryptedAttachmentStore = EncryptedAttachmentStore(context)
+
+    @Provides
     @Singleton
     fun provideTripRepository(
         tripDao: TripDao,
-    ): TripRepository = LocalTripRepository(tripDao)
+        attachmentStore: EncryptedAttachmentStore,
+    ): TripRepository = LocalTripRepository(tripDao, attachmentStore)
 
     @Provides
     @Singleton
     fun provideChecklistTemplateRepository(
         dao: ChecklistTemplateDao,
     ): ChecklistTemplateRepository = LocalChecklistTemplateRepository(dao)
+
+    @Provides
+    @Singleton
+    fun provideAttachmentRepository(
+        @ApplicationContext context: Context,
+        dao: AttachmentDao,
+        store: EncryptedAttachmentStore,
+    ): AttachmentRepository = LocalAttachmentRepository(context.contentResolver, dao, store)
 
     @Provides
     @Singleton

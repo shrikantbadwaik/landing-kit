@@ -42,6 +42,15 @@ data class ChecklistTemplateItem(
     val category: ItemCategory = ItemCategory.CHECKLIST,
 )
 
+data class KitAttachment(
+    val id: String,
+    val tripId: String,
+    val displayName: String,
+    val mimeType: String,
+    val sizeBytes: Long,
+    val createdAtMillis: Long,
+)
+
 enum class ItemCategory { CHECKLIST, DOCUMENT, TRANSPORT, MONEY, SAFETY }
 
 object TripValidator {

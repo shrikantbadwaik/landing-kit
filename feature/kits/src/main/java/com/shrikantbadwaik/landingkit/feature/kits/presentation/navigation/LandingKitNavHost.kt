@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -158,6 +159,9 @@ internal fun LandingKitNavHost(
             composable<KitRoute.Detail> { backStackEntry ->
                 val route = backStackEntry.toRoute<KitRoute.Detail>()
                 val trip = trips.firstOrNull { it.id == route.tripId }
+                val attachments by remember(route.tripId) {
+                    viewModel.attachments(route.tripId)
+                }.collectAsStateWithLifecycle(initialValue = emptyList())
                 var missingRouteConfirmed by remember(route.tripId) { mutableStateOf(false) }
                 val deletedMessage = trip?.let {
                     stringResource(R.string.kit_deleted_message, it.destination)
@@ -181,6 +185,7 @@ internal fun LandingKitNavHost(
                 } else {
                     KitDetailScreen(
                         trip = trip,
+                        attachments = attachments,
                         onBack = { navController.popBackStack() },
                         onEdit = { navController.navigate(KitRoute.Edit(trip.id)) },
                         onDelete = {
@@ -202,6 +207,12 @@ internal fun LandingKitNavHost(
                         onCheck = { item, checked ->
                             viewModel.setComplete(trip.id, item.id, checked)
                         },
+                        onImportAttachments = { sources, onComplete ->
+                            viewModel.importAttachments(trip.id, sources, onComplete)
+                        },
+                        onLoadAttachmentThumbnail = viewModel::attachmentThumbnail,
+                        onPrepareAttachment = viewModel::prepareAttachment,
+                        onDeleteAttachment = viewModel::deleteAttachment,
                     )
                 }
             }

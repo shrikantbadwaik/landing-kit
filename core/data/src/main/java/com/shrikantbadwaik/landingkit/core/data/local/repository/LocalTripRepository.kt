@@ -2,6 +2,7 @@ package com.shrikantbadwaik.landingkit.core.data.local.repository
 
 import com.shrikantbadwaik.landingkit.core.data.TripRepository
 import com.shrikantbadwaik.landingkit.core.data.local.dao.TripDao
+import com.shrikantbadwaik.landingkit.core.data.local.attachment.EncryptedAttachmentStore
 import com.shrikantbadwaik.landingkit.core.data.local.mapper.toEntity
 import com.shrikantbadwaik.landingkit.core.data.local.mapper.toModel
 import com.shrikantbadwaik.landingkit.core.model.Trip
@@ -14,6 +15,7 @@ import kotlinx.coroutines.sync.withLock
 /** Room-backed, durable device-local source of truth. */
 class LocalTripRepository(
     private val tripDao: TripDao,
+    private val attachmentStore: EncryptedAttachmentStore,
 ) : TripRepository {
     private val writeMutex = Mutex()
 
@@ -34,6 +36,7 @@ class LocalTripRepository(
 
     override suspend fun deleteTrip(id: String) = writeMutex.withLock {
         tripDao.deleteTrip(id)
+        attachmentStore.deleteTrip(id)
     }
 
     override suspend fun setItemComplete(

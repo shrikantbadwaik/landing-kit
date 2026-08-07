@@ -10,6 +10,8 @@ The durable product vision, research findings, roadmap, non-goals, and decision 
 - Customise each readiness checklist by adding, renaming, completing, reordering, and removing tasks.
 - Apply curated checklist starters or save personal device-local templates for future kits.
 - Validate required arrival details explicitly, retain past kits for reference, and recover from stale local routes.
+- Import ticket images, QR screenshots, and PDFs through a full-width evidence tray, then preview, open, or delete them from the arrival card.
+- Encrypt attachment copies with an Android Keystore-backed AES-GCM key and keep their metadata in Room.
 - Explore a polished sample kit for Kyoto.
 - Persist trips and checklist progress in an app-private Room database.
 - Persist lightweight user preferences with AndroidX DataStore.
@@ -46,7 +48,7 @@ The interface uses a travel-journal/boarding-pass visual language: expressive ed
 
 Fraunces and Manrope are bundled in `core/designsystem/src/main/res/font` and remain available offline. Their OFL license texts live in `licenses/`.
 
-Room now provides the device-local source of truth through coroutine-aware DAO operations and observable `Flow` queries. Trips and personal checklist templates have separate repositories, while Room migration `1 → 2` adds template tables without modifying existing trip records. Exported schemas are checked into `core/data/schemas`, giving future database changes an explicit migration and test surface. Room entities deliberately remain inside the data module; UI and domain code continue to depend only on repository contracts and domain models.
+Room now provides the device-local source of truth through coroutine-aware DAO operations and observable `Flow` queries. Trips, personal checklist templates, and attachment metadata have separate repositories. Room migration `1 → 2` adds template tables and `2 → 3` adds attachment metadata without modifying existing trip records. Exported schemas are checked into `core/data/schemas`, giving future database changes an explicit migration and test surface. Room entities deliberately remain inside the data module; UI and domain code continue to depend only on repository contracts and domain models.
 
 Hilt owns the application dependency graph. `LandingKitViewModel` uses constructor injection, while the data module's `DataModule` provides singleton database, repository, and preferences instances. This replaces the previous handwritten service locator in `Application`, keeps data wiring beside its implementations, and keeps dependencies explicit and testable.
 
@@ -56,9 +58,11 @@ Dependency coordinates, plugin versions, Compose BOM, and SDK/toolchain levels a
 
 ## Privacy posture
 
-The manifest intentionally omits `android.permission.INTERNET`. Trip records are stored under the app sandbox, Android backup is disabled, and nothing is exported automatically. Uninstalling the app removes its data.
+The manifest intentionally omits `android.permission.INTERNET` and broad storage permissions. Trip records are stored under the app sandbox, Android backup is disabled, and nothing is exported automatically. Uninstalling the app removes its data.
 
-This first milestone does **not** yet import passports, tickets, or other sensitive files. Before supporting those, add Android Keystore-backed encryption, explicit retention controls, and user-initiated encrypted backup/export through the Storage Access Framework.
+User-selected ticket images and PDFs are copied into app-private storage and encrypted with AES-GCM using a non-exportable Android Keystore key. Image thumbnails are generated during import and encrypted separately, allowing the gallery to render without decrypting every full attachment. Opening an attachment creates a temporary decrypted cache file exposed through a narrowly scoped, read-only `FileProvider` grant; deleting the attachment also deletes its encrypted thumbnail and viewing preview. The original selected document is never modified. Imports are limited to 25 MB per file.
+
+Passport scans and other identity documents remain explicitly out of scope pending a dedicated security review. Android Sharesheet intake, access gating, and encrypted backup/export are not implemented yet.
 
 ## Build
 
@@ -72,7 +76,7 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Next product slices
 
-1. Encrypt imported documents and add QR/ticket attachments.
+1. Complete attachment intake through the Android Sharesheet and decide the biometric/device-credential policy.
 2. Add a large-text, one-handed "arrival mode" available from a notification.
 3. Add encrypted local export/import through Android's document picker.
 4. Add accessibility, instrumentation, and screenshot tests.

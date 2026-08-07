@@ -193,6 +193,36 @@
     <string name="detail_privacy_footer">AVAILABLE WITHOUT SIGNAL  •  STORED ON THIS DEVICE</string>
     <string name="date_format_detail">EEEE, d MMMM yyyy</string>
 
+    <!-- Arrival evidence -->
+    <string name="attachment_section_label">ARRIVAL EVIDENCE</string>
+    <string name="attachment_section_title">Tickets close at hand</string>
+    <string name="attachment_importing">Importing…</string>
+    <string name="attachment_section_description">Add confirmation PDFs, ticket screenshots or QR codes. An encrypted copy stays on this device.</string>
+    <string name="attachment_picker_title_more">Add another file</string>
+    <string name="attachment_open_description">Open %1$s</string>
+    <string name="attachment_remove_description">Remove %1$s</string>
+    <string name="attachment_identity_warning">Keep passports and identity documents out of Landing Kit for now.</string>
+    <string name="attachment_type_pdf" translatable="false">PDF</string>
+    <string name="attachment_type_image">IMAGE</string>
+    <string name="attachment_open">Open</string>
+    <string name="attachment_remove">Remove</string>
+    <string name="attachment_delete_title">Remove this attachment?</string>
+    <string name="attachment_delete_description">%1$s will be removed from this device. The original file won’t change.</string>
+    <string name="attachment_delete_action">Remove attachment</string>
+    <string name="attachment_keep_action">Keep it</string>
+    <string name="attachment_removed">%1$s removed from this device.</string>
+    <plurals name="attachment_imported">
+        <item quantity="one">%d file encrypted and saved offline.</item>
+        <item quantity="other">%d files encrypted and saved offline.</item>
+    </plurals>
+    <string name="attachment_import_partial">%1$d saved · %2$d couldn’t be imported.</string>
+    <string name="attachment_import_too_large">Each file must be 25 MB or smaller.</string>
+    <string name="attachment_import_unsupported">Choose a PDF or an image.</string>
+    <string name="attachment_import_failed">Those files couldn’t be imported. Try choosing them again.</string>
+    <string name="attachment_open_failed">This attachment couldn’t be opened.</string>
+    <string name="attachment_no_viewer">No app on this device can open this file type.</string>
+    <string name="attachment_delete_failed">This attachment couldn’t be removed. Try again.</string>
+
     <!-- Kit management -->
     <string name="kit_edit">Edit kit</string>
     <string name="kit_manage_label">MANAGE THIS KIT</string>

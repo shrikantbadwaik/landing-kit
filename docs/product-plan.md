@@ -125,7 +125,7 @@ Builder and app-promotion communities were treated as competition signals rather
 - Data exists only on the device unless the user explicitly exports it.
 - Uninstalling the app removes its data.
 - Android backup is disabled.
-- No documents or images are imported yet.
+- Images and PDFs can be imported intentionally through Android's document picker; Sharesheet intake is not available yet.
 - There is no cross-device synchronisation or real-time safety check-in.
 
 ## Prioritised roadmap
@@ -146,13 +146,14 @@ Success condition: a user can maintain a kit throughout its useful lifecycle wit
 
 Goal: eliminate searching through email, Files, and screenshots at the moment of arrival.
 
-- Import screenshots, images, PDFs, tickets, and QR codes.
-- Accept content through Android Sharesheet and the Storage Access Framework.
-- Attach evidence to the appropriate arrival-kit section.
-- Encrypt imported files using Android Keystore-backed keys.
-- Add biometric or device-credential protection where appropriate.
-- Provide explicit deletion and retention controls.
-- Keep passport scans and similarly high-risk identity documents out of the first attachment release.
+- [x] Import screenshots, images, PDFs, tickets, and QR codes through the Storage Access Framework.
+- [ ] Accept content through the Android Sharesheet.
+- [x] Attach evidence to a dedicated arrival-kit section.
+- [x] Encrypt imported files using Android Keystore-backed AES-GCM keys.
+- [ ] Add biometric or device-credential protection where appropriate.
+- [x] Provide explicit per-attachment deletion and remove generated previews with the attachment.
+- [ ] Define longer-term retention and automatic-expiry policy.
+- [x] Keep passport scans and similarly high-risk identity documents out of the first attachment release.
 
 Success condition: a user can retrieve a booking confirmation or QR code offline within two taps.
 
@@ -261,6 +262,9 @@ Early validation should focus on behaviour rather than download volume:
 - Added additive curated templates plus device-local personal templates with explicit deletion and a non-destructive Room 1-to-2 migration.
 - Completed the kit lifecycle with explicit required-field validation, honest missing-kit recovery, calm empty states, and retained past-arrival references ordered behind upcoming travel.
 - Limited arrival-date selection to today or later; existing kits naturally become past references over time and remain editable without allowing accidental historical dates.
+- Began Phase 2 with a verified attachment vertical slice: SAF image/PDF intake, Room metadata migration `2 → 3`, 25 MB limits, Android Keystore-backed AES-GCM storage, two-tap offline viewing through a narrow `FileProvider`, and explicit deletion that leaves the source document unchanged.
+- Kept Android Sharesheet intake, biometric/device-credential gating, and a long-term retention policy as open Phase 2 work rather than weakening the first secure slice.
+- Replaced the small attachment action with a tappable evidence tray and compact preview gallery; image thumbnails remain encrypted at rest, PDF entries use an honest document treatment, and deletion stays available directly on each preview.
 
 ## Maintaining this plan
 

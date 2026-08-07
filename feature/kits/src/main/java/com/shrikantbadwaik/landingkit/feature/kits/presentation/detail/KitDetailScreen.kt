@@ -1,5 +1,9 @@
 package com.shrikantbadwaik.landingkit.feature.kits.presentation.detail
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,22 +23,31 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import com.shrikantbadwaik.landingkit.core.data.PreparedAttachment
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.ArrivalItem
+import com.shrikantbadwaik.landingkit.core.model.KitAttachment
 import com.shrikantbadwaik.landingkit.core.model.Trip
+import com.shrikantbadwaik.landingkit.feature.kits.AttachmentImportResult
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.TicketIllustration
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AnimatedChecklistItem
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AttachmentSection
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DeleteAttachmentDialog
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DeleteKitDialog
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DetailCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.EditKitAction
@@ -45,18 +58,67 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPha
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.arrivalPhase
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.delay
 
 @Composable
 internal fun KitDetailScreen(
     trip: Trip,
+    attachments: List<KitAttachment>,
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onCheck: (ArrivalItem, Boolean) -> Unit,
+    onImportAttachments: (List<android.net.Uri>, (AttachmentImportResult) -> Unit) -> Unit,
+    onLoadAttachmentThumbnail: suspend (String) -> ByteArray?,
+    onPrepareAttachment: (String, (Result<PreparedAttachment>) -> Unit) -> Unit,
+    onDeleteAttachment: (String, (Result<Unit>) -> Unit) -> Unit,
 ) {
+    val context = LocalContext.current
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var attachmentPendingDeletion by remember { mutableStateOf<KitAttachment?>(null) }
+    var attachmentFeedback by remember { mutableStateOf<String?>(null) }
+    var attachmentFeedbackVersion by remember { mutableIntStateOf(0) }
+    var isImportingAttachment by remember { mutableStateOf(false) }
     val dateFormatter = DateTimeFormatter.ofPattern(stringResource(R.string.date_format_detail))
     val phase = remember(trip.arrivalDate) { trip.arrivalPhase(LocalDate.now()) }
+    val showAttachmentFeedback: (String) -> Unit = { message ->
+        attachmentFeedback = message
+        attachmentFeedbackVersion++
+    }
+    val attachmentPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenMultipleDocuments(),
+    ) { sources ->
+        if (sources.isNotEmpty()) {
+            isImportingAttachment = true
+            onImportAttachments(sources) { result ->
+                isImportingAttachment = false
+                val rejected = result.unsupported + result.tooLarge + result.failed
+                val message = when {
+                    result.imported > 0 && rejected > 0 -> context.getString(
+                        R.string.attachment_import_partial,
+                        result.imported,
+                        rejected,
+                    )
+                    result.imported > 0 -> context.resources.getQuantityString(
+                        R.plurals.attachment_imported,
+                        result.imported,
+                        result.imported,
+                    )
+                    result.tooLarge > 0 -> context.getString(R.string.attachment_import_too_large)
+                    result.unsupported > 0 -> context.getString(R.string.attachment_import_unsupported)
+                    else -> context.getString(R.string.attachment_import_failed)
+                }
+                showAttachmentFeedback(message)
+            }
+        }
+    }
+
+    LaunchedEffect(attachmentFeedbackVersion) {
+        if (attachmentFeedback != null) {
+            delay(ATTACHMENT_FEEDBACK_DURATION_MILLIS)
+            attachmentFeedback = null
+        }
+    }
 
     if (showDeleteConfirmation) {
         DeleteKitDialog(
@@ -66,6 +128,25 @@ internal fun KitDetailScreen(
                 onDelete()
             },
             onDismiss = { showDeleteConfirmation = false },
+        )
+    }
+
+    attachmentPendingDeletion?.let { attachment ->
+        DeleteAttachmentDialog(
+            attachment = attachment,
+            onDismiss = { attachmentPendingDeletion = null },
+            onDelete = {
+                attachmentPendingDeletion = null
+                onDeleteAttachment(attachment.id) { result ->
+                    showAttachmentFeedback(
+                        if (result.isSuccess) {
+                            context.getString(R.string.attachment_removed, attachment.displayName)
+                        } else {
+                            context.getString(R.string.attachment_delete_failed)
+                        },
+                    )
+                }
+            },
         )
     }
 
@@ -134,6 +215,47 @@ internal fun KitDetailScreen(
                 item(key = "detail_past_notice") {
                     PastArrivalNotice()
                 }
+            }
+            item(key = "detail_attachments") {
+                AttachmentSection(
+                    attachments = attachments,
+                    isImporting = isImportingAttachment,
+                    feedback = attachmentFeedback,
+                    onLoadThumbnail = onLoadAttachmentThumbnail,
+                    onImport = {
+                        attachmentPicker.launch(arrayOf(PDF_MIME_TYPE, IMAGE_MIME_TYPE))
+                    },
+                    onOpen = { attachment ->
+                        onPrepareAttachment(attachment.id) { result ->
+                            result.onSuccess { prepared ->
+                                val contentUri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    prepared.file,
+                                )
+                                val intent = Intent(Intent.ACTION_VIEW)
+                                    .setDataAndType(contentUri, prepared.mimeType)
+                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                try {
+                                    context.startActivity(intent)
+                                } catch (_: ActivityNotFoundException) {
+                                    showAttachmentFeedback(
+                                        context.getString(R.string.attachment_no_viewer),
+                                    )
+                                } catch (_: RuntimeException) {
+                                    showAttachmentFeedback(
+                                        context.getString(R.string.attachment_open_failed),
+                                    )
+                                }
+                            }.onFailure {
+                                showAttachmentFeedback(
+                                    context.getString(R.string.attachment_open_failed),
+                                )
+                            }
+                        }
+                    },
+                    onDelete = { attachmentPendingDeletion = it },
+                )
             }
             item(key = "detail_driver_address") {
                 DetailCard(
@@ -232,3 +354,7 @@ internal fun KitDetailScreen(
         }
     }
 }
+
+private const val PDF_MIME_TYPE = "application/pdf"
+private const val IMAGE_MIME_TYPE = "image/*"
+private const val ATTACHMENT_FEEDBACK_DURATION_MILLIS = 4_000L
