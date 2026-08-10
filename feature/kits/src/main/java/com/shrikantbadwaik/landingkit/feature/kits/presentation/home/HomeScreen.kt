@@ -110,6 +110,7 @@ internal fun HomeScreen(
                                 },
                             ),
                             style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
                     CoralButton(label = stringResource(R.string.home_new_kit), onClick = onCreate)
@@ -155,6 +156,7 @@ internal fun HomeScreen(
                         Text(
                             text = stringResource(R.string.home_past_arrivals),
                             style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
                 }

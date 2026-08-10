@@ -169,7 +169,7 @@ Goal: provide a one-handed, high-legibility experience for the moment after land
 - [x] Emergency contact.
 - [x] Quick access to the user-selected most important attachment, with the newest saved file as a deterministic fallback.
 - [x] Optional local notification for fast entry.
-- [ ] Complete large-text and screen-reader validation. The first screen ships with a scroll-safe layout, strong contrast, semantic address heading, and labelled navigation.
+- [x] Complete large-text and screen-reader validation. Arrival Mode is verified at 200% text in light and dark themes, remains scroll-safe with long local-language content, exposes a pane title and navigable headings, and keeps labelled actions at or above the 48dp target minimum.
 
 Success condition: the essential arrival flow remains usable while tired, carrying luggage, or communicating with a driver.
 
@@ -292,6 +292,9 @@ Early validation should focus on behaviour rather than download volume:
 - Kept notification content private on the lock screen and verified permission timing, Room migration, alarm scheduling/cancellation, persisted state, and direct Arrival Mode routing on the emulator.
 - Verified a real posted notification end to end: it displayed the intended destination-specific copy, opened the correct Arrival Mode when tapped, cleared itself afterward, and left no active alarm after the reminder was disabled.
 - Replaced the parent trip's destructive SQLite `REPLACE` write with Room `Upsert`; this prevents kit edits from cascading into deletion of saved attachment rows. Verified on the emulator by saving an existing kit and confirming its original booking PDF remained available.
+- Completed Phase 3 accessibility validation on the emulator at 200% text in both light and dark themes. The long Japanese address, transfer guidance, ticket action, emergency details, and footer remain readable without clipping or overlap.
+- Added an on-device Compose accessibility regression test for the Arrival Mode pane title, heading structure, labelled actions, lazy-list sections, and 48dp Back target. The test uncovered and fixed a Back-button semantic action that TalkBack could focus but could not activate.
+- Corrected theme-controlled Home headings and custom-card content colors so they remain legible when the system uses dark mode.
 
 ## Maintaining this plan
 

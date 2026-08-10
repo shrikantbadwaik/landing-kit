@@ -42,7 +42,10 @@ internal fun CoralButton(label: String, onClick: () -> Unit) {
 @Composable
 internal fun EmptyKitCard(onCreate: () -> Unit, onSample: () -> Unit) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = LandingKitColors.Lavender.copy(alpha = .55f)),
+        colors = CardDefaults.cardColors(
+            containerColor = LandingKitColors.Lavender.copy(alpha = .55f),
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ),
         shape = RoundedCornerShape(30.dp),
     ) {
         Column(Modifier.padding(24.dp)) {
@@ -86,6 +89,7 @@ internal fun NoUpcomingArrivalsCard() {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = LandingKitColors.Seafoam.copy(alpha = .28f),
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ),
         shape = RoundedCornerShape(24.dp),
     ) {

@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.data.PreparedAttachment
@@ -61,6 +62,7 @@ internal fun ArrivalModeScreen(
     onLockAttachmentAccess: () -> Unit,
 ) {
     val content = remember(trip, attachments) { trip.toArrivalModeContent(attachments) }
+    val screenTitle = stringResource(R.string.arrival_mode_header)
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val openAttachment = rememberProtectedAttachmentOpener(
@@ -78,6 +80,7 @@ internal fun ArrivalModeScreen(
     )
 
     Scaffold(
+        modifier = Modifier.semantics { paneTitle = screenTitle },
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
@@ -116,10 +119,7 @@ internal fun ArrivalModeScreen(
                         Spacer(Modifier.height(20.dp))
                         Text(
                             text = content.address,
-                            modifier = Modifier.semantics {
-                                heading()
-                                contentDescription = content.address
-                            },
+                            modifier = Modifier.semantics { heading() },
                             style = MaterialTheme.typography.headlineLarge,
                             color = Color.White,
                         )
@@ -244,6 +244,7 @@ private fun ArrivalModeInfoCard(
             Column(Modifier.weight(1f)) {
                 Text(
                     text = label,
+                    modifier = Modifier.semantics { heading() },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary,
                 )
@@ -276,7 +277,10 @@ private fun ArrivalEvidenceAction(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 152.dp)
-            .semantics { contentDescription = openDescription },
+            .semantics(mergeDescendants = true) {
+                heading()
+                contentDescription = openDescription
+            },
         shape = RoundedCornerShape(24.dp),
         color = LandingKitColors.Sun.copy(alpha = 0.24f),
         contentColor = LandingKitColors.Ink,

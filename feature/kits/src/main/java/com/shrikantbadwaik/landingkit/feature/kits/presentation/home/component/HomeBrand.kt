@@ -76,6 +76,7 @@ private fun BrandMark() {
 internal fun PrivacyNote() {
     Surface(
         color = LandingKitColors.Seafoam.copy(alpha = .42f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
         shape = RoundedCornerShape(18.dp),
     ) {
         Row(

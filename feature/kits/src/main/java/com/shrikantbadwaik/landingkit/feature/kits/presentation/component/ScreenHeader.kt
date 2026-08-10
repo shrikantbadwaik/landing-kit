@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.feature.kits.R
@@ -30,7 +32,7 @@ internal fun ScreenHeader(onBack: () -> Unit, label: String, badge: String) {
     ) {
         Surface(
             onClick = onBack,
-            modifier = Modifier.size(46.dp).clearAndSetSemantics {
+            modifier = Modifier.size(48.dp).semantics {
                 contentDescription = backDescription
             },
             color = MaterialTheme.colorScheme.surface,
@@ -39,11 +41,19 @@ internal fun ScreenHeader(onBack: () -> Unit, label: String, badge: String) {
             shadowElevation = 2.dp,
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.symbol_back), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = stringResource(R.string.symbol_back),
+                    modifier = Modifier.clearAndSetSemantics {},
+                    style = MaterialTheme.typography.titleMedium,
+                )
             }
         }
         Spacer(Modifier.width(13.dp))
-        Text(label, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.weight(1f).semantics { heading() },
+        )
         Surface(color = LandingKitColors.Sun.copy(alpha = .55f), shape = CircleShape) {
             Text(
                 badge,

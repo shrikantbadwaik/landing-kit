@@ -13,7 +13,10 @@ android {
     namespace = "com.shrikantbadwaik.landingkit.feature.kits"
     compileSdk = libs.versions.compile.sdk.get().toInt()
 
-    defaultConfig { minSdk = libs.versions.min.sdk.get().toInt() }
+    defaultConfig {
+        minSdk = libs.versions.min.sdk.get().toInt()
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
     buildFeatures { compose = true }
 
     compileOptions {
@@ -51,4 +54,11 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     testImplementation(libs.junit)
+
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
