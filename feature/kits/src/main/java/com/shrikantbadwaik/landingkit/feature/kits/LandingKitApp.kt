@@ -10,11 +10,13 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.navigation.Landi
 fun LandingKitApp(viewModel: LandingKitViewModel) {
     val tripCollection by viewModel.trips.collectAsStateWithLifecycle()
     val templates by viewModel.templates.collectAsStateWithLifecycle()
+    val pendingSharedAttachments by viewModel.pendingSharedAttachments.collectAsStateWithLifecycle()
     when (val state = tripCollection) {
         TripCollectionState.Loading -> LoadingScreen()
         is TripCollectionState.Ready -> LandingKitNavHost(
             trips = state.trips,
             personalTemplates = templates,
+            pendingSharedAttachments = pendingSharedAttachments,
             viewModel = viewModel,
         )
     }

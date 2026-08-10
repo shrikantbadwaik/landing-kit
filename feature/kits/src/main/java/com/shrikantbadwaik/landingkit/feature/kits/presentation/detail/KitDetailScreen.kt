@@ -43,6 +43,7 @@ import com.shrikantbadwaik.landingkit.core.model.KitAttachment
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.AttachmentImportResult
 import com.shrikantbadwaik.landingkit.feature.kits.R
+import com.shrikantbadwaik.landingkit.feature.kits.toUserMessage
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.TicketIllustration
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AnimatedChecklistItem
@@ -92,23 +93,7 @@ internal fun KitDetailScreen(
             isImportingAttachment = true
             onImportAttachments(sources) { result ->
                 isImportingAttachment = false
-                val rejected = result.unsupported + result.tooLarge + result.failed
-                val message = when {
-                    result.imported > 0 && rejected > 0 -> context.getString(
-                        R.string.attachment_import_partial,
-                        result.imported,
-                        rejected,
-                    )
-                    result.imported > 0 -> context.resources.getQuantityString(
-                        R.plurals.attachment_imported,
-                        result.imported,
-                        result.imported,
-                    )
-                    result.tooLarge > 0 -> context.getString(R.string.attachment_import_too_large)
-                    result.unsupported > 0 -> context.getString(R.string.attachment_import_unsupported)
-                    else -> context.getString(R.string.attachment_import_failed)
-                }
-                showAttachmentFeedback(message)
+                showAttachmentFeedback(result.toUserMessage(context))
             }
         }
     }

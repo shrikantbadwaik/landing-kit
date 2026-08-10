@@ -125,7 +125,7 @@ Builder and app-promotion communities were treated as competition signals rather
 - Data exists only on the device unless the user explicitly exports it.
 - Uninstalling the app removes its data.
 - Android backup is disabled.
-- Images and PDFs can be imported intentionally through Android's document picker; Sharesheet intake is not available yet.
+- Images and PDFs can be imported intentionally through Android's document picker or shared into an existing kit through Android's Sharesheet.
 - There is no cross-device synchronisation or real-time safety check-in.
 
 ## Prioritised roadmap
@@ -147,7 +147,7 @@ Success condition: a user can maintain a kit throughout its useful lifecycle wit
 Goal: eliminate searching through email, Files, and screenshots at the moment of arrival.
 
 - [x] Import screenshots, images, PDFs, tickets, and QR codes through the Storage Access Framework.
-- [ ] Accept content through the Android Sharesheet.
+- [x] Accept content through the Android Sharesheet.
 - [x] Attach evidence to a dedicated arrival-kit section.
 - [x] Encrypt imported files using Android Keystore-backed AES-GCM keys.
 - [ ] Add biometric or device-credential protection where appropriate.
@@ -265,6 +265,13 @@ Early validation should focus on behaviour rather than download volume:
 - Began Phase 2 with a verified attachment vertical slice: SAF image/PDF intake, Room metadata migration `2 → 3`, 25 MB limits, Android Keystore-backed AES-GCM storage, two-tap offline viewing through a narrow `FileProvider`, and explicit deletion that leaves the source document unchanged.
 - Kept Android Sharesheet intake, biometric/device-credential gating, and a long-term retention policy as open Phase 2 work rather than weakening the first secure slice.
 - Replaced the small attachment action with a tappable evidence tray and compact preview gallery; image thumbnails remain encrypted at rest, PDF entries use an honest document treatment, and deletion stays available directly on each preview.
+
+### 10 August 2026
+
+- Completed Android Sharesheet intake for single and multiple PDF/image streams, including cold-start and already-open app delivery.
+- Added an arrival-kit chooser before import, then routed shared content through the existing size validation and Android Keystore-backed encrypted attachment pipeline.
+- Kept attachment intake honest when no kit exists: users are asked to create a kit first rather than silently creating incomplete trip data.
+- Preserved the no-backend, no-account, and no-network-permission posture; biometric/device-credential policy and long-term retention remain the next Phase 2 decisions.
 
 ## Maintaining this plan
 

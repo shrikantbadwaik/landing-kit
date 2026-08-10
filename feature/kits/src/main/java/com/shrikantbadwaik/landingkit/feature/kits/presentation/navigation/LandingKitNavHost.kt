@@ -32,6 +32,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,7 +45,9 @@ import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.ChecklistTemplate
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.LandingKitViewModel
+import com.shrikantbadwaik.landingkit.feature.kits.PendingSharedAttachments
 import com.shrikantbadwaik.landingkit.feature.kits.R
+import com.shrikantbadwaik.landingkit.feature.kits.toUserMessage
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.LoadingScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.MissingKitScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.KitDetailScreen
@@ -53,6 +56,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.HomeScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.curatedChecklistTemplates
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.defaultChecklistContent
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.sampleTripContent
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.share.SharedAttachmentSheet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -60,6 +64,7 @@ import kotlinx.coroutines.launch
 internal fun LandingKitNavHost(
     trips: List<Trip>,
     personalTemplates: List<ChecklistTemplate>,
+    pendingSharedAttachments: PendingSharedAttachments?,
     viewModel: LandingKitViewModel,
     navController: NavHostController = rememberNavController(),
 ) {
@@ -68,6 +73,10 @@ internal fun LandingKitNavHost(
     var animatedTripIds by remember { mutableStateOf(emptySet<String>()) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var importingSharedAttachmentsInto by remember(pendingSharedAttachments?.id) {
+        mutableStateOf<String?>(null)
+    }
     val checklistContent = defaultChecklistContent()
     val curatedTemplates = curatedChecklistTemplates()
     val sampleContent = sampleTripContent(checklistContent)
@@ -284,16 +293,44 @@ internal fun LandingKitNavHost(
                         text = snackbarData.visuals.message,
                         modifier = Modifier.weight(1f),
                     )
-                    TextButton(
-                        onClick = snackbarData::performAction,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = LandingKitColors.Sun,
-                        ),
-                    ) {
-                        Text(stringResource(R.string.kit_undo_action))
+                    snackbarData.visuals.actionLabel?.let { actionLabel ->
+                        TextButton(
+                            onClick = snackbarData::performAction,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = LandingKitColors.Sun,
+                            ),
+                        ) {
+                            Text(actionLabel)
+                        }
                     }
                 }
             }
+        }
+
+        pendingSharedAttachments?.let { pending ->
+            SharedAttachmentSheet(
+                pending = pending,
+                trips = trips,
+                importingTripId = importingSharedAttachmentsInto,
+                onDismiss = { viewModel.dismissSharedAttachments(pending.id) },
+                onSelectTrip = { trip ->
+                    importingSharedAttachmentsInto = trip.id
+                    viewModel.importSharedAttachments(
+                        pendingId = pending.id,
+                        tripId = trip.id,
+                    ) { result ->
+                        importingSharedAttachmentsInto = null
+                        if (result.imported > 0) {
+                            navController.navigate(KitRoute.Detail(trip.id)) {
+                                launchSingleTop = true
+                            }
+                        }
+                        scope.launch {
+                            snackbarHostState.showSnackbar(result.toUserMessage(context))
+                        }
+                    }
+                },
+            )
         }
     }
 }

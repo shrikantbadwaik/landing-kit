@@ -223,6 +223,20 @@
     <string name="attachment_no_viewer">No app on this device can open this file type.</string>
     <string name="attachment_delete_failed">This attachment couldn’t be removed. Try again.</string>
 
+    <!-- Android Sharesheet intake -->
+    <string name="share_sheet_label">SHARED TO LANDING KIT</string>
+    <string name="share_sheet_title">Keep it with an arrival</string>
+    <plurals name="share_sheet_count">
+        <item quantity="one">%d file is ready. Choose a kit and an encrypted copy will stay on this device.</item>
+        <item quantity="other">%d files are ready. Choose a kit and encrypted copies will stay on this device.</item>
+    </plurals>
+    <string name="share_sheet_choose_kit">CHOOSE AN ARRIVAL KIT</string>
+    <string name="share_sheet_trip_supporting_text">%1$s  •  %2$s</string>
+    <string name="share_sheet_not_now">Not now</string>
+    <string name="share_sheet_empty_title">Create an arrival kit first</string>
+    <string name="share_sheet_empty_description">There isn’t a kit to save these files to yet. Create one, then share the files to Landing Kit again.</string>
+    <string name="share_sheet_got_it">Got it</string>
+
     <!-- Kit management -->
     <string name="kit_edit">Edit kit</string>
     <string name="kit_manage_label">MANAGE THIS KIT</string>

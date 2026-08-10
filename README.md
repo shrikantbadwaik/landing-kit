@@ -10,7 +10,7 @@ The durable product vision, research findings, roadmap, non-goals, and decision 
 - Customise each readiness checklist by adding, renaming, completing, reordering, and removing tasks.
 - Apply curated checklist starters or save personal device-local templates for future kits.
 - Validate required arrival details explicitly, retain past kits for reference, and recover from stale local routes.
-- Import ticket images, QR screenshots, and PDFs through a full-width evidence tray, then preview, open, or delete them from the arrival card.
+- Import ticket images, QR screenshots, and PDFs through a compact evidence gallery or Android's Sharesheet, then preview, open, or delete them from the arrival card.
 - Encrypt attachment copies with an Android Keystore-backed AES-GCM key and keep their metadata in Room.
 - Explore a polished sample kit for Kyoto.
 - Persist trips and checklist progress in an app-private Room database.
@@ -62,7 +62,7 @@ The manifest intentionally omits `android.permission.INTERNET` and broad storage
 
 User-selected ticket images and PDFs are copied into app-private storage and encrypted with AES-GCM using a non-exportable Android Keystore key. Image thumbnails are generated during import and encrypted separately, allowing the gallery to render without decrypting every full attachment. Opening an attachment creates a temporary decrypted cache file exposed through a narrowly scoped, read-only `FileProvider` grant; deleting the attachment also deletes its encrypted thumbnail and viewing preview. The original selected document is never modified. Imports are limited to 25 MB per file.
 
-Passport scans and other identity documents remain explicitly out of scope pending a dedicated security review. Android Sharesheet intake, access gating, and encrypted backup/export are not implemented yet.
+Passport scans and other identity documents remain explicitly out of scope pending a dedicated security review. Android Sharesheet intake routes single or multiple PDF/image streams through the same encrypted import pipeline after the user chooses an arrival kit. Access gating and encrypted backup/export are not implemented yet.
 
 ## Build
 
@@ -76,7 +76,7 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Next product slices
 
-1. Complete attachment intake through the Android Sharesheet and decide the biometric/device-credential policy.
+1. Decide the biometric/device-credential policy for attachment access and define attachment retention/expiry behaviour.
 2. Add a large-text, one-handed "arrival mode" available from a notification.
 3. Add encrypted local export/import through Android's document picker.
 4. Add accessibility, instrumentation, and screenshot tests.

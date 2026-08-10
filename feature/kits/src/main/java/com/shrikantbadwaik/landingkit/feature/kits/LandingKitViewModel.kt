@@ -1,5 +1,6 @@
 package com.shrikantbadwaik.landingkit.feature.kits
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,10 +21,14 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 @HiltViewModel
 class LandingKitViewModel @Inject constructor(
@@ -31,6 +36,11 @@ class LandingKitViewModel @Inject constructor(
     private val templateRepository: ChecklistTemplateRepository,
     private val attachmentRepository: AttachmentRepository,
 ) : ViewModel() {
+    private val _pendingSharedAttachments = MutableStateFlow<PendingSharedAttachments?>(null)
+    private val sharedAttachmentImports = ConcurrentHashMap.newKeySet<String>()
+    val pendingSharedAttachments: StateFlow<PendingSharedAttachments?> =
+        _pendingSharedAttachments.asStateFlow()
+
     internal val trips: StateFlow<TripCollectionState> = repository.observeTrips()
         .map<List<Trip>, TripCollectionState>(TripCollectionState::Ready)
         .stateIn(
@@ -96,31 +106,71 @@ class LandingKitViewModel @Inject constructor(
 
     internal fun importAttachments(
         tripId: String,
-        sources: List<android.net.Uri>,
+        sources: List<Uri>,
         onComplete: (AttachmentImportResult) -> Unit,
     ) {
         viewModelScope.launch {
-            var imported = 0
-            var unsupported = 0
-            var tooLarge = 0
-            var failed = 0
-            sources.forEach { source ->
-                try {
-                    attachmentRepository.importAttachment(tripId, source)
-                    imported++
-                } catch (_: UnsupportedAttachmentException) {
-                    unsupported++
-                } catch (_: AttachmentTooLargeException) {
-                    tooLarge++
-                } catch (cancellation: CancellationException) {
-                    throw cancellation
-                } catch (error: Throwable) {
-                    Log.e(ATTACHMENT_LOG_TAG, "Attachment import failed", error)
-                    failed++
-                }
-            }
-            onComplete(AttachmentImportResult(imported, unsupported, tooLarge, failed))
+            onComplete(importAttachmentSources(tripId, sources))
         }
+    }
+
+    fun acceptSharedAttachments(sources: List<Uri>) {
+        if (sources.isEmpty()) return
+        _pendingSharedAttachments.value = PendingSharedAttachments(
+            id = UUID.randomUUID().toString(),
+            sources = sources.distinct(),
+        )
+    }
+
+    internal fun dismissSharedAttachments(pendingId: String) {
+        _pendingSharedAttachments.compareAndSet(
+            expect = _pendingSharedAttachments.value?.takeIf { it.id == pendingId },
+            update = null,
+        )
+    }
+
+    internal fun importSharedAttachments(
+        pendingId: String,
+        tripId: String,
+        onComplete: (AttachmentImportResult) -> Unit,
+    ) {
+        val pending = _pendingSharedAttachments.value?.takeIf { it.id == pendingId } ?: return
+        if (!sharedAttachmentImports.add(pendingId)) return
+        viewModelScope.launch {
+            try {
+                val result = importAttachmentSources(tripId, pending.sources)
+                _pendingSharedAttachments.compareAndSet(expect = pending, update = null)
+                onComplete(result)
+            } finally {
+                sharedAttachmentImports.remove(pendingId)
+            }
+        }
+    }
+
+    private suspend fun importAttachmentSources(
+        tripId: String,
+        sources: List<Uri>,
+    ): AttachmentImportResult {
+        var imported = 0
+        var unsupported = 0
+        var tooLarge = 0
+        var failed = 0
+        sources.forEach { source ->
+            try {
+                attachmentRepository.importAttachment(tripId, source)
+                imported++
+            } catch (_: UnsupportedAttachmentException) {
+                unsupported++
+            } catch (_: AttachmentTooLargeException) {
+                tooLarge++
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Throwable) {
+                Log.e(ATTACHMENT_LOG_TAG, "Attachment import failed", error)
+                failed++
+            }
+        }
+        return AttachmentImportResult(imported, unsupported, tooLarge, failed)
     }
 
     internal fun prepareAttachment(
@@ -161,6 +211,11 @@ internal data class AttachmentImportResult(
     val unsupported: Int,
     val tooLarge: Int,
     val failed: Int,
+)
+
+data class PendingSharedAttachments(
+    val id: String,
+    val sources: List<Uri>,
 )
 
 private const val ATTACHMENT_LOG_TAG = "LandingKitAttachment"
