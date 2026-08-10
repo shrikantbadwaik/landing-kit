@@ -174,9 +174,95 @@ Goal: provide a one-handed, high-legibility experience for the moment after land
 
 Success condition: the essential arrival flow remains usable while tired, carrying luggage, or communicating with a driver.
 
+### Phase 3.5 — Arrival resilience
+
+Goal: prove that the critical arrival path still works when connectivity, transport, language, check-in, or device conditions are less reliable than expected.
+
+This is a post-MVP enhancement phase and is not a prerequisite for the first beta rollout. Its features can ship independently when research and traveller testing justify them.
+
+#### 3.5.1 — Verified offline arrival test
+
+Priority: P0
+
+- [ ] Add a “Check my arrival kit” rehearsal that verifies essential arrival details are present.
+- [ ] Prove that the selected ticket or confirmation exists in app-owned storage, decrypts successfully, and can be rendered locally.
+- [ ] Use concrete results such as “Ready on this phone”, “Needs attention”, and “Not checked” instead of a percentage or safety score.
+- [ ] Record when the kit was last checked and invalidate that result after relevant details, attachments, or quick-access choices change.
+- [ ] Clearly distinguish a static saved copy from a live pass and explain that rotating codes or changed travel details may still require the original provider.
+- [ ] State honestly that readiness on this phone does not protect against a lost, broken, or discharged device.
+
+Exit condition: in airplane mode, the traveller can open Arrival Mode, retrieve the local-language address, and display the selected ticket or confirmation without unavailable content or an unexpected dependency.
+
+#### 3.5.2 — Operational Arrival Plan B
+
+Priority: P0
+
+- [ ] Store fallback transport, user-recorded last-service information, accommodation check-in cutoff, late-arrival instructions, and accommodation contact details.
+- [ ] Allow an optional expected cost or payment fallback and alternate-stay note without turning Landing Kit into a live transport or booking service.
+- [ ] Record when volatile details were last checked and present them as traveller-supplied notes rather than live truth.
+- [ ] Add a focused “If delayed” card to Arrival Mode.
+- [ ] Extend the offline arrival test with independent Plan B readiness rules.
+
+Exit condition: when the primary transfer or check-in plan fails, the traveller can find an actionable, previously prepared fallback without connectivity.
+
+#### 3.5.3 — Private Handoff Mode
+
+Priority: P1
+
+- [ ] Show only traveller-selected local-language content such as the stay name, address, phone number, or prepared phrase.
+- [ ] Hide booking references, attachments, notes, and navigation paths that could expose the rest of the kit while the phone is handed to another person.
+- [ ] Use large, high-contrast, scroll-safe text with screen-reader support.
+- [ ] Return to protected app content when the handoff ends or times out.
+
+Deferred from this sub-milestone: offline text-to-speech. Reconsider it only when the required on-device voice exists and user testing shows that speech improves the handoff.
+
+Exit condition: a traveller can show a driver or receptionist the needed information without revealing unrelated private trip details.
+
+#### 3.5.4 — Honest Ticket Presentation
+
+Priority: P1
+
+- [ ] Present saved images, PDFs, tickets, and QR codes without cropping, with fit-to-screen and deliberate zoom.
+- [ ] Support rotation, temporary display brightness, and screen-awake behaviour while presenting the ticket.
+- [ ] Show saved-copy and freshness context without implying that static information is live.
+- [ ] Keep exit and return-to-arrival actions obvious and accessible.
+
+Exit condition: common portrait, landscape, long-document, and QR-code evidence can be presented reliably at a checkpoint without exposing unrelated attachments.
+
+#### 3.5.5 — Travel-day Actions
+
+Priority: P2
+
+- [ ] Add one-tap, user-initiated call, message, copy-address, and open-in-map actions through Android system capabilities.
+- [ ] Validate whether travellers want an optional prefilled “I arrived” system share before adding it.
+
+Excluded from this sub-milestone: background location, automatic monitoring, missed-check-in escalation, and emergency-response claims.
+
+Exit condition: the traveller can contact the accommodation, hand an address to another app, or deliberately notify someone without Landing Kit tracking them or requiring a backend.
+
+#### 3.5.6 — Faster Entry Experiment
+
+Priority: P2
+
+- [ ] Prototype privacy-conscious Android app shortcuts and a home-screen widget for the next relevant Arrival Mode.
+- [ ] Keep sensitive destination and accommodation details hidden by default outside the app.
+- [ ] Compare app launch, notification, shortcut, and widget retrieval time with representative travellers.
+- [ ] Retain only the entry points that are measurably faster and clearly understood.
+
+Exit condition: a validated shortcut reduces time and interaction cost without leaking sensitive arrival information or cluttering the product.
+
+Integration rules:
+
+- The 3.5.1 readiness engine must accept independent rules so 3.5.2 and later Phase 5 preparation checks can extend it without becoming one monolithic score.
+- Phase 4 handles failures that an on-device readiness test cannot solve: device loss, damage, battery exhaustion, uninstall, and device replacement.
+- Phase 5 prepares reusable information and tasks that the Phase 3.5 rehearsal can verify.
+- Phase 6 validates the complete chain in airplane mode, with one-handed use, large text, TalkBack, and simulated arrival failures.
+
+Success condition: before departure, a traveller can rehearse the arrival flow and confirm that their primary details, fallback plan, human handoff, and selected ticket remain usable without Landing Kit connectivity or an account.
+
 ### Phase 4 — Controlled backup and handoff
 
-Goal: address device loss without introducing a mandatory backend.
+Goal: address device loss without introducing a mandatory backend
 
 - Generate a concise printable arrival summary.
 - Export and import an encrypted local backup.
@@ -297,6 +383,8 @@ Early validation should focus on behaviour rather than download volume:
 - Added an on-device Compose accessibility regression test for the Arrival Mode pane title, heading structure, labelled actions, lazy-list sections, and 48dp Back target. The test uncovered and fixed a Back-button semantic action that TalkBack could focus but could not activate.
 - Corrected theme-controlled Home headings and custom-card content colors so they remain legible when the system uses dark mode.
 - Completed app-wide dark mode using the device appearance. Added a deliberate semantic dark palette, dark launch and system-bar resources, theme-safe custom surfaces across Home, editor, detail, Arrival Mode, attachments, and sharing, plus an on-device contrast regression test for every Material text/container pair.
+- Added Phase 3.5 as a non-blocking, evidence-led arrival-resilience phase. It focuses on offline rehearsal, explicit fallback plans, privacy-safe human handoff, faster Android entry points, reliable ticket presentation, and user-initiated contact actions without broadening Landing Kit into a live itinerary or tracking service.
+- Structured Phase 3.5 into six independently shippable sub-milestones: verified offline arrival, operational Plan B, private handoff, honest ticket presentation, travel-day actions, and a measured faster-entry experiment. Connected their readiness rules and validation explicitly to Phases 4, 5, and 6.
 
 ## Maintaining this plan
 
