@@ -75,11 +75,13 @@ internal fun AttachmentSection(
     feedback: String?,
     protectionEnabled: Boolean,
     protectionControlEnabled: Boolean,
+    showRetentionCleanup: Boolean,
     onLoadThumbnail: suspend (String) -> ByteArray?,
     onImport: () -> Unit,
     onOpen: (KitAttachment) -> Unit,
     onDelete: (KitAttachment) -> Unit,
     onProtectionChange: (Boolean) -> Unit,
+    onClearAttachments: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -142,6 +144,51 @@ internal fun AttachmentSection(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            AnimatedVisibility(
+                visible = showRetentionCleanup,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                AttachmentRetentionCleanup(onClearAttachments = onClearAttachments)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AttachmentRetentionCleanup(onClearAttachments: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = LandingKitColors.Coral.copy(alpha = .09f),
+        border = BorderStroke(1.dp, LandingKitColors.Coral.copy(alpha = .24f)),
+    ) {
+        Column(Modifier.padding(14.dp)) {
+            Text(
+                text = stringResource(R.string.attachment_retention_label),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+            Text(
+                text = stringResource(R.string.attachment_retention_title),
+                modifier = Modifier.padding(top = 6.dp),
+                style = MaterialTheme.typography.titleSmall,
+            )
+            Text(
+                text = stringResource(R.string.attachment_retention_description),
+                modifier = Modifier.padding(top = 3.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(
+                onClick = onClearAttachments,
+                modifier = Modifier.align(Alignment.End),
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
+            ) {
+                Text(stringResource(R.string.attachment_cleanup_action))
+            }
         }
     }
 }
@@ -477,6 +524,44 @@ internal fun DeleteAttachmentDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.attachment_keep_action)) }
+        },
+        shape = RoundedCornerShape(24.dp),
+    )
+}
+
+@Composable
+internal fun ClearAttachmentsDialog(
+    attachmentCount: Int,
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.attachment_cleanup_dialog_title)) },
+        text = {
+            Text(
+                text = androidx.compose.ui.res.pluralStringResource(
+                    R.plurals.attachment_cleanup_dialog_description,
+                    attachmentCount,
+                    attachmentCount,
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onDelete,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
+            ) {
+                Text(stringResource(R.string.attachment_cleanup_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.attachment_cleanup_keep))
+            }
         },
         shape = RoundedCornerShape(24.dp),
     )

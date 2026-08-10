@@ -152,7 +152,7 @@ Goal: eliminate searching through email, Files, and screenshots at the moment of
 - [x] Encrypt imported files using Android Keystore-backed AES-GCM keys.
 - [x] Add biometric or device-credential protection where appropriate.
 - [x] Provide explicit per-attachment deletion and remove generated previews with the attachment.
-- [ ] Define longer-term retention and automatic-expiry policy.
+- [x] Define longer-term retention and automatic-expiry policy.
 - [x] Keep passport scans and similarly high-risk identity documents out of the first attachment release.
 
 Success condition: a user can retrieve a booking confirmation or QR code offline within two taps.
@@ -275,7 +275,9 @@ Early validation should focus on behaviour rather than download volume:
 - Added optional biometric or device-credential confirmation before decrypting an attachment for viewing. A successful confirmation unlocks evidence for five minutes while Landing Kit remains foregrounded; leaving the app locks it immediately.
 - Required confirmation when enabling protection and when disabling it from a locked session, preventing the preference control from becoming a bypass.
 - Kept the security claim precise: attachment files remain encrypted at rest, while authentication is an app-level viewing gate rather than a biometric-bound encryption-key migration.
-- Left long-term attachment retention and automatic expiry as the final open Phase 2 product decision.
+- Completed Phase 2 with a conservative retention policy: evidence never expires silently, remains until explicit deletion, and past arrivals offer a confirmed bulk-cleanup action.
+- Bulk cleanup removes app-private encrypted files, thumbnails, previews, and Room metadata while leaving every original source document unchanged.
+- Chose user-controlled cleanup over scheduled auto-deletion because travel receipts and booking evidence may remain useful after arrival, and silent deletion would undermine an offline reliability product.
 
 ## Maintaining this plan
 

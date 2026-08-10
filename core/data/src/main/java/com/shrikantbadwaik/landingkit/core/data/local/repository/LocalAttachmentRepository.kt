@@ -127,6 +127,13 @@ class LocalAttachmentRepository(
         }
     }
 
+    override suspend fun deleteAttachments(tripId: String): Int = withContext(Dispatchers.IO) {
+        attachmentMutex.withLock {
+            store.deleteTrip(tripId)
+            dao.deleteAttachments(tripId)
+        }
+    }
+
     private fun Uri.metadata(): SourceMetadata {
         val providerType = contentResolver.getType(this)
         var name: String? = null

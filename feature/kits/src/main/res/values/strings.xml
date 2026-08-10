@@ -231,6 +231,22 @@
     <string name="attachment_authentication_not_enrolled">Set up a screen lock or biometric in Android Settings before enabling protection.</string>
     <string name="attachment_authentication_unavailable">Biometric or screen-lock confirmation isn’t available on this device.</string>
     <string name="attachment_protection_disabled_unavailable">Protection was turned off because device confirmation is no longer available.</string>
+    <string name="attachment_retention_label">PAST ARRIVAL</string>
+    <string name="attachment_retention_title">Keep it, or clear it when you’re ready</string>
+    <string name="attachment_retention_description">Landing Kit never expires evidence automatically. Remove these private copies when you no longer need them.</string>
+    <string name="attachment_cleanup_action">Remove all evidence</string>
+    <string name="attachment_cleanup_dialog_title">Remove all arrival evidence?</string>
+    <plurals name="attachment_cleanup_dialog_description">
+        <item quantity="one">This encrypted copy will be permanently removed from Landing Kit. The original file won’t change.</item>
+        <item quantity="other">All %d encrypted copies will be permanently removed from Landing Kit. The original files won’t change.</item>
+    </plurals>
+    <string name="attachment_cleanup_confirm">Remove all files</string>
+    <string name="attachment_cleanup_keep">Keep them</string>
+    <plurals name="attachment_cleanup_complete">
+        <item quantity="one">%d attachment removed from this device.</item>
+        <item quantity="other">%d attachments removed from this device.</item>
+    </plurals>
+    <string name="attachment_cleanup_failed">These attachments couldn’t be removed. Try again.</string>
 
     <!-- Android Sharesheet intake -->
     <string name="share_sheet_label">SHARED TO LANDING KIT</string>

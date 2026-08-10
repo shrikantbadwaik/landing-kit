@@ -257,6 +257,22 @@ class LandingKitViewModel @Inject constructor(
             onDeleted(result)
         }
     }
+
+    internal fun deleteAttachments(
+        tripId: String,
+        onDeleted: (Result<Int>) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val result = try {
+                Result.success(attachmentRepository.deleteAttachments(tripId))
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Throwable) {
+                Result.failure(error)
+            }
+            onDeleted(result)
+        }
+    }
 }
 
 internal data class AttachmentImportResult(

@@ -11,6 +11,7 @@ interface AttachmentRepository {
     suspend fun loadThumbnail(attachmentId: String): ByteArray?
     suspend fun prepareForViewing(attachmentId: String): PreparedAttachment
     suspend fun deleteAttachment(attachmentId: String)
+    suspend fun deleteAttachments(tripId: String): Int
 }
 
 data class PreparedAttachment(

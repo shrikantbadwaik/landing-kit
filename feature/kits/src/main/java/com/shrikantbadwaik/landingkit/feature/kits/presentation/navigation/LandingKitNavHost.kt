@@ -226,6 +226,9 @@ internal fun LandingKitNavHost(
                         onLoadAttachmentThumbnail = viewModel::attachmentThumbnail,
                         onPrepareAttachment = viewModel::prepareAttachment,
                         onDeleteAttachment = viewModel::deleteAttachment,
+                        onDeleteAttachments = { onDeleted ->
+                            viewModel.deleteAttachments(trip.id, onDeleted)
+                        },
                         attachmentProtectionEnabled = attachmentProtectionEnabled,
                         isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
                         pendingAttachmentAuthentication = pendingAttachmentAuthentication,

@@ -53,6 +53,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.Ticket
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AnimatedChecklistItem
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AttachmentSection
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DeleteAttachmentDialog
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.ClearAttachmentsDialog
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DeleteKitDialog
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DetailCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.EditKitAction
@@ -61,6 +62,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.PastArrivalNotice
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPhase
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.arrivalPhase
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.shouldOfferAttachmentCleanup
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.AttachmentAuthenticationAvailability
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.AttachmentAuthenticator
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.findFragmentActivity
@@ -80,6 +82,7 @@ internal fun KitDetailScreen(
     onLoadAttachmentThumbnail: suspend (String) -> ByteArray?,
     onPrepareAttachment: (String, (Result<PreparedAttachment>) -> Unit) -> Unit,
     onDeleteAttachment: (String, (Result<Unit>) -> Unit) -> Unit,
+    onDeleteAttachments: ((Result<Int>) -> Unit) -> Unit,
     attachmentProtectionEnabled: Boolean,
     isAttachmentAccessUnlocked: Boolean,
     pendingAttachmentAuthentication: PendingAttachmentAuthentication?,
@@ -94,6 +97,7 @@ internal fun KitDetailScreen(
     val authenticator = remember(activity) { activity?.let(::AttachmentAuthenticator) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var attachmentPendingDeletion by remember { mutableStateOf<KitAttachment?>(null) }
+    var showClearAttachmentsConfirmation by remember { mutableStateOf(false) }
     var attachmentFeedback by remember { mutableStateOf<String?>(null) }
     var attachmentFeedbackVersion by remember { mutableIntStateOf(0) }
     var isImportingAttachment by remember { mutableStateOf(false) }
@@ -245,6 +249,32 @@ internal fun KitDetailScreen(
         )
     }
 
+    if (showClearAttachmentsConfirmation) {
+        ClearAttachmentsDialog(
+            attachmentCount = attachments.size,
+            onDismiss = { showClearAttachmentsConfirmation = false },
+            onDelete = {
+                showClearAttachmentsConfirmation = false
+                onDeleteAttachments { result ->
+                    showAttachmentFeedback(
+                        result.fold(
+                            onSuccess = { deleted ->
+                                context.resources.getQuantityString(
+                                    R.plurals.attachment_cleanup_complete,
+                                    deleted,
+                                    deleted,
+                                )
+                            },
+                            onFailure = {
+                                context.getString(R.string.attachment_cleanup_failed)
+                            },
+                        ),
+                    )
+                }
+            },
+        )
+    }
+
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -318,6 +348,10 @@ internal fun KitDetailScreen(
                     feedback = attachmentFeedback,
                     protectionEnabled = attachmentProtectionEnabled,
                     protectionControlEnabled = pendingAttachmentAuthentication == null,
+                    showRetentionCleanup = shouldOfferAttachmentCleanup(
+                        arrivalPhase = phase,
+                        attachmentCount = attachments.size,
+                    ),
                     onLoadThumbnail = onLoadAttachmentThumbnail,
                     onImport = {
                         attachmentPicker.launch(arrayOf(PDF_MIME_TYPE, IMAGE_MIME_TYPE))
@@ -345,6 +379,7 @@ internal fun KitDetailScreen(
                             )
                         }
                     },
+                    onClearAttachments = { showClearAttachmentsConfirmation = true },
                     onDelete = { attachmentPendingDeletion = it },
                 )
             }

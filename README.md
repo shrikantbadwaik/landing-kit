@@ -13,6 +13,7 @@ The durable product vision, research findings, roadmap, non-goals, and decision 
 - Import ticket images, QR screenshots, and PDFs through a compact evidence gallery or Android's Sharesheet, then preview, open, or delete them from the arrival card.
 - Encrypt attachment copies with an Android Keystore-backed AES-GCM key and keep their metadata in Room.
 - Optionally require biometrics or the device screen lock before decrypting attachments for viewing.
+- Keep evidence until explicit deletion and offer confirmed bulk cleanup on past arrivals; nothing expires silently.
 - Explore a polished sample kit for Kyoto.
 - Persist trips and checklist progress in an app-private Room database.
 - Persist lightweight user preferences with AndroidX DataStore.
@@ -63,7 +64,7 @@ The manifest intentionally omits `android.permission.INTERNET` and broad storage
 
 User-selected ticket images and PDFs are copied into app-private storage and encrypted with AES-GCM using a non-exportable Android Keystore key. Image thumbnails are generated during import and encrypted separately, allowing the gallery to render without decrypting every full attachment. Opening an attachment creates a temporary decrypted cache file exposed through a narrowly scoped, read-only `FileProvider` grant; deleting the attachment also deletes its encrypted thumbnail and viewing preview. The original selected document is never modified. Imports are limited to 25 MB per file.
 
-Passport scans and other identity documents remain explicitly out of scope pending a dedicated security review. Android Sharesheet intake routes single or multiple PDF/image streams through the same encrypted import pipeline after the user chooses an arrival kit. Optional biometric/device-credential protection gates attachment viewing for five minutes or until the app leaves the foreground. This is an app-level re-authorization gate; it does not make the existing encryption key biometric-bound. Encrypted backup/export is not implemented yet.
+Passport scans and other identity documents remain explicitly out of scope pending a dedicated security review. Android Sharesheet intake routes single or multiple PDF/image streams through the same encrypted import pipeline after the user chooses an arrival kit. Optional biometric/device-credential protection gates attachment viewing for five minutes or until the app leaves the foreground. This is an app-level re-authorization gate; it does not make the existing encryption key biometric-bound. Evidence never expires automatically; past arrivals provide explicit bulk cleanup that leaves source files unchanged. Encrypted backup/export is not implemented yet.
 
 ## Build
 
@@ -77,8 +78,7 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Next product slices
 
-1. Define attachment retention, cleanup, and automatic-expiry behaviour.
-2. Add a large-text, one-handed "arrival mode" available from a notification.
-3. Add encrypted local export/import through Android's document picker.
-4. Add accessibility, instrumentation, and screenshot tests.
-5. Validate the first-90-minutes card with frequent and anxious travellers before broad itinerary features.
+1. Add a large-text, one-handed "arrival mode" available from a notification.
+2. Add encrypted local export/import through Android's document picker.
+3. Add accessibility, instrumentation, and screenshot tests.
+4. Validate the first-90-minutes card with frequent and anxious travellers before broad itinerary features.

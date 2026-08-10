@@ -35,8 +35,8 @@ class LocalTripRepository(
     }
 
     override suspend fun deleteTrip(id: String) = writeMutex.withLock {
-        tripDao.deleteTrip(id)
         attachmentStore.deleteTrip(id)
+        tripDao.deleteTrip(id)
     }
 
     override suspend fun setItemComplete(

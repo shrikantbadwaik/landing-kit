@@ -11,6 +11,7 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.File
 import java.io.InputStream
+import java.io.IOException
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -118,10 +119,17 @@ class EncryptedAttachmentStore(context: Context) {
     }
 
     fun deleteTrip(tripId: String) {
-        safeChild(attachmentRoot, tripId).deleteRecursively()
+        val tripDirectory = safeChild(attachmentRoot, tripId)
+        if (tripDirectory.exists() && !tripDirectory.deleteRecursively()) {
+            throw IOException("Could not delete encrypted trip attachments")
+        }
         previewRoot.listFiles()
             ?.filter { it.name.startsWith("$tripId-") }
-            ?.forEach(File::delete)
+            ?.forEach { preview ->
+                if (preview.exists() && !preview.delete()) {
+                    throw IOException("Could not delete attachment preview")
+                }
+            }
     }
 
     private fun deletePreviews(tripId: String, attachmentId: String) {

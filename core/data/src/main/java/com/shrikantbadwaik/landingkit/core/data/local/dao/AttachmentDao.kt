@@ -20,4 +20,7 @@ interface AttachmentDao {
 
     @Query("DELETE FROM attachments WHERE id = :id")
     suspend fun deleteAttachment(id: String)
+
+    @Query("DELETE FROM attachments WHERE trip_id = :tripId")
+    suspend fun deleteAttachments(tripId: String): Int
 }
