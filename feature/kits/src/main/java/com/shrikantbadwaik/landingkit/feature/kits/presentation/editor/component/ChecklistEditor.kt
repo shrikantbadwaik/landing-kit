@@ -75,7 +75,8 @@ internal fun ChecklistEditor(
             Spacer(Modifier.width(12.dp))
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = LandingKitColors.Seafoam.copy(alpha = .55f),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ) {
                 Text(
                     text = pluralStringResource(
@@ -157,6 +158,7 @@ private fun ChecklistEditorItem(
         } else {
             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .42f)
         },
+        contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(
             1.dp,
             if (item.title.isBlank()) {
@@ -299,6 +301,7 @@ private fun ChecklistEmptyState() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         color = LandingKitColors.Sky.copy(alpha = .25f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(1.dp, LandingKitColors.Sky.copy(alpha = .6f)),
     ) {
         Column(Modifier.padding(16.dp)) {

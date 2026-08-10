@@ -17,6 +17,10 @@ internal fun LoadingScreen() {
         Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
-        Text(stringResource(R.string.loading_offline_kit), style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = stringResource(R.string.loading_offline_kit),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
     }
 }

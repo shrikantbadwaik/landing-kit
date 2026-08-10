@@ -116,6 +116,7 @@ Builder and app-promotion communities were treated as competition signals rather
 - Include a polished Kyoto sample kit.
 - Provide Home, Create, and Detail experiences.
 - Use a custom offline design system and bundled fonts.
+- Follow the device light or dark appearance across every app and system surface without requiring a separate setting.
 - Use calm hybrid animations without replaying full choreography on every return.
 - Offer an opt-in arrival-day notification that opens the correct kit directly in Arrival Mode.
 - Keep the application free of the `INTERNET` permission.
@@ -295,6 +296,7 @@ Early validation should focus on behaviour rather than download volume:
 - Completed Phase 3 accessibility validation on the emulator at 200% text in both light and dark themes. The long Japanese address, transfer guidance, ticket action, emergency details, and footer remain readable without clipping or overlap.
 - Added an on-device Compose accessibility regression test for the Arrival Mode pane title, heading structure, labelled actions, lazy-list sections, and 48dp Back target. The test uncovered and fixed a Back-button semantic action that TalkBack could focus but could not activate.
 - Corrected theme-controlled Home headings and custom-card content colors so they remain legible when the system uses dark mode.
+- Completed app-wide dark mode using the device appearance. Added a deliberate semantic dark palette, dark launch and system-bar resources, theme-safe custom surfaces across Home, editor, detail, Arrival Mode, attachments, and sharing, plus an on-device contrast regression test for every Material text/container pair.
 
 ## Maintaining this plan
 

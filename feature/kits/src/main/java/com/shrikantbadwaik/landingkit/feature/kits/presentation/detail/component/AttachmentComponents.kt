@@ -164,6 +164,7 @@ private fun AttachmentRetentionCleanup(onClearAttachments: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         color = LandingKitColors.Coral.copy(alpha = .09f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(1.dp, LandingKitColors.Coral.copy(alpha = .24f)),
     ) {
         Column(Modifier.padding(14.dp)) {
@@ -203,6 +204,11 @@ private fun AttachmentProtectionControl(
     onProtectionChange: (Boolean) -> Unit,
 ) {
     val toggleDescription = stringResource(R.string.attachment_protection_toggle_description)
+    val lockColor = if (protectionEnabled) {
+        MaterialTheme.colorScheme.onPrimary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -211,6 +217,7 @@ private fun AttachmentProtectionControl(
         } else {
             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .38f)
         },
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
@@ -221,14 +228,13 @@ private fun AttachmentProtectionControl(
                 modifier = Modifier.size(38.dp),
                 shape = CircleShape,
                 color = if (protectionEnabled) {
-                    LandingKitColors.Forest
+                    MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.outlineVariant
                 },
-                contentColor = if (protectionEnabled) Color.White else LandingKitColors.Ink,
+                contentColor = lockColor,
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    val lockColor = if (protectionEnabled) Color.White else LandingKitColors.Ink
                     Canvas(Modifier.size(18.dp)) {
                         val strokeWidth = 1.7.dp.toPx()
                         drawRoundRect(
@@ -324,7 +330,11 @@ private fun AttachmentPickerTile(
     onImport: () -> Unit,
 ) {
     val shape = RoundedCornerShape(20.dp)
-    val outlineColor = if (isImporting) LandingKitColors.Coral else LandingKitColors.Forest
+    val outlineColor = if (isImporting) {
+        MaterialTheme.colorScheme.secondary
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
     Column(
         modifier = Modifier
             .padding(top = 12.dp, end = 12.dp)
@@ -351,20 +361,20 @@ private fun AttachmentPickerTile(
         if (isImporting) {
             CircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
-                color = LandingKitColors.Forest,
+                color = MaterialTheme.colorScheme.primary,
                 strokeWidth = 2.dp,
             )
         } else {
             Box(
                 modifier = Modifier
                     .size(36.dp)
-                    .background(LandingKitColors.Forest, CircleShape),
+                    .background(MaterialTheme.colorScheme.primary, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "+",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                 )
             }
         }
@@ -376,7 +386,7 @@ private fun AttachmentPickerTile(
                 stringResource(R.string.attachment_picker_title_more)
             },
             style = MaterialTheme.typography.labelSmall,
-            color = LandingKitColors.Forest,
+            color = outlineColor,
             maxLines = 2,
             textAlign = TextAlign.Center,
         )
@@ -433,7 +443,7 @@ private fun AttachmentPreview(
             border = BorderStroke(
                 width = if (attachment.isQuickAccess) 2.dp else 1.dp,
                 color = if (attachment.isQuickAccess) {
-                    LandingKitColors.Forest
+                    MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.outlineVariant
                 },
@@ -495,22 +505,30 @@ private fun AttachmentPreview(
                     )
                     .border(
                         width = 1.dp,
-                        color = LandingKitColors.Forest.copy(
-                            alpha = if (attachment.isQuickAccess) .18f else .42f,
-                        ),
+                        color = if (attachment.isQuickAccess) {
+                            LandingKitColors.Forest.copy(alpha = .18f)
+                        } else {
+                            MaterialTheme.colorScheme.primary.copy(alpha = .62f)
+                        },
                         shape = CircleShape,
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                QuickAccessGlyph(selected = attachment.isQuickAccess)
+                QuickAccessGlyph(
+                    selected = attachment.isQuickAccess,
+                    color = if (attachment.isQuickAccess) {
+                        LandingKitColors.Forest
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
+                )
             }
         }
     }
 }
 
 @Composable
-private fun QuickAccessGlyph(selected: Boolean) {
-    val color = LandingKitColors.Forest
+private fun QuickAccessGlyph(selected: Boolean, color: Color) {
     Canvas(Modifier.size(18.dp)) {
         val stroke = 1.8.dp.toPx()
         val centerX = size.width * .5f

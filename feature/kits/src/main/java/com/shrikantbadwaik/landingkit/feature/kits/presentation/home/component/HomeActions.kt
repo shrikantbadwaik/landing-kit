@@ -43,8 +43,8 @@ internal fun CoralButton(label: String, onClick: () -> Unit) {
 internal fun EmptyKitCard(onCreate: () -> Unit, onSample: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = LandingKitColors.Lavender.copy(alpha = .55f),
-            contentColor = MaterialTheme.colorScheme.onSurface,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ),
         shape = RoundedCornerShape(30.dp),
     ) {
@@ -59,7 +59,7 @@ internal fun EmptyKitCard(onCreate: () -> Unit, onSample: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             Text(
                 stringResource(R.string.home_empty_description),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .76f),
             )
             Spacer(Modifier.height(22.dp))
             Button(

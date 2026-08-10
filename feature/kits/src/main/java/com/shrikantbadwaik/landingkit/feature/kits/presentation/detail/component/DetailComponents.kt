@@ -156,6 +156,7 @@ internal fun ArrivalReminderCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = backgroundColor,
+        contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(
             1.dp,
             if (enabled) {
@@ -182,7 +183,7 @@ internal fun ArrivalReminderCard(
                     .size(44.dp)
                     .clip(CircleShape)
                     .background(
-                        if (enabled) LandingKitColors.Forest else LandingKitColors.Sun,
+                        if (enabled) MaterialTheme.colorScheme.primary else LandingKitColors.Sun,
                     ),
                 contentAlignment = Alignment.Center,
             ) {
@@ -190,7 +191,11 @@ internal fun ArrivalReminderCard(
                     painter = painterResource(R.drawable.ic_notification_arrival),
                     contentDescription = null,
                     modifier = Modifier.size(22.dp),
-                    tint = if (enabled) Color.White else LandingKitColors.Forest,
+                    tint = if (enabled) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        LandingKitColors.Forest
+                    },
                 )
             }
             Column(Modifier.weight(1f)) {
@@ -236,6 +241,7 @@ internal fun KitDangerZone(onDelete: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = LandingKitColors.Coral.copy(alpha = 0.10f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(1.dp, LandingKitColors.Coral.copy(alpha = 0.28f)),
     ) {
         Column(Modifier.padding(18.dp)) {
@@ -444,6 +450,7 @@ internal fun PastArrivalNotice() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = LandingKitColors.Lavender.copy(alpha = .42f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(1.dp, LandingKitColors.Lavender.copy(alpha = .82f)),
     ) {
         Column(Modifier.padding(18.dp)) {

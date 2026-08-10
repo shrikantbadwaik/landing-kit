@@ -152,11 +152,29 @@ private val DarkColors = darkColorScheme(
     primaryContainer = Color(0xFF174B46),
     onPrimaryContainer = Color(0xFFC5F2E7),
     secondary = Color(0xFFFFB59E),
+    onSecondary = Color(0xFF5C1A0B),
     secondaryContainer = Color(0xFF74341F),
+    onSecondaryContainer = Color(0xFFFFDBD0),
+    tertiary = Color(0xFFB7CFB7),
+    onTertiary = Color(0xFF233426),
+    tertiaryContainer = Color(0xFF394B3B),
+    onTertiaryContainer = Color(0xFFD3EBD2),
     background = Color(0xFF101917),
+    onBackground = Color(0xFFE1EAE6),
     surface = Color(0xFF17211F),
+    onSurface = Color(0xFFE1EAE6),
     surfaceVariant = Color(0xFF25302E),
     onSurfaceVariant = Color(0xFFBFC9C5),
+    outline = Color(0xFF89938F),
+    outlineVariant = Color(0xFF3F4946),
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
+    inverseSurface = Color(0xFFE1EAE6),
+    inverseOnSurface = Color(0xFF2E3734),
+    inversePrimary = LandingKitColors.Forest,
+    scrim = Color.Black,
 )
 
 private val LandingKitShapes = Shapes(
@@ -166,9 +184,12 @@ private val LandingKitShapes = Shapes(
 )
 
 @Composable
-fun LandingKitTheme(content: @Composable () -> Unit) {
+fun LandingKitTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit,
+) {
     MaterialTheme(
-        colorScheme = if (isSystemInDarkTheme()) DarkColors else LightColors,
+        colorScheme = if (darkTheme) DarkColors else LightColors,
         typography = LandingKitTypography,
         shapes = LandingKitShapes,
         content = content,

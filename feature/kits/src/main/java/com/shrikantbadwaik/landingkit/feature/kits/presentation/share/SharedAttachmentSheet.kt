@@ -154,6 +154,7 @@ private fun TripDestination(
             .clickable(enabled = enabled, onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.56f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
@@ -207,6 +208,7 @@ private fun EmptyKitState(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         color = LandingKitColors.Seafoam.copy(alpha = 0.34f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column(Modifier.padding(20.dp)) {
             Text(

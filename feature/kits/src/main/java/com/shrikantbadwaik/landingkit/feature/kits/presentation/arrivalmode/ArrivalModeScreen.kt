@@ -282,9 +282,9 @@ private fun ArrivalEvidenceAction(
                 contentDescription = openDescription
             },
         shape = RoundedCornerShape(24.dp),
-        color = LandingKitColors.Sun.copy(alpha = 0.24f),
+        color = LandingKitColors.Sun,
         contentColor = LandingKitColors.Ink,
-        border = BorderStroke(1.dp, LandingKitColors.Sun.copy(alpha = 0.72f)),
+        border = BorderStroke(1.dp, LandingKitColors.Ink.copy(alpha = 0.12f)),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -319,7 +319,7 @@ private fun ArrivalEvidenceAction(
                 Text(
                     text = stringResource(R.string.arrival_mode_evidence_label),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = LandingKitColors.Ink,
                 )
                 Spacer(Modifier.height(5.dp))
                 Text(

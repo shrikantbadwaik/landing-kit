@@ -53,8 +53,13 @@ internal fun ScreenHeader(onBack: () -> Unit, label: String, badge: String) {
             text = label,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.weight(1f).semantics { heading() },
+            color = MaterialTheme.colorScheme.onBackground,
         )
-        Surface(color = LandingKitColors.Sun.copy(alpha = .55f), shape = CircleShape) {
+        Surface(
+            color = LandingKitColors.Sun,
+            contentColor = LandingKitColors.Ink,
+            shape = CircleShape,
+        ) {
             Text(
                 badge,
                 modifier = Modifier.padding(horizontal = 13.dp, vertical = 8.dp),

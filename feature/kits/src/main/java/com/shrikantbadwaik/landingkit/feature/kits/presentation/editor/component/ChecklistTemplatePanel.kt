@@ -209,6 +209,7 @@ private fun ChecklistTemplateCard(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = accent.copy(alpha = .22f),
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ),
         border = BorderStroke(1.dp, accent.copy(alpha = .75f)),
     ) {
@@ -220,6 +221,7 @@ private fun ChecklistTemplateCard(
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = accent.copy(alpha = .7f),
+                    contentColor = LandingKitColors.Ink,
                 ) {
                     Text(
                         text = stringResource(

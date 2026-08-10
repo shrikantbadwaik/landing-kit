@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.feature.kits.R
+import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -79,7 +80,11 @@ internal fun FormSection(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(color = accent, shape = RoundedCornerShape(12.dp)) {
+                Surface(
+                    color = accent,
+                    contentColor = LandingKitColors.Ink,
+                    shape = RoundedCornerShape(12.dp),
+                ) {
                     Text(
                         number,
                         modifier = Modifier.padding(horizontal = 11.dp, vertical = 8.dp),

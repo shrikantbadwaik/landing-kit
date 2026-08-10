@@ -39,7 +39,7 @@ class ArrivalModeAccessibilityTest {
         )
 
         composeRule.setContent {
-            LandingKitTheme {
+            LandingKitTheme(darkTheme = true) {
                 ArrivalModeScreen(
                     trip = sampleTrip,
                     attachments = listOf(sampleAttachment),

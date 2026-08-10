@@ -423,6 +423,7 @@ internal fun KitDetailScreen(
                         },
                     ),
                     style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
                 )
             }
             if (trip.items.isEmpty()) {

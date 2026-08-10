@@ -124,7 +124,7 @@
     <string name="template_save_current">Save this list</string>
     <string name="template_curated_label">CURATED</string>
     <string name="template_personal_label">YOUR TEMPLATE</string>
-    <string name="template_add_missing">Add missing tasks</string>
+    <string name="template_add_missing">Add</string>
     <plurals name="template_more_tasks">
         <item quantity="one">+%d more task</item>
         <item quantity="other">+%d more tasks</item>
