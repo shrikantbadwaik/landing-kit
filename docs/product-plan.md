@@ -18,7 +18,7 @@ Landing Kit is not intended to become another full itinerary planner.
 
 - Critical arrival information remains available without connectivity.
 - Everything important is reachable within one or two taps.
-- No account, ads, analytics, or backend is required.
+- No account, ads, or product backend is required, and every arrival feature remains available offline.
 - Private travel information stays on the user's device.
 - The experience reduces cognitive load at a stressful point in a journey.
 
@@ -49,7 +49,7 @@ Supporting jobs:
 ## Product principles
 
 1. **Offline is the default**, not a paid upgrade or degraded fallback.
-2. **Device-local by design**: no account, backend, ads, analytics, or automatic upload.
+2. **Device-local travel data by design**: no account, product backend, ads, or automatic upload of kit content. Firebase Analytics is limited to product telemetry, with Advertising ID collection and ad-personalization signals disabled, and must never receive destinations, addresses, booking details, notes, checklist content, or attachments.
 3. **Arrival-focused**: solve the first 90 minutes exceptionally well before expanding scope.
 4. **Calm under pressure**: important content should be readable, predictable, and quickly accessible.
 5. **Explicit user control**: importing, exporting, sharing, and deleting are always user-initiated.
@@ -119,7 +119,7 @@ Builder and app-promotion communities were treated as competition signals rather
 - Follow the device light or dark appearance across every app and system surface without requiring a separate setting.
 - Use calm hybrid animations without replaying full choreography on every return.
 - Offer an opt-in arrival-day notification that opens the correct kit directly in Arrival Mode.
-- Keep the application free of the `INTERNET` permission.
+- Keep every arrival feature functional without connectivity. Firebase Analytics may use the network for product telemetry, but kit content remains device-local and no travel data is included in custom analytics events.
 - Use a modular Android architecture with Hilt, Coroutines, Flow, Room, DataStore, Compose, and Material 3.
 - Centralise dependency versions and prohibit Grab/MyTeksi repositories and dependencies.
 
@@ -321,6 +321,8 @@ The planned product remains achievable without a proprietary backend:
 - WorkManager or alarm APIs provide local reminders.
 - Android Sharesheet and Storage Access Framework handle user-controlled exchange.
 
+Firebase Analytics is used only for product telemetry and is not a storage, synchronisation, account, or delivery backend for arrival kits. The app's travel features must not depend on Firebase availability, and kit content must never be added to analytics parameters or user properties.
+
 A backend should only be reconsidered if validated demand emerges for real-time cross-device sync, collaborative editing, or automated safety check-ins. Those capabilities require a separate privacy, security, cost, and operational decision.
 
 ## Product success measures
@@ -385,6 +387,7 @@ Early validation should focus on behaviour rather than download volume:
 - Completed app-wide dark mode using the device appearance. Added a deliberate semantic dark palette, dark launch and system-bar resources, theme-safe custom surfaces across Home, editor, detail, Arrival Mode, attachments, and sharing, plus an on-device contrast regression test for every Material text/container pair.
 - Added Phase 3.5 as a non-blocking, evidence-led arrival-resilience phase. It focuses on offline rehearsal, explicit fallback plans, privacy-safe human handoff, faster Android entry points, reliable ticket presentation, and user-initiated contact actions without broadening Landing Kit into a live itinerary or tracking service.
 - Structured Phase 3.5 into six independently shippable sub-milestones: verified offline arrival, operational Plan B, private handoff, honest ticket presentation, travel-day actions, and a measured faster-entry experiment. Connected their readiness rules and validation explicitly to Phases 4, 5, and 6.
+- Connected the Android app to Firebase using the Google Services plugin `4.5.0`, Firebase BoM `34.17.0`, and the main Firebase Analytics module through the central version catalog. This intentionally replaces the earlier no-analytics/no-network posture while keeping all kit content device-local and every arrival feature independent of Firebase availability. Disabled Advertising ID collection and ad-personalization signals and removed advertising-related SDK permissions.
 
 ## Maintaining this plan
 

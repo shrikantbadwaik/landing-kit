@@ -18,7 +18,7 @@ The durable product vision, research findings, roadmap, non-goals, and decision 
 - Explore a polished sample kit for Kyoto.
 - Persist trips and checklist progress in an app-private Room database.
 - Persist lightweight user preferences with AndroidX DataStore.
-- No account, analytics, ads, or network permission.
+- No account or ads. Firebase Analytics provides product telemetry when connectivity is available; every arrival feature remains usable offline.
 - Kotlin, Jetpack Compose, and Material 3 in a pragmatic feature/core module hierarchy.
 - Hilt-managed dependency injection with constructor-injected ViewModels and application-scoped data services.
 - Explicit Kotlin Coroutines and Flow dependencies for main-safe asynchronous work and reactive state.
@@ -61,7 +61,9 @@ Dependency coordinates, plugin versions, Compose BOM, and SDK/toolchain levels a
 
 ## Privacy posture
 
-The manifest intentionally omits `android.permission.INTERNET` and broad storage permissions. Trip records are stored under the app sandbox, Android backup is disabled, and nothing is exported automatically. Uninstalling the app removes its data.
+The app includes Firebase Analytics and therefore declares `android.permission.INTERNET` and `android.permission.ACCESS_NETWORK_STATE`. Firebase may collect its default app, device, and session telemetry when connectivity is available. Advertising ID collection and ad-personalization signals are disabled, and advertising-related permissions contributed by the SDK are removed during manifest merging. Landing Kit does not send destinations, addresses, booking details, notes, checklist content, or attachments to Firebase, and no custom analytics events containing travel content are implemented. Every arrival feature remains usable without connectivity.
+
+Trip records are stored under the app sandbox, Android backup is disabled, and no kit content is exported automatically. Uninstalling the app removes its data. Broad storage permissions remain intentionally absent.
 
 User-selected ticket images and PDFs are copied into app-private storage and encrypted with AES-GCM using a non-exportable Android Keystore key. Image thumbnails are generated during import and encrypted separately, allowing the gallery to render without decrypting every full attachment. Opening an attachment creates a temporary decrypted cache file exposed through a narrowly scoped, read-only `FileProvider` grant; deleting the attachment also deletes its encrypted thumbnail and viewing preview. The original selected document is never modified. Imports are limited to 25 MB per file.
 

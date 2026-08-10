@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "322790078588",
+    "project_id": "travel-with-thikana",
+    "storage_bucket": "travel-with-thikana.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:322790078588:android:c7042b3d2997d64952b1f9",
+        "android_client_info": {
+          "package_name": "com.shrikantbadwaik.travel.with.thikana"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBepG0xd-7fI6K_PM9RLWLMpUZDPmhnBoQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
