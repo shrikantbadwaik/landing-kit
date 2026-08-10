@@ -79,8 +79,7 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Next product slices
 
-1. Add a local notification shortcut into Arrival Mode.
-2. Complete large-text and screen-reader validation for Arrival Mode.
-3. Add encrypted local export/import through Android's document picker.
-4. Add accessibility, instrumentation, and screenshot tests.
-5. Validate the first-90-minutes card with frequent and anxious travellers before broad itinerary features.
+1. Complete large-text and screen-reader validation for Arrival Mode.
+2. Add encrypted local export/import through Android's document picker.
+3. Add accessibility, instrumentation, and screenshot tests.
+4. Validate the first-90-minutes card with frequent and anxious travellers before broad itinerary features.

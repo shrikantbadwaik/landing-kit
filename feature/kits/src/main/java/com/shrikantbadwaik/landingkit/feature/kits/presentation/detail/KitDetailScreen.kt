@@ -1,5 +1,8 @@
 package com.shrikantbadwaik.landingkit.feature.kits.presentation.detail
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.shrikantbadwaik.landingkit.core.data.PreparedAttachment
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.ArrivalItem
@@ -48,6 +52,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.Screen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.TicketIllustration
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AnimatedChecklistItem
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.ArrivalModeAction
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.ArrivalReminderCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AttachmentSection
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DeleteAttachmentDialog
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.ClearAttachmentsDialog
@@ -79,6 +84,7 @@ internal fun KitDetailScreen(
     onPrepareAttachment: (String, (Result<PreparedAttachment>) -> Unit) -> Unit,
     onDeleteAttachment: (String, (Result<Unit>) -> Unit) -> Unit,
     onSetQuickAccessAttachment: (String?, (Result<Unit>) -> Unit) -> Unit,
+    onSetArrivalReminder: (Boolean, (Result<Unit>) -> Unit) -> Unit,
     onDeleteAttachments: ((Result<Int>) -> Unit) -> Unit,
     attachmentProtectionEnabled: Boolean,
     isAttachmentAccessUnlocked: Boolean,
@@ -96,6 +102,8 @@ internal fun KitDetailScreen(
     var attachmentFeedback by remember { mutableStateOf<String?>(null) }
     var attachmentFeedbackVersion by remember { mutableIntStateOf(0) }
     var isImportingAttachment by remember { mutableStateOf(false) }
+    var arrivalReminderPermissionDenied by remember(trip.id) { mutableStateOf(false) }
+    var arrivalReminderChangeFailed by remember(trip.id) { mutableStateOf(false) }
     val dateFormatter = DateTimeFormatter.ofPattern(stringResource(R.string.date_format_detail))
     val phase = remember(trip.arrivalDate) { trip.arrivalPhase(LocalDate.now()) }
     val showAttachmentFeedback: (String) -> Unit = { message ->
@@ -110,6 +118,34 @@ internal fun KitDetailScreen(
             onImportAttachments(sources) { result ->
                 isImportingAttachment = false
                 showAttachmentFeedback(result.toUserMessage(context))
+            }
+        }
+    }
+    val reminderPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        arrivalReminderPermissionDenied = !granted
+        if (granted) {
+            onSetArrivalReminder(true) { result ->
+                arrivalReminderChangeFailed = result.isFailure
+            }
+        }
+    }
+    val setArrivalReminder: (Boolean) -> Unit = { enabled ->
+        arrivalReminderChangeFailed = false
+        if (
+            enabled &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            reminderPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            arrivalReminderPermissionDenied = false
+            onSetArrivalReminder(enabled) { result ->
+                arrivalReminderChangeFailed = result.isFailure
             }
         }
     }
@@ -261,6 +297,17 @@ internal fun KitDetailScreen(
             if (phase == ArrivalPhase.PAST) {
                 item(key = "detail_past_notice") {
                     PastArrivalNotice()
+                }
+            }
+            if (phase != ArrivalPhase.PAST) {
+                item(key = "detail_arrival_reminder") {
+                    ArrivalReminderCard(
+                        enabled = trip.arrivalReminderEnabled,
+                        arrivalDate = trip.arrivalDate.format(dateFormatter),
+                        permissionDenied = arrivalReminderPermissionDenied,
+                        changeFailed = arrivalReminderChangeFailed,
+                        onEnabledChange = setArrivalReminder,
+                    )
                 }
             }
             item(key = "detail_attachments") {

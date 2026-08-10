@@ -46,4 +46,11 @@ class LocalTripRepository(
     ) = writeMutex.withLock {
         tripDao.setItemComplete(tripId = tripId, itemId = itemId, complete = complete)
     }
+
+    override suspend fun setArrivalReminderEnabled(
+        tripId: String,
+        enabled: Boolean,
+    ) = writeMutex.withLock {
+        tripDao.setArrivalReminderEnabled(tripId = tripId, enabled = enabled)
+    }
 }

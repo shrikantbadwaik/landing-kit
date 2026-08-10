@@ -12,6 +12,7 @@ import com.shrikantbadwaik.landingkit.core.data.local.dao.TripDao
 import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_1_2
 import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_2_3
 import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_3_4
+import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_4_5
 import com.shrikantbadwaik.landingkit.core.data.local.database.LandingKitDatabase
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalChecklistTemplateRepository
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalAttachmentRepository
@@ -35,7 +36,12 @@ object DataModule {
         context,
         LandingKitDatabase::class.java,
         "landing_kit.db",
-    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
+    ).addMigrations(
+        MIGRATION_1_2,
+        MIGRATION_2_3,
+        MIGRATION_3_4,
+        MIGRATION_4_5,
+    ).build()
 
     @Provides
     fun provideTripDao(database: LandingKitDatabase): TripDao = database.tripDao()

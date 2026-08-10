@@ -17,4 +17,5 @@ data class TripEntity(
     @ColumnInfo(name = "currency_note") val currencyNote: String,
     @ColumnInfo(name = "emergency_contact") val emergencyContact: String,
     @ColumnInfo(name = "dietary_phrase") val dietaryPhrase: String,
+    @ColumnInfo(name = "arrival_reminder_enabled") val arrivalReminderEnabled: Boolean,
 )

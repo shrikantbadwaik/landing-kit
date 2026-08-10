@@ -11,6 +11,8 @@ fun LandingKitApp(viewModel: LandingKitViewModel) {
     val tripCollection by viewModel.trips.collectAsStateWithLifecycle()
     val templates by viewModel.templates.collectAsStateWithLifecycle()
     val pendingSharedAttachments by viewModel.pendingSharedAttachments.collectAsStateWithLifecycle()
+    val pendingArrivalModeTripId by
+        viewModel.pendingArrivalModeTripId.collectAsStateWithLifecycle()
     val attachmentProtectionEnabled by
         viewModel.attachmentProtectionEnabled.collectAsStateWithLifecycle()
     val isAttachmentAccessUnlocked by
@@ -23,6 +25,7 @@ fun LandingKitApp(viewModel: LandingKitViewModel) {
             trips = state.trips,
             personalTemplates = templates,
             pendingSharedAttachments = pendingSharedAttachments,
+            pendingArrivalModeTripId = pendingArrivalModeTripId,
             attachmentProtectionEnabled = attachmentProtectionEnabled,
             isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
             pendingAttachmentAuthentication = pendingAttachmentAuthentication,

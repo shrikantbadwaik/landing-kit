@@ -9,6 +9,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -127,6 +130,101 @@ internal fun ArrivalModeAction(
             Text(
                 stringResource(R.string.arrival_mode_action),
                 style = MaterialTheme.typography.labelLarge,
+            )
+        }
+    }
+}
+
+@Composable
+internal fun ArrivalReminderCard(
+    enabled: Boolean,
+    arrivalDate: String,
+    permissionDenied: Boolean,
+    changeFailed: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (enabled) {
+            LandingKitColors.Seafoam.copy(alpha = .28f)
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+        animationSpec = tween(240),
+        label = "Arrival reminder background",
+    )
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = backgroundColor,
+        border = BorderStroke(
+            1.dp,
+            if (enabled) {
+                LandingKitColors.Forest.copy(alpha = .22f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            },
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .toggleable(
+                    value = enabled,
+                    role = Role.Switch,
+                    onValueChange = onEnabledChange,
+                )
+                .padding(18.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (enabled) LandingKitColors.Forest else LandingKitColors.Sun,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_notification_arrival),
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp),
+                    tint = if (enabled) Color.White else LandingKitColors.Forest,
+                )
+            }
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.arrival_reminder_title),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = when {
+                        changeFailed -> stringResource(R.string.arrival_reminder_failed)
+                        permissionDenied -> stringResource(
+                            R.string.arrival_reminder_permission_denied,
+                        )
+                        enabled -> stringResource(
+                            R.string.arrival_reminder_description_on,
+                            arrivalDate,
+                        )
+                        else -> stringResource(
+                            R.string.arrival_reminder_description_off,
+                            arrivalDate,
+                        )
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (changeFailed || permissionDenied) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
+            Switch(
+                checked = enabled,
+                onCheckedChange = null,
             )
         }
     }

@@ -45,6 +45,7 @@ class KitFormTest {
             arrivalDate = LocalDate.of(2026, 8, 18),
             arrivalCard = ArrivalCard(accommodationName = "Old stay", address = "Old address"),
             items = listOf(completedItem),
+            arrivalReminderEnabled = true,
         )
 
         val edited = KitForm.fromTrip(existing)
@@ -53,6 +54,7 @@ class KitFormTest {
 
         assertEquals(existing.id, edited.id)
         assertEquals(existing.items, edited.items)
+        assertTrue(edited.arrivalReminderEnabled)
         assertTrue(edited.items.single().isComplete)
         assertEquals("New stay", edited.arrivalCard.accommodationName)
         assertEquals("New address", edited.arrivalCard.address)

@@ -192,6 +192,15 @@
     <string name="detail_past_notice_title">This arrival has passed.</string>
     <string name="detail_past_notice_description">Everything remains available offline. Edit the date to reuse this kit, or delete it when you no longer need it.</string>
     <string name="detail_privacy_footer">AVAILABLE WITHOUT SIGNAL  •  STORED ON THIS DEVICE</string>
+    <string name="arrival_reminder_title">Keep this handy</string>
+    <string name="arrival_reminder_description_off">Remind me about this travel on %1$s.</string>
+    <string name="arrival_reminder_description_on">Reminder is set for this travel around 8:00 AM on %1$s.</string>
+    <string name="arrival_reminder_permission_denied">Allow notifications to keep Arrival Mode one tap away on arrival day.</string>
+    <string name="arrival_reminder_failed">That shortcut couldn’t be changed. Try again.</string>
+    <string name="arrival_reminder_channel_name">Arrival day shortcuts</string>
+    <string name="arrival_reminder_channel_description">One-tap access to an arrival card on its arrival day.</string>
+    <string name="arrival_reminder_notification_title">Your arrival card is ready</string>
+    <string name="arrival_reminder_notification_body">Open your %1$s arrival details.</string>
     <string name="date_format_detail">EEEE, d MMMM yyyy</string>
 
     <!-- Arrival mode -->

@@ -9,4 +9,5 @@ interface TripRepository {
     suspend fun saveTrip(trip: Trip)
     suspend fun deleteTrip(id: String)
     suspend fun setItemComplete(tripId: String, itemId: String, complete: Boolean)
+    suspend fun setArrivalReminderEnabled(tripId: String, enabled: Boolean)
 }

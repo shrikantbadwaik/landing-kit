@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import com.shrikantbadwaik.landingkit.core.data.local.entity.ArrivalItemEntity
 import com.shrikantbadwaik.landingkit.core.data.local.entity.TripEntity
 import com.shrikantbadwaik.landingkit.core.data.local.model.TripWithItems
@@ -20,8 +21,8 @@ interface TripDao {
     @Query("SELECT * FROM trips WHERE id = :id LIMIT 1")
     suspend fun getTrip(id: String): TripWithItems?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTrip(trip: TripEntity)
+    @Upsert
+    suspend fun upsertTrip(trip: TripEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItems(items: List<ArrivalItemEntity>)
@@ -39,10 +40,17 @@ interface TripDao {
     )
     suspend fun setItemComplete(tripId: String, itemId: String, complete: Boolean)
 
+    @Query(
+        """UPDATE trips
+            SET arrival_reminder_enabled = :enabled
+            WHERE id = :tripId""",
+    )
+    suspend fun setArrivalReminderEnabled(tripId: String, enabled: Boolean)
+
     @Transaction
     suspend fun replaceTrip(trip: TripEntity, items: List<ArrivalItemEntity>) {
         deleteItems(trip.id)
-        insertTrip(trip)
+        upsertTrip(trip)
         insertItems(items)
     }
 }

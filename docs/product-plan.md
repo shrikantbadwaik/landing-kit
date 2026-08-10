@@ -117,6 +117,7 @@ Builder and app-promotion communities were treated as competition signals rather
 - Provide Home, Create, and Detail experiences.
 - Use a custom offline design system and bundled fonts.
 - Use calm hybrid animations without replaying full choreography on every return.
+- Offer an opt-in arrival-day notification that opens the correct kit directly in Arrival Mode.
 - Keep the application free of the `INTERNET` permission.
 - Use a modular Android architecture with Hilt, Coroutines, Flow, Room, DataStore, Compose, and Material 3.
 - Centralise dependency versions and prohibit Grab/MyTeksi repositories and dependencies.
@@ -167,7 +168,7 @@ Goal: provide a one-handed, high-legibility experience for the moment after land
 - [x] Transfer instructions.
 - [x] Emergency contact.
 - [x] Quick access to the user-selected most important attachment, with the newest saved file as a deterministic fallback.
-- [ ] Optional local notification for fast entry.
+- [x] Optional local notification for fast entry.
 - [ ] Complete large-text and screen-reader validation. The first screen ships with a scroll-safe layout, strong contrast, semantic address heading, and labelled navigation.
 
 Success condition: the essential arrival flow remains usable while tired, carrying luggage, or communicating with a driver.
@@ -286,6 +287,11 @@ Early validation should focus on behaviour rather than download volume:
 - Replaced traveller-facing implementation language with plain travel language across Home, the editor, saved lists, tickets and confirmations, protection prompts, sharing, cleanup, and kit removal. Internal security and storage terminology remains available in engineering documentation where precision matters.
 - Let travellers choose the ticket or confirmation that opens first in Arrival Mode. The choice is stored locally, can be cleared from the preview, and safely falls back to the newest saved file if no choice remains.
 - Added a non-destructive Room `3 → 4` migration for the per-arrival quick-access choice and verified the migration on the emulator without losing the existing Kyoto kit or its saved details.
+- Added an opt-in “Keep this handy” shortcut for upcoming arrivals. Android schedules it locally from 8:00 AM on the arrival date, requests notification permission only when enabled, and opens the correct kit directly in Arrival Mode from both warm and cold app states.
+- Stored the choice per kit with a non-destructive Room `4 → 5` migration. Edits reschedule it, disabling or deleting the kit cancels it, and reboot, app replacement, or timezone changes restore eligible reminders without a backend.
+- Kept notification content private on the lock screen and verified permission timing, Room migration, alarm scheduling/cancellation, persisted state, and direct Arrival Mode routing on the emulator.
+- Verified a real posted notification end to end: it displayed the intended destination-specific copy, opened the correct Arrival Mode when tapped, cleared itself afterward, and left no active alarm after the reminder was disabled.
+- Replaced the parent trip's destructive SQLite `REPLACE` write with Room `Upsert`; this prevents kit edits from cascading into deletion of saved attachment rows. Verified on the emulator by saving an existing kit and confirming its original booking PDF remained available.
 
 ## Maintaining this plan
 

@@ -23,6 +23,7 @@ internal fun TripWithItems.toModel() = Trip(
         dietaryPhrase = trip.dietaryPhrase,
     ),
     items = items.sortedBy(ArrivalItemEntity::sortOrder).map(ArrivalItemEntity::toModel),
+    arrivalReminderEnabled = trip.arrivalReminderEnabled,
 )
 
 internal fun Trip.toEntity() = TripEntity(
@@ -37,6 +38,7 @@ internal fun Trip.toEntity() = TripEntity(
     currencyNote = arrivalCard.currencyNote,
     emergencyContact = arrivalCard.emergencyContact,
     dietaryPhrase = arrivalCard.dietaryPhrase,
+    arrivalReminderEnabled = arrivalReminderEnabled,
 )
 
 private fun String.toArrivalDate(): LocalDate = runCatching(LocalDate::parse)

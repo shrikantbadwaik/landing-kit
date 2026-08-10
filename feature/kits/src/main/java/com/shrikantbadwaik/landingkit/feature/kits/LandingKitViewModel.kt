@@ -15,6 +15,7 @@ import com.shrikantbadwaik.landingkit.core.model.KitAttachment
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.core.data.preferences.UserPreferences
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.KitForm
+import com.shrikantbadwaik.landingkit.feature.kits.notification.ArrivalReminderScheduler
 import com.shrikantbadwaik.landingkit.feature.kits.sample.SampleTripContent
 import com.shrikantbadwaik.landingkit.feature.kits.sample.sampleTrip
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,8 +40,10 @@ class LandingKitViewModel @Inject constructor(
     private val templateRepository: ChecklistTemplateRepository,
     private val attachmentRepository: AttachmentRepository,
     private val userPreferences: UserPreferences,
+    private val arrivalReminderScheduler: ArrivalReminderScheduler,
 ) : ViewModel() {
     private val _pendingSharedAttachments = MutableStateFlow<PendingSharedAttachments?>(null)
+    private val _pendingArrivalModeTripId = MutableStateFlow<String?>(null)
     private val sharedAttachmentImports = ConcurrentHashMap.newKeySet<String>()
     private val _isAttachmentAccessUnlocked = MutableStateFlow(false)
     private val _pendingAttachmentAuthentication =
@@ -48,6 +51,8 @@ class LandingKitViewModel @Inject constructor(
     private var attachmentRelockJob: Job? = null
     val pendingSharedAttachments: StateFlow<PendingSharedAttachments?> =
         _pendingSharedAttachments.asStateFlow()
+    internal val pendingArrivalModeTripId: StateFlow<String?> =
+        _pendingArrivalModeTripId.asStateFlow()
     internal val attachmentProtectionEnabled: StateFlow<Boolean> =
         userPreferences.attachmentProtectionEnabled.stateIn(
             scope = viewModelScope,
@@ -81,6 +86,7 @@ class LandingKitViewModel @Inject constructor(
         val trip = form.toTrip(existingTrip)
         viewModelScope.launch {
             repository.saveTrip(trip)
+            arrivalReminderScheduler.sync(trip)
             onSaved(trip.id)
         }
     }
@@ -89,6 +95,7 @@ class LandingKitViewModel @Inject constructor(
         val trip = sampleTrip(content)
         viewModelScope.launch {
             repository.saveTrip(trip)
+            arrivalReminderScheduler.sync(trip)
             onSaved(trip.id)
         }
     }
@@ -100,12 +107,35 @@ class LandingKitViewModel @Inject constructor(
     internal fun deleteKit(tripId: String, onDeleted: () -> Unit) {
         viewModelScope.launch {
             repository.deleteTrip(tripId)
+            arrivalReminderScheduler.cancel(tripId)
             onDeleted()
         }
     }
 
     internal fun restoreKit(trip: Trip) {
-        viewModelScope.launch { repository.saveTrip(trip) }
+        viewModelScope.launch {
+            repository.saveTrip(trip)
+            arrivalReminderScheduler.sync(trip)
+        }
+    }
+
+    internal fun setArrivalReminderEnabled(
+        trip: Trip,
+        enabled: Boolean,
+        onChanged: (Result<Unit>) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val result = try {
+                repository.setArrivalReminderEnabled(trip.id, enabled)
+                arrivalReminderScheduler.sync(trip.copy(arrivalReminderEnabled = enabled))
+                Result.success(Unit)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Throwable) {
+                Result.failure(error)
+            }
+            onChanged(result)
+        }
     }
 
     internal fun saveTemplate(template: ChecklistTemplate) {
@@ -173,6 +203,14 @@ class LandingKitViewModel @Inject constructor(
             id = UUID.randomUUID().toString(),
             sources = sources.distinct(),
         )
+    }
+
+    fun acceptArrivalModeShortcut(tripId: String) {
+        _pendingArrivalModeTripId.value = tripId
+    }
+
+    internal fun consumeArrivalModeShortcut(tripId: String) {
+        _pendingArrivalModeTripId.compareAndSet(expect = tripId, update = null)
     }
 
     internal fun dismissSharedAttachments(pendingId: String) {

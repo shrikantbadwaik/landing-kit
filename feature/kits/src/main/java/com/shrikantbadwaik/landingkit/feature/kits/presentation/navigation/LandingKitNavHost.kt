@@ -67,6 +67,7 @@ internal fun LandingKitNavHost(
     trips: List<Trip>,
     personalTemplates: List<ChecklistTemplate>,
     pendingSharedAttachments: PendingSharedAttachments?,
+    pendingArrivalModeTripId: String?,
     attachmentProtectionEnabled: Boolean,
     isAttachmentAccessUnlocked: Boolean,
     pendingAttachmentAuthentication: PendingAttachmentAuthentication?,
@@ -92,6 +93,16 @@ internal fun LandingKitNavHost(
                 popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 launchSingleTop = true
             }
+        }
+    }
+
+    LaunchedEffect(pendingArrivalModeTripId) {
+        pendingArrivalModeTripId?.let { tripId ->
+            navController.navigate(KitRoute.ArrivalMode(tripId)) {
+                popUpTo<KitRoute.Home> { inclusive = false }
+                launchSingleTop = true
+            }
+            viewModel.consumeArrivalModeShortcut(tripId)
         }
     }
 
@@ -234,6 +245,13 @@ internal fun LandingKitNavHost(
                             viewModel.setQuickAccessAttachment(
                                 tripId = trip.id,
                                 attachmentId = attachmentId,
+                                onChanged = onChanged,
+                            )
+                        },
+                        onSetArrivalReminder = { enabled, onChanged ->
+                            viewModel.setArrivalReminderEnabled(
+                                trip = trip,
+                                enabled = enabled,
                                 onChanged = onChanged,
                             )
                         },

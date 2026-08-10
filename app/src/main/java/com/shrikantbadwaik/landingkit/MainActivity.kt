@@ -9,6 +9,7 @@ import androidx.fragment.app.FragmentActivity
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitTheme
 import com.shrikantbadwaik.landingkit.feature.kits.LandingKitApp
 import com.shrikantbadwaik.landingkit.feature.kits.LandingKitViewModel
+import com.shrikantbadwaik.landingkit.feature.kits.notification.ArrivalReminderIntent
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -19,6 +20,7 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         receiveSharedAttachments(intent)
+        receiveArrivalModeShortcut(intent)
         setContent {
             LandingKitTheme {
                 LandingKitApp(viewModel)
@@ -30,6 +32,7 @@ class MainActivity : FragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         receiveSharedAttachments(intent)
+        receiveArrivalModeShortcut(intent)
     }
 
     override fun onStop() {
@@ -43,6 +46,14 @@ class MainActivity : FragmentActivity() {
         if (sources.isNotEmpty()) viewModel.acceptSharedAttachments(sources)
 
         // Prevent configuration changes or task restoration from consuming the same share again.
+        setIntent(Intent(this, MainActivity::class.java).setAction(Intent.ACTION_MAIN))
+    }
+
+    private fun receiveArrivalModeShortcut(incomingIntent: Intent?) {
+        val tripId = ArrivalReminderIntent.tripId(incomingIntent) ?: return
+        viewModel.acceptArrivalModeShortcut(tripId)
+
+        // Prevent task restoration from reopening Arrival Mode after the shortcut is consumed.
         setIntent(Intent(this, MainActivity::class.java).setAction(Intent.ACTION_MAIN))
     }
 }

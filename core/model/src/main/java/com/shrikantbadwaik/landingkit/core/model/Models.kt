@@ -9,6 +9,7 @@ data class Trip(
     val arrivalDate: LocalDate,
     val arrivalCard: ArrivalCard,
     val items: List<ArrivalItem>,
+    val arrivalReminderEnabled: Boolean = false,
 )
 
 data class ArrivalCard(
