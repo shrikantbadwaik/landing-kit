@@ -14,6 +14,7 @@ The durable product vision, research findings, roadmap, non-goals, and decision 
 - Encrypt attachment copies with an Android Keystore-backed AES-GCM key and keep their metadata in Room.
 - Optionally require biometrics or the device screen lock before decrypting attachments for viewing.
 - Keep evidence until explicit deletion and offer confirmed bulk cleanup on past arrivals; nothing expires silently.
+- Enter an address-first Arrival Mode for large local-language details, stay and booking information, transfer guidance, emergency help, and fast offline evidence access.
 - Explore a polished sample kit for Kyoto.
 - Persist trips and checklist progress in an app-private Room database.
 - Persist lightweight user preferences with AndroidX DataStore.
@@ -42,7 +43,7 @@ The durable product vision, research findings, roadmap, non-goals, and decision 
 - `:core:data` owns repository contracts, Room persistence, exported database schemas, DataStore preferences, and its Hilt bindings.
 - `:core:designsystem` owns the Material 3 theme and reusable visual foundations.
 
-Within `:feature:kits`, the app shell only coordinates state and navigation. Home, create, and detail each own a focused screen package and a nested `component` package; shared presentation primitives, navigation types, form models, and sample data live in their own packages. This keeps screen wiring readable without promoting feature-specific UI into the global design system.
+Within `:feature:kits`, the app shell only coordinates state and navigation. Home, create, detail, and Arrival Mode each own a focused screen package; shared presentation primitives, navigation types, form models, security coordinators, and sample data live in their own packages. This keeps screen wiring readable without promoting feature-specific UI into the global design system.
 
 ## Visual direction
 
@@ -78,7 +79,8 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Next product slices
 
-1. Add a large-text, one-handed "arrival mode" available from a notification.
-2. Add encrypted local export/import through Android's document picker.
-3. Add accessibility, instrumentation, and screenshot tests.
-4. Validate the first-90-minutes card with frequent and anxious travellers before broad itinerary features.
+1. Add a local notification shortcut into Arrival Mode.
+2. Complete large-text and screen-reader validation for Arrival Mode.
+3. Add encrypted local export/import through Android's document picker.
+4. Add accessibility, instrumentation, and screenshot tests.
+5. Validate the first-90-minutes card with frequent and anxious travellers before broad itinerary features.

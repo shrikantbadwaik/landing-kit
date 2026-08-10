@@ -10,6 +10,7 @@ interface AttachmentRepository {
     suspend fun importAttachment(tripId: String, source: Uri): KitAttachment
     suspend fun loadThumbnail(attachmentId: String): ByteArray?
     suspend fun prepareForViewing(attachmentId: String): PreparedAttachment
+    suspend fun setQuickAccessAttachment(tripId: String, attachmentId: String?)
     suspend fun deleteAttachment(attachmentId: String)
     suspend fun deleteAttachments(tripId: String): Int
 }

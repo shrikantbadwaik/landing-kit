@@ -51,6 +51,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.toUserMessage
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.LoadingScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.MissingKitScreen
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.arrivalmode.ArrivalModeScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.KitDetailScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.KitEditorScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.HomeScreen
@@ -200,6 +201,9 @@ internal fun LandingKitNavHost(
                         trip = trip,
                         attachments = attachments,
                         onBack = { navController.popBackStack() },
+                        onArrivalMode = {
+                            navController.navigate(KitRoute.ArrivalMode(trip.id))
+                        },
                         onEdit = { navController.navigate(KitRoute.Edit(trip.id)) },
                         onDelete = {
                             viewModel.deleteKit(trip.id) {
@@ -226,9 +230,59 @@ internal fun LandingKitNavHost(
                         onLoadAttachmentThumbnail = viewModel::attachmentThumbnail,
                         onPrepareAttachment = viewModel::prepareAttachment,
                         onDeleteAttachment = viewModel::deleteAttachment,
+                        onSetQuickAccessAttachment = { attachmentId, onChanged ->
+                            viewModel.setQuickAccessAttachment(
+                                tripId = trip.id,
+                                attachmentId = attachmentId,
+                                onChanged = onChanged,
+                            )
+                        },
                         onDeleteAttachments = { onDeleted ->
                             viewModel.deleteAttachments(trip.id, onDeleted)
                         },
+                        attachmentProtectionEnabled = attachmentProtectionEnabled,
+                        isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
+                        pendingAttachmentAuthentication = pendingAttachmentAuthentication,
+                        onSetAttachmentProtection = viewModel::setAttachmentProtectionEnabled,
+                        onRequestAttachmentAuthentication =
+                            viewModel::requestAttachmentAuthentication,
+                        onFinishAttachmentAuthentication =
+                            viewModel::finishAttachmentAuthentication,
+                        onUnlockAttachmentAccess = viewModel::unlockAttachmentAccess,
+                        onLockAttachmentAccess = viewModel::lockAttachmentAccess,
+                    )
+                }
+            }
+
+            composable<KitRoute.ArrivalMode> { backStackEntry ->
+                val route = backStackEntry.toRoute<KitRoute.ArrivalMode>()
+                val trip = trips.firstOrNull { it.id == route.tripId }
+                val attachments by remember(route.tripId) {
+                    viewModel.attachments(route.tripId)
+                }.collectAsStateWithLifecycle(initialValue = emptyList())
+                var missingRouteConfirmed by remember(route.tripId) { mutableStateOf(false) }
+
+                LaunchedEffect(route.tripId, trip) {
+                    if (trip == null) {
+                        delay(MISSING_ROUTE_GRACE_MILLIS)
+                        missingRouteConfirmed = true
+                    } else {
+                        missingRouteConfirmed = false
+                    }
+                }
+
+                if (trip == null) {
+                    if (missingRouteConfirmed) {
+                        MissingKitScreen(onHome = returnHome)
+                    } else {
+                        LoadingScreen()
+                    }
+                } else {
+                    ArrivalModeScreen(
+                        trip = trip,
+                        attachments = attachments,
+                        onBack = { navController.popBackStack() },
+                        onPrepareAttachment = viewModel::prepareAttachment,
                         attachmentProtectionEnabled = attachmentProtectionEnabled,
                         isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
                         pendingAttachmentAuthentication = pendingAttachmentAuthentication,

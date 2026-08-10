@@ -18,6 +18,13 @@ interface AttachmentDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertAttachment(attachment: AttachmentEntity)
 
+    @Query(
+        """UPDATE attachments
+            SET is_quick_access = CASE WHEN id = :attachmentId THEN 1 ELSE 0 END
+            WHERE trip_id = :tripId""",
+    )
+    suspend fun setQuickAccessAttachment(tripId: String, attachmentId: String?)
+
     @Query("DELETE FROM attachments WHERE id = :id")
     suspend fun deleteAttachment(id: String)
 

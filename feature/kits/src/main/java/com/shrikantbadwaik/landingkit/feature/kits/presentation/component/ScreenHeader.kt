@@ -15,19 +15,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.feature.kits.R
 
 @Composable
 internal fun ScreenHeader(onBack: () -> Unit, label: String, badge: String) {
+    val backDescription = stringResource(R.string.navigate_back)
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
             onClick = onBack,
-            modifier = Modifier.size(46.dp),
+            modifier = Modifier.size(46.dp).clearAndSetSemantics {
+                contentDescription = backDescription
+            },
             color = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface,
             shape = CircleShape,

@@ -47,6 +47,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -79,6 +80,7 @@ internal fun AttachmentSection(
     onLoadThumbnail: suspend (String) -> ByteArray?,
     onImport: () -> Unit,
     onOpen: (KitAttachment) -> Unit,
+    onQuickAccess: (KitAttachment) -> Unit,
     onDelete: (KitAttachment) -> Unit,
     onProtectionChange: (Boolean) -> Unit,
     onClearAttachments: () -> Unit,
@@ -137,6 +139,7 @@ internal fun AttachmentSection(
                 onLoadThumbnail = onLoadThumbnail,
                 onImport = onImport,
                 onOpen = onOpen,
+                onQuickAccess = onQuickAccess,
                 onDelete = onDelete,
             )
             Text(
@@ -278,6 +281,7 @@ private fun AttachmentGallery(
     onLoadThumbnail: suspend (String) -> ByteArray?,
     onImport: () -> Unit,
     onOpen: (KitAttachment) -> Unit,
+    onQuickAccess: (KitAttachment) -> Unit,
     onDelete: (KitAttachment) -> Unit,
 ) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -305,6 +309,7 @@ private fun AttachmentGallery(
                     previewSize = tileSize,
                     onLoadThumbnail = onLoadThumbnail,
                     onOpen = onOpen,
+                    onQuickAccess = onQuickAccess,
                     onDelete = onDelete,
                 )
             }
@@ -384,10 +389,19 @@ private fun AttachmentPreview(
     previewSize: Dp,
     onLoadThumbnail: suspend (String) -> ByteArray?,
     onOpen: (KitAttachment) -> Unit,
+    onQuickAccess: (KitAttachment) -> Unit,
     onDelete: (KitAttachment) -> Unit,
 ) {
     val openDescription = stringResource(R.string.attachment_open_description, attachment.displayName)
     val removeDescription = stringResource(R.string.attachment_remove_description, attachment.displayName)
+    val quickAccessDescription = stringResource(
+        if (attachment.isQuickAccess) {
+            R.string.attachment_quick_access_remove_description
+        } else {
+            R.string.attachment_quick_access_set_description
+        },
+        attachment.displayName,
+    )
     val thumbnailBytes by produceState<ByteArray?>(
         initialValue = null,
         key1 = attachment.id,
@@ -412,11 +426,18 @@ private fun AttachmentPreview(
                 .size(previewSize)
                 .align(Alignment.BottomStart)
                 .clip(RoundedCornerShape(20.dp))
-                .clickable { onOpen(attachment) }
-                .semantics { contentDescription = openDescription },
+                .semantics { contentDescription = openDescription }
+                .clickable { onOpen(attachment) },
             shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .38f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            border = BorderStroke(
+                width = if (attachment.isQuickAccess) 2.dp else 1.dp,
+                color = if (attachment.isQuickAccess) {
+                    LandingKitColors.Forest
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant
+                },
+            ),
         ) {
             Crossfade(
                 targetState = imageBitmap,
@@ -454,6 +475,64 @@ private fun AttachmentPreview(
                 TrashGlyph()
             }
         }
+        IconButton(
+            onClick = { onQuickAccess(attachment) },
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .size(48.dp)
+                .semantics { contentDescription = quickAccessDescription },
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(
+                        color = if (attachment.isQuickAccess) {
+                            LandingKitColors.Sun
+                        } else {
+                            MaterialTheme.colorScheme.surface.copy(alpha = .94f)
+                        },
+                        shape = CircleShape,
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = LandingKitColors.Forest.copy(
+                            alpha = if (attachment.isQuickAccess) .18f else .42f,
+                        ),
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                QuickAccessGlyph(selected = attachment.isQuickAccess)
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickAccessGlyph(selected: Boolean) {
+    val color = LandingKitColors.Forest
+    Canvas(Modifier.size(18.dp)) {
+        val stroke = 1.8.dp.toPx()
+        val centerX = size.width * .5f
+        val headCenter = Offset(centerX, size.height * .34f)
+        drawCircle(
+            color = color,
+            radius = size.width * .19f,
+            center = headCenter,
+            style = if (selected) androidx.compose.ui.graphics.drawscope.Fill else Stroke(stroke),
+        )
+        drawLine(
+            color = color,
+            start = Offset(centerX, size.height * .53f),
+            end = Offset(centerX, size.height * .86f),
+            strokeWidth = stroke,
+        )
+        drawLine(
+            color = color,
+            start = Offset(size.width * .34f, size.height * .86f),
+            end = Offset(size.width * .66f, size.height * .86f),
+            strokeWidth = stroke,
+        )
     }
 }
 

@@ -1,13 +1,12 @@
 package com.shrikantbadwaik.landingkit.feature.kits.presentation.detail
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +34,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
 import com.shrikantbadwaik.landingkit.core.data.PreparedAttachment
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.ArrivalItem
@@ -46,11 +43,11 @@ import com.shrikantbadwaik.landingkit.feature.kits.AttachmentImportResult
 import com.shrikantbadwaik.landingkit.feature.kits.PendingAttachmentAuthentication
 import com.shrikantbadwaik.landingkit.feature.kits.ProtectedAttachmentAction
 import com.shrikantbadwaik.landingkit.feature.kits.R
-import com.shrikantbadwaik.landingkit.feature.kits.requiresAttachmentAuthentication
 import com.shrikantbadwaik.landingkit.feature.kits.toUserMessage
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.TicketIllustration
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AnimatedChecklistItem
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.ArrivalModeAction
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AttachmentSection
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DeleteAttachmentDialog
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.ClearAttachmentsDialog
@@ -63,9 +60,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPhase
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.arrivalPhase
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.shouldOfferAttachmentCleanup
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.AttachmentAuthenticationAvailability
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.AttachmentAuthenticator
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.findFragmentActivity
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.rememberProtectedAttachmentOpener
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.delay
@@ -75,6 +70,7 @@ internal fun KitDetailScreen(
     trip: Trip,
     attachments: List<KitAttachment>,
     onBack: () -> Unit,
+    onArrivalMode: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onCheck: (ArrivalItem, Boolean) -> Unit,
@@ -82,6 +78,7 @@ internal fun KitDetailScreen(
     onLoadAttachmentThumbnail: suspend (String) -> ByteArray?,
     onPrepareAttachment: (String, (Result<PreparedAttachment>) -> Unit) -> Unit,
     onDeleteAttachment: (String, (Result<Unit>) -> Unit) -> Unit,
+    onSetQuickAccessAttachment: (String?, (Result<Unit>) -> Unit) -> Unit,
     onDeleteAttachments: ((Result<Int>) -> Unit) -> Unit,
     attachmentProtectionEnabled: Boolean,
     isAttachmentAccessUnlocked: Boolean,
@@ -93,8 +90,6 @@ internal fun KitDetailScreen(
     onLockAttachmentAccess: () -> Unit,
 ) {
     val context = LocalContext.current
-    val activity = remember(context) { context.findFragmentActivity() }
-    val authenticator = remember(activity) { activity?.let(::AttachmentAuthenticator) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var attachmentPendingDeletion by remember { mutableStateOf<KitAttachment?>(null) }
     var showClearAttachmentsConfirmation by remember { mutableStateOf(false) }
@@ -103,8 +98,6 @@ internal fun KitDetailScreen(
     var isImportingAttachment by remember { mutableStateOf(false) }
     val dateFormatter = DateTimeFormatter.ofPattern(stringResource(R.string.date_format_detail))
     val phase = remember(trip.arrivalDate) { trip.arrivalPhase(LocalDate.now()) }
-    val authenticationTitle = stringResource(R.string.attachment_auth_prompt_title)
-    val authenticationSubtitle = stringResource(R.string.attachment_auth_prompt_subtitle)
     val showAttachmentFeedback: (String) -> Unit = { message ->
         attachmentFeedback = message
         attachmentFeedbackVersion++
@@ -120,97 +113,19 @@ internal fun KitDetailScreen(
             }
         }
     }
-    val openAttachment: (KitAttachment) -> Unit = { attachment ->
-        onPrepareAttachment(attachment.id) { result ->
-            result.onSuccess { prepared ->
-                val contentUri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.fileprovider",
-                    prepared.file,
-                )
-                val intent = Intent(Intent.ACTION_VIEW)
-                    .setDataAndType(contentUri, prepared.mimeType)
-                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                try {
-                    context.startActivity(intent)
-                } catch (_: ActivityNotFoundException) {
-                    showAttachmentFeedback(context.getString(R.string.attachment_no_viewer))
-                } catch (_: RuntimeException) {
-                    showAttachmentFeedback(context.getString(R.string.attachment_open_failed))
-                }
-            }.onFailure {
-                showAttachmentFeedback(context.getString(R.string.attachment_open_failed))
-            }
-        }
-    }
-    val latestAttachments by rememberUpdatedState(attachments)
-    val latestOpenAttachment by rememberUpdatedState(openAttachment)
-
-    LaunchedEffect(pendingAttachmentAuthentication?.id, authenticator) {
-        val request = pendingAttachmentAuthentication ?: return@LaunchedEffect
-        val activeAuthenticator = authenticator
-        val isDisablingProtection =
-            (request.action as? ProtectedAttachmentAction.SetProtection)?.enabled == false
-        when (activeAuthenticator?.availability()) {
-            AttachmentAuthenticationAvailability.Available -> activeAuthenticator.authenticate(
-                title = authenticationTitle,
-                subtitle = authenticationSubtitle,
-                onSuccess = {
-                    onFinishAttachmentAuthentication(request.id)
-                    when (val action = request.action) {
-                        is ProtectedAttachmentAction.Open -> {
-                            onUnlockAttachmentAccess()
-                            latestAttachments.firstOrNull { it.id == action.attachmentId }
-                                ?.let(latestOpenAttachment)
-                        }
-                        is ProtectedAttachmentAction.SetProtection -> {
-                            onSetAttachmentProtection(action.enabled)
-                            if (action.enabled) {
-                                onUnlockAttachmentAccess()
-                            } else {
-                                onLockAttachmentAccess()
-                            }
-                        }
-                    }
-                },
-                onCancelled = { onFinishAttachmentAuthentication(request.id) },
-                onError = {
-                    onFinishAttachmentAuthentication(request.id)
-                    showAttachmentFeedback(
-                        context.getString(R.string.attachment_authentication_failed),
-                    )
-                },
-            )
-            AttachmentAuthenticationAvailability.NotEnrolled -> {
-                onFinishAttachmentAuthentication(request.id)
-                if (isDisablingProtection) {
-                    onSetAttachmentProtection(false)
-                    onLockAttachmentAccess()
-                    showAttachmentFeedback(
-                        context.getString(R.string.attachment_protection_disabled_unavailable),
-                    )
-                } else {
-                    showAttachmentFeedback(
-                        context.getString(R.string.attachment_authentication_not_enrolled),
-                    )
-                }
-            }
-            AttachmentAuthenticationAvailability.Unavailable, null -> {
-                onFinishAttachmentAuthentication(request.id)
-                if (isDisablingProtection) {
-                    onSetAttachmentProtection(false)
-                    onLockAttachmentAccess()
-                    showAttachmentFeedback(
-                        context.getString(R.string.attachment_protection_disabled_unavailable),
-                    )
-                } else {
-                    showAttachmentFeedback(
-                        context.getString(R.string.attachment_authentication_unavailable),
-                    )
-                }
-            }
-        }
-    }
+    val openAttachment = rememberProtectedAttachmentOpener(
+        attachments = attachments,
+        protectionEnabled = attachmentProtectionEnabled,
+        accessUnlocked = isAttachmentAccessUnlocked,
+        pendingAuthentication = pendingAttachmentAuthentication,
+        onPrepareAttachment = onPrepareAttachment,
+        onSetProtection = onSetAttachmentProtection,
+        onRequestAuthentication = onRequestAttachmentAuthentication,
+        onFinishAuthentication = onFinishAttachmentAuthentication,
+        onUnlockAccess = onUnlockAttachmentAccess,
+        onLockAccess = onLockAttachmentAccess,
+        onFeedback = showAttachmentFeedback,
+    )
 
     LaunchedEffect(attachmentFeedbackVersion) {
         if (attachmentFeedback != null) {
@@ -328,10 +243,17 @@ internal fun KitDetailScreen(
                                 color = Color.White.copy(alpha = .78f),
                             )
                             Spacer(Modifier.height(22.dp))
-                            EditKitAction(
-                                onClick = onEdit,
-                                modifier = Modifier.align(Alignment.End),
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                ArrivalModeAction(
+                                    onClick = onArrivalMode,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                EditKitAction(onClick = onEdit)
+                            }
                         }
                     }
                 }
@@ -356,17 +278,15 @@ internal fun KitDetailScreen(
                     onImport = {
                         attachmentPicker.launch(arrayOf(PDF_MIME_TYPE, IMAGE_MIME_TYPE))
                     },
-                    onOpen = { attachment ->
-                        if (requiresAttachmentAuthentication(
-                                protectionEnabled = attachmentProtectionEnabled,
-                                accessUnlocked = isAttachmentAccessUnlocked,
-                            )
-                        ) {
-                            onRequestAttachmentAuthentication(
-                                ProtectedAttachmentAction.Open(attachment.id),
-                            )
-                        } else {
-                            openAttachment(attachment)
+                    onOpen = openAttachment,
+                    onQuickAccess = { attachment ->
+                        val attachmentId = attachment.takeUnless(KitAttachment::isQuickAccess)?.id
+                        onSetQuickAccessAttachment(attachmentId) { result ->
+                            if (result.isFailure) {
+                                showAttachmentFeedback(
+                                    context.getString(R.string.attachment_quick_access_failed),
+                                )
+                            }
                         }
                     },
                     onProtectionChange = { enabled ->

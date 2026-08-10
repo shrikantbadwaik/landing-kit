@@ -1,6 +1,6 @@
 # Landing Kit Product Plan
 
-Last updated: 7 August 2026
+Last updated: 10 August 2026
 
 ## Product vision
 
@@ -56,6 +56,7 @@ Supporting jobs:
 6. **Sensitive by assumption**: travel details and attachments receive privacy-conscious defaults.
 7. **No feature theatre**: avoid live or social functionality that weakens offline reliability.
 8. **Maintainable Android architecture**: feature boundaries and data ownership should remain explicit.
+9. **Plain language at the surface**: explain what users can do and what will happen; keep implementation terms in engineering documentation rather than traveller-facing copy.
 
 ## Validated problem signals
 
@@ -161,13 +162,13 @@ Success condition: a user can retrieve a booking confirmation or QR code offline
 
 Goal: provide a one-handed, high-legibility experience for the moment after landing.
 
-- Large local-language address.
-- Accommodation name and booking reference.
-- Transfer instructions.
-- Emergency contact.
-- Quick access to the most important attachment.
-- Optional local notification for fast entry.
-- Large text, strong contrast, and screen-reader support.
+- [x] Large local-language address.
+- [x] Accommodation name and booking reference.
+- [x] Transfer instructions.
+- [x] Emergency contact.
+- [x] Quick access to the user-selected most important attachment, with the newest saved file as a deterministic fallback.
+- [ ] Optional local notification for fast entry.
+- [ ] Complete large-text and screen-reader validation. The first screen ships with a scroll-safe layout, strong contrast, semantic address heading, and labelled navigation.
 
 Success condition: the essential arrival flow remains usable while tired, carrying luggage, or communicating with a driver.
 
@@ -278,6 +279,13 @@ Early validation should focus on behaviour rather than download volume:
 - Completed Phase 2 with a conservative retention policy: evidence never expires silently, remains until explicit deletion, and past arrivals offer a confirmed bulk-cleanup action.
 - Bulk cleanup removes app-private encrypted files, thumbnails, previews, and Room metadata while leaving every original source document unchanged.
 - Chose user-controlled cleanup over scheduled auto-deletion because travel receipts and booking evidence may remain useful after arrival, and silent deletion would undermine an offline reliability product.
+- Began Phase 3 with a dedicated Arrival Mode route entered from kit detail. The first verified slice prioritises the local-language address, stay, booking reference, transfer guidance, and emergency contact in a one-handed scrollable layout.
+- Reused the protected attachment-opening coordinator in Detail and Arrival Mode, preserving encryption and biometric/device-credential behaviour while providing fast access to the newest saved evidence.
+- Kept attachment priority explicit: newest-first is only an interim deterministic default until users can pin the file they consider most important.
+- Verified Arrival Mode on the emulator, including scrolling, encrypted attachment opening in an external viewer, returning to the mode, and system Back navigation to kit detail.
+- Replaced traveller-facing implementation language with plain travel language across Home, the editor, saved lists, tickets and confirmations, protection prompts, sharing, cleanup, and kit removal. Internal security and storage terminology remains available in engineering documentation where precision matters.
+- Let travellers choose the ticket or confirmation that opens first in Arrival Mode. The choice is stored locally, can be cleared from the preview, and safely falls back to the newest saved file if no choice remains.
+- Added a non-destructive Room `3 → 4` migration for the per-arrival quick-access choice and verified the migration on the emulator without losing the existing Kyoto kit or its saved details.
 
 ## Maintaining this plan
 

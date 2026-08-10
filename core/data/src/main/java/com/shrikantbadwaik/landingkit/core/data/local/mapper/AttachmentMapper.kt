@@ -10,4 +10,5 @@ internal fun AttachmentEntity.toModel() = KitAttachment(
     mimeType = mimeType,
     sizeBytes = sizeBytes,
     createdAtMillis = createdAtMillis,
+    isQuickAccess = isQuickAccess,
 )

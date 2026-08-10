@@ -96,6 +96,43 @@ internal fun EditKitAction(
 }
 
 @Composable
+internal fun ArrivalModeAction(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = tween(140),
+        label = "Arrival mode action scale",
+    )
+
+    Surface(
+        onClick = onClick,
+        modifier = modifier.graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        },
+        interactionSource = interactionSource,
+        shape = RoundedCornerShape(17.dp),
+        color = LandingKitColors.Sun,
+        contentColor = LandingKitColors.Ink,
+        shadowElevation = 5.dp,
+    ) {
+        Box(
+            modifier = Modifier.padding(horizontal = 17.dp, vertical = 11.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                stringResource(R.string.arrival_mode_action),
+                style = MaterialTheme.typography.labelLarge,
+            )
+        }
+    }
+}
+
+@Composable
 internal fun KitDangerZone(onDelete: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),

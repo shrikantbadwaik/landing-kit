@@ -25,4 +25,5 @@ data class AttachmentEntity(
     @ColumnInfo(name = "mime_type") val mimeType: String,
     @ColumnInfo(name = "size_bytes") val sizeBytes: Long,
     @ColumnInfo(name = "created_at") val createdAtMillis: Long,
+    @ColumnInfo(name = "is_quick_access") val isQuickAccess: Boolean,
 )

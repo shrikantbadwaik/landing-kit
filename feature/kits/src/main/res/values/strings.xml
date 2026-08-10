@@ -8,9 +8,10 @@
     <string name="symbol_sparkle" translatable="false">✦</string>
     <string name="symbol_move_up" translatable="false">↑</string>
     <string name="symbol_move_down" translatable="false">↓</string>
-    <string name="loading_offline_kit">Preparing your offline kit…</string>
+    <string name="navigate_back">Navigate back</string>
+    <string name="loading_offline_kit">Preparing your arrival…</string>
     <string name="missing_kit_header">ARRIVAL UNAVAILABLE</string>
-    <string name="missing_kit_badge">Device local</string>
+    <string name="missing_kit_badge">On this device</string>
     <string name="missing_kit_title">This kit isn’t on this device.</string>
     <string name="missing_kit_description">It may have been deleted, or this link may be out of date. Your other offline arrivals are still safe.</string>
     <string name="missing_kit_home_action">Back to my arrivals</string>
@@ -20,7 +21,7 @@
     <string name="brand_tagline">OFFLINE TRAVEL COMPANION</string>
     <string name="home_headline">Land ready.\nTravel lighter.</string>
     <string name="home_intro">Your first 90 minutes, collected in one calm place — even when the signal disappears.</string>
-    <string name="privacy_title">Private by design</string>
+    <string name="privacy_title">Kept private</string>
     <string name="privacy_description">Everything stays on this device.</string>
     <string name="home_start_here">START HERE</string>
     <string name="home_up_next">UP NEXT</string>
@@ -32,8 +33,8 @@
     <string name="home_empty_description">Save your stay, transfer, money notes and emergency details before take-off.</string>
     <string name="home_create_first_kit">Create my first kit</string>
     <string name="home_explore_sample">Explore a Kyoto sample  →</string>
-    <string name="home_privacy_footer">NO ACCOUNT  •  NO ADS  •  DEVICE-LOCAL</string>
-    <string name="home_kept_for_reference">KEPT FOR REFERENCE</string>
+    <string name="home_privacy_footer">NO ACCOUNT  •  NO ADS  •  STAYS ON THIS DEVICE</string>
+    <string name="home_kept_for_reference">HERE IF YOU NEED IT</string>
     <string name="home_past_arrivals">Past arrivals</string>
     <string name="home_no_upcoming_title">Nothing upcoming — and nothing lost.</string>
     <string name="home_no_upcoming_description">Your previous kits stay below for reference. Start a new one whenever the next trip takes shape.</string>
@@ -53,7 +54,7 @@
     <string name="editor_date_done">Done</string>
     <string name="editor_date_cancel">Cancel</string>
     <string name="editor_save_changes">Save changes  →</string>
-    <string name="editor_save_offline_kit">Save offline kit  →</string>
+    <string name="editor_save_offline_kit">Save my kit  →</string>
     <string name="editor_header_edit">EDIT ARRIVAL KIT</string>
     <string name="editor_header_new">NEW ARRIVAL KIT</string>
     <string name="editor_step_count">4 steps</string>
@@ -72,14 +73,14 @@
     <string name="editor_choose_arrival_date">Choose arrival date</string>
     <string name="editor_destination_required">Add a destination.</string>
     <string name="editor_arrival_date_required_error">Choose an arrival date.</string>
-    <string name="editor_arrival_date_invalid">Choose a valid arrival date.</string>
+    <string name="editor_arrival_date_invalid">Choose today or a future date.</string>
     <string name="editor_stay_name_required">Add the name of your stay.</string>
     <string name="editor_address_required">Add the address you’ll need on arrival.</string>
     <string name="editor_past_arrival_notice">This date has passed. The kit will stay available under Past arrivals.</string>
     <string name="editor_validation_title">A few details still need you</string>
     <plurals name="editor_validation_summary">
-        <item quantity="one">Complete %d required detail before saving.</item>
-        <item quantity="other">Complete %d required details before saving.</item>
+        <item quantity="one">Add %d more detail before saving.</item>
+        <item quantity="other">Add %d more details before saving.</item>
     </plurals>
     <string name="editor_stay_section">Where you’re staying</string>
     <string name="editor_stay_name_label">Stay name *</string>
@@ -138,12 +139,12 @@
     </plurals>
     <string name="template_save_dialog_label">PERSONAL TEMPLATE</string>
     <string name="template_save_dialog_title">Reuse this calm start</string>
-    <string name="template_save_dialog_description">Save these task names and their order on this device. Completion stays specific to each trip.</string>
+    <string name="template_save_dialog_description">Save these tasks and their order for another trip. Each trip keeps its own checked-off tasks.</string>
     <string name="template_name_label">Template name</string>
     <string name="template_name_placeholder">e.g. My international routine</string>
     <string name="template_cancel">Cancel</string>
     <string name="template_save_action">Save template</string>
-    <string name="template_empty_checklist">Add at least one named task before saving a template.</string>
+    <string name="template_empty_checklist">Add at least one task before saving the template.</string>
     <string name="template_invalid_checklist">Give every task a name or remove it before saving this list.</string>
     <string name="template_delete_dialog_title">Delete this template?</string>
     <string name="template_delete_dialog_description">%1$s will be removed from this device. Tasks already added to kits won’t change.</string>
@@ -167,7 +168,7 @@
     <string name="template_carry_on_medication">Keep medication in my carry-on</string>
     <string name="template_carry_on_pen">Keep a pen for arrival forms</string>
     <string name="template_carry_on_baggage">Save baggage claim details</string>
-    <string name="editor_required_note">Required: destination, arrival date, stay name and address. Everything else can be added when you have it.</string>
+    <string name="editor_required_note">Start with a destination, arrival date, stay name and address. Everything else can wait.</string>
 
     <!-- Kit detail -->
     <string name="detail_badge_offline">Offline</string>
@@ -187,38 +188,56 @@
     <string name="detail_ready_before_landing">Ready before landing</string>
     <string name="detail_arrival_checklist">Arrival checklist</string>
     <string name="detail_checklist_empty">No preparation tasks yet. Add the ones that matter from Edit kit.</string>
-    <string name="detail_past_notice_label">KEPT FOR REFERENCE</string>
+    <string name="detail_past_notice_label">HERE IF YOU NEED IT</string>
     <string name="detail_past_notice_title">This arrival has passed.</string>
     <string name="detail_past_notice_description">Everything remains available offline. Edit the date to reuse this kit, or delete it when you no longer need it.</string>
     <string name="detail_privacy_footer">AVAILABLE WITHOUT SIGNAL  •  STORED ON THIS DEVICE</string>
     <string name="date_format_detail">EEEE, d MMMM yyyy</string>
 
-    <!-- Arrival evidence -->
-    <string name="attachment_section_label">ARRIVAL EVIDENCE</string>
+    <!-- Arrival mode -->
+    <string name="arrival_mode_action">Arrival mode  →</string>
+    <string name="arrival_mode_header">ARRIVAL MODE</string>
+    <string name="arrival_mode_badge">Offline</string>
+    <string name="arrival_mode_show_address">SHOW THIS ADDRESS</string>
+    <string name="arrival_mode_staying_at">STAYING AT</string>
+    <string name="arrival_mode_booking">BOOKING</string>
+    <string name="arrival_mode_transfer">GETTING THERE</string>
+    <string name="arrival_mode_emergency">NEED HELP?</string>
+    <string name="arrival_mode_evidence_label">TICKETS &amp; CONFIRMATIONS</string>
+    <string name="arrival_mode_evidence_title">Open flight ticket or booking confirmation</string>
+    <string name="arrival_mode_evidence_open">Open  →</string>
+    <string name="arrival_mode_no_evidence">No tickets or confirmations saved yet.</string>
+    <string name="arrival_mode_footer">LARGE, ESSENTIAL, AVAILABLE WITHOUT SIGNAL</string>
+
+    <!-- Tickets and confirmations -->
+    <string name="attachment_section_label">TICKETS &amp; CONFIRMATIONS</string>
     <string name="attachment_section_title">Tickets close at hand</string>
-    <string name="attachment_importing">Importing…</string>
-    <string name="attachment_section_description">Add confirmation PDFs, ticket screenshots or QR codes. An encrypted copy stays on this device.</string>
+    <string name="attachment_importing">Saving…</string>
+    <string name="attachment_section_description">Keep booking PDFs, ticket screenshots or QR codes here.</string>
     <string name="attachment_picker_title_more">Add another file</string>
     <string name="attachment_open_description">Open %1$s</string>
     <string name="attachment_remove_description">Remove %1$s</string>
-    <string name="attachment_identity_warning">Keep passports and identity documents out of Landing Kit for now.</string>
+    <string name="attachment_quick_access_set_description">Show %1$s first in Arrival Mode</string>
+    <string name="attachment_quick_access_remove_description">Stop showing %1$s first in Arrival Mode</string>
+    <string name="attachment_quick_access_failed">That choice couldn’t be changed. Try again.</string>
+    <string name="attachment_identity_warning">Keep passports and ID documents out of Landing Kit for now.</string>
     <string name="attachment_type_pdf" translatable="false">PDF</string>
-    <string name="attachment_type_image">IMAGE</string>
+    <string name="attachment_type_image">PHOTO</string>
     <string name="attachment_open">Open</string>
     <string name="attachment_remove">Remove</string>
     <string name="attachment_delete_title">Remove this attachment?</string>
-    <string name="attachment_delete_description">%1$s will be removed from this device. The original file won’t change.</string>
+    <string name="attachment_delete_description">%1$s will be removed</string>
     <string name="attachment_delete_action">Remove attachment</string>
     <string name="attachment_keep_action">Keep it</string>
-    <string name="attachment_removed">%1$s removed from this device.</string>
+    <string name="attachment_removed">%1$s removed</string>
     <plurals name="attachment_imported">
-        <item quantity="one">%d file encrypted and saved offline.</item>
-        <item quantity="other">%d files encrypted and saved offline.</item>
+        <item quantity="one">%d file saved for your arrival.</item>
+        <item quantity="other">%d files saved for your arrival.</item>
     </plurals>
-    <string name="attachment_import_partial">%1$d saved · %2$d couldn’t be imported.</string>
-    <string name="attachment_import_too_large">Each file must be 25 MB or smaller.</string>
-    <string name="attachment_import_unsupported">Choose a PDF or an image.</string>
-    <string name="attachment_import_failed">Those files couldn’t be imported. Try choosing them again.</string>
+    <string name="attachment_import_partial">%1$d saved · %2$d couldn’t be added.</string>
+    <string name="attachment_import_too_large">Choose files that are 25 MB or smaller.</string>
+    <string name="attachment_import_unsupported">Choose a PDF, photo or screenshot.</string>
+    <string name="attachment_import_failed">Those files couldn’t be added. Try choosing them again.</string>
     <string name="attachment_open_failed">This attachment couldn’t be opened.</string>
     <string name="attachment_no_viewer">No app on this device can open this file type.</string>
     <string name="attachment_delete_failed">This attachment couldn’t be removed. Try again.</string>
@@ -233,18 +252,18 @@
     <string name="attachment_protection_disabled_unavailable">Protection was turned off because device confirmation is no longer available.</string>
     <string name="attachment_retention_label">PAST ARRIVAL</string>
     <string name="attachment_retention_title">Keep it, or clear it when you’re ready</string>
-    <string name="attachment_retention_description">Landing Kit never expires evidence automatically. Remove these private copies when you no longer need them.</string>
-    <string name="attachment_cleanup_action">Remove all evidence</string>
-    <string name="attachment_cleanup_dialog_title">Remove all arrival evidence?</string>
+    <string name="attachment_retention_description">Landing Kit never removes these attachments on its own. Clear them whenever you no longer need them.</string>
+    <string name="attachment_cleanup_action">Remove all attachments</string>
+    <string name="attachment_cleanup_dialog_title">Remove all travel attachments?</string>
     <plurals name="attachment_cleanup_dialog_description">
-        <item quantity="one">This encrypted copy will be permanently removed from Landing Kit. The original file won’t change.</item>
-        <item quantity="other">All %d encrypted copies will be permanently removed from Landing Kit. The original files won’t change.</item>
+        <item quantity="one">This copy will be permanently removed from Landing Kit. The original will stay where you found it.</item>
+        <item quantity="other">All %d copies will be permanently removed from Landing Kit. The originals will stay where you found them.</item>
     </plurals>
     <string name="attachment_cleanup_confirm">Remove all files</string>
     <string name="attachment_cleanup_keep">Keep them</string>
     <plurals name="attachment_cleanup_complete">
-        <item quantity="one">%d attachment removed from this device.</item>
-        <item quantity="other">%d attachments removed from this device.</item>
+        <item quantity="one">%d attachment removed.</item>
+        <item quantity="other">%d attachments removed.</item>
     </plurals>
     <string name="attachment_cleanup_failed">These attachments couldn’t be removed. Try again.</string>
 
@@ -252,8 +271,8 @@
     <string name="share_sheet_label">SHARED TO LANDING KIT</string>
     <string name="share_sheet_title">Keep it with an arrival</string>
     <plurals name="share_sheet_count">
-        <item quantity="one">%d file is ready. Choose a kit and an encrypted copy will stay on this device.</item>
-        <item quantity="other">%d files are ready. Choose a kit and encrypted copies will stay on this device.</item>
+        <item quantity="one">%d file is ready. Choose an arrival and a private copy will stay in Landing Kit.</item>
+        <item quantity="other">%d files are ready. Choose an arrival and private copies will stay in Landing Kit.</item>
     </plurals>
     <string name="share_sheet_choose_kit">CHOOSE AN ARRIVAL KIT</string>
     <string name="share_sheet_trip_supporting_text">%1$s  •  %2$s</string>

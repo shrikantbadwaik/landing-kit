@@ -258,6 +258,25 @@ class LandingKitViewModel @Inject constructor(
         }
     }
 
+    internal fun setQuickAccessAttachment(
+        tripId: String,
+        attachmentId: String?,
+        onChanged: (Result<Unit>) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val result = try {
+                Result.success(
+                    attachmentRepository.setQuickAccessAttachment(tripId, attachmentId),
+                )
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Throwable) {
+                Result.failure(error)
+            }
+            onChanged(result)
+        }
+    }
+
     internal fun deleteAttachments(
         tripId: String,
         onDeleted: (Result<Int>) -> Unit,

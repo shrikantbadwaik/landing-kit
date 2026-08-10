@@ -67,6 +67,7 @@ class LocalAttachmentRepository(
                         mimeType = metadata.mimeType,
                         sizeBytes = encryptedSize,
                         createdAtMillis = System.currentTimeMillis(),
+                        isQuickAccess = false,
                     )
                     try {
                         dao.insertAttachment(entity)
@@ -118,6 +119,15 @@ class LocalAttachmentRepository(
                 )
             }
         }
+
+    override suspend fun setQuickAccessAttachment(
+        tripId: String,
+        attachmentId: String?,
+    ) = withContext(Dispatchers.IO) {
+        attachmentMutex.withLock {
+            dao.setQuickAccessAttachment(tripId, attachmentId)
+        }
+    }
 
     override suspend fun deleteAttachment(attachmentId: String) = withContext(Dispatchers.IO) {
         attachmentMutex.withLock {

@@ -49,6 +49,7 @@ data class KitAttachment(
     val mimeType: String,
     val sizeBytes: Long,
     val createdAtMillis: Long,
+    val isQuickAccess: Boolean = false,
 )
 
 enum class ItemCategory { CHECKLIST, DOCUMENT, TRANSPORT, MONEY, SAFETY }

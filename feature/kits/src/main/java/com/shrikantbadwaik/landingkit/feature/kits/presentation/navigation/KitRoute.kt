@@ -13,5 +13,8 @@ internal sealed interface KitRoute {
     data class Detail(val tripId: String) : KitRoute
 
     @Serializable
+    data class ArrivalMode(val tripId: String) : KitRoute
+
+    @Serializable
     data class Edit(val tripId: String) : KitRoute
 }
