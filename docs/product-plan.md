@@ -150,7 +150,7 @@ Goal: eliminate searching through email, Files, and screenshots at the moment of
 - [x] Accept content through the Android Sharesheet.
 - [x] Attach evidence to a dedicated arrival-kit section.
 - [x] Encrypt imported files using Android Keystore-backed AES-GCM keys.
-- [ ] Add biometric or device-credential protection where appropriate.
+- [x] Add biometric or device-credential protection where appropriate.
 - [x] Provide explicit per-attachment deletion and remove generated previews with the attachment.
 - [ ] Define longer-term retention and automatic-expiry policy.
 - [x] Keep passport scans and similarly high-risk identity documents out of the first attachment release.
@@ -271,7 +271,11 @@ Early validation should focus on behaviour rather than download volume:
 - Completed Android Sharesheet intake for single and multiple PDF/image streams, including cold-start and already-open app delivery.
 - Added an arrival-kit chooser before import, then routed shared content through the existing size validation and Android Keystore-backed encrypted attachment pipeline.
 - Kept attachment intake honest when no kit exists: users are asked to create a kit first rather than silently creating incomplete trip data.
-- Preserved the no-backend, no-account, and no-network-permission posture; biometric/device-credential policy and long-term retention remain the next Phase 2 decisions.
+- Preserved the no-backend, no-account, and no-network-permission posture; biometric/device-credential policy and long-term retention remained the next Phase 2 decisions.
+- Added optional biometric or device-credential confirmation before decrypting an attachment for viewing. A successful confirmation unlocks evidence for five minutes while Landing Kit remains foregrounded; leaving the app locks it immediately.
+- Required confirmation when enabling protection and when disabling it from a locked session, preventing the preference control from becoming a bypass.
+- Kept the security claim precise: attachment files remain encrypted at rest, while authentication is an app-level viewing gate rather than a biometric-bound encryption-key migration.
+- Left long-term attachment retention and automatic expiry as the final open Phase 2 product decision.
 
 ## Maintaining this plan
 

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,6 +38,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.asImageBitmap
@@ -70,10 +73,13 @@ internal fun AttachmentSection(
     attachments: List<KitAttachment>,
     isImporting: Boolean,
     feedback: String?,
+    protectionEnabled: Boolean,
+    protectionControlEnabled: Boolean,
     onLoadThumbnail: suspend (String) -> ByteArray?,
     onImport: () -> Unit,
     onOpen: (KitAttachment) -> Unit,
     onDelete: (KitAttachment) -> Unit,
+    onProtectionChange: (Boolean) -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -99,6 +105,11 @@ internal fun AttachmentSection(
                 text = stringResource(R.string.attachment_section_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            AttachmentProtectionControl(
+                protectionEnabled = protectionEnabled,
+                controlEnabled = protectionControlEnabled,
+                onProtectionChange = onProtectionChange,
             )
             AnimatedVisibility(
                 visible = feedback != null,
@@ -130,6 +141,83 @@ internal fun AttachmentSection(
                 text = stringResource(R.string.attachment_identity_warning),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun AttachmentProtectionControl(
+    protectionEnabled: Boolean,
+    controlEnabled: Boolean,
+    onProtectionChange: (Boolean) -> Unit,
+) {
+    val toggleDescription = stringResource(R.string.attachment_protection_toggle_description)
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = if (protectionEnabled) {
+            LandingKitColors.Seafoam.copy(alpha = .3f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .38f)
+        },
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                modifier = Modifier.size(38.dp),
+                shape = CircleShape,
+                color = if (protectionEnabled) {
+                    LandingKitColors.Forest
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant
+                },
+                contentColor = if (protectionEnabled) Color.White else LandingKitColors.Ink,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    val lockColor = if (protectionEnabled) Color.White else LandingKitColors.Ink
+                    Canvas(Modifier.size(18.dp)) {
+                        val strokeWidth = 1.7.dp.toPx()
+                        drawRoundRect(
+                            color = lockColor,
+                            topLeft = Offset(size.width * .16f, size.height * .43f),
+                            size = Size(size.width * .68f, size.height * .49f),
+                            cornerRadius = CornerRadius(2.dp.toPx()),
+                            style = Stroke(strokeWidth),
+                        )
+                        drawArc(
+                            color = lockColor,
+                            startAngle = 180f,
+                            sweepAngle = 180f,
+                            useCenter = false,
+                            topLeft = Offset(size.width * .29f, size.height * .08f),
+                            size = Size(size.width * .42f, size.height * .58f),
+                            style = Stroke(strokeWidth),
+                        )
+                    }
+                }
+            }
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.attachment_protection_title),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                Text(
+                    text = stringResource(R.string.attachment_protection_description),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(
+                checked = protectionEnabled,
+                onCheckedChange = onProtectionChange,
+                enabled = controlEnabled,
+                modifier = Modifier.semantics {
+                    contentDescription = toggleDescription
+                },
             )
         }
     }

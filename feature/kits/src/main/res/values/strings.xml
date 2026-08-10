@@ -222,6 +222,15 @@
     <string name="attachment_open_failed">This attachment couldn’t be opened.</string>
     <string name="attachment_no_viewer">No app on this device can open this file type.</string>
     <string name="attachment_delete_failed">This attachment couldn’t be removed. Try again.</string>
+    <string name="attachment_protection_title">Ask before opening</string>
+    <string name="attachment_protection_description">Use biometrics or your screen lock. Access stays open for 5 minutes, or until you leave the app.</string>
+    <string name="attachment_protection_toggle_description">Require identity confirmation before opening attachments</string>
+    <string name="attachment_auth_prompt_title">Open arrival evidence</string>
+    <string name="attachment_auth_prompt_subtitle">Confirm it’s you using biometrics or your screen lock</string>
+    <string name="attachment_authentication_failed">Your identity couldn’t be confirmed. Try again.</string>
+    <string name="attachment_authentication_not_enrolled">Set up a screen lock or biometric in Android Settings before enabling protection.</string>
+    <string name="attachment_authentication_unavailable">Biometric or screen-lock confirmation isn’t available on this device.</string>
+    <string name="attachment_protection_disabled_unavailable">Protection was turned off because device confirmation is no longer available.</string>
 
     <!-- Android Sharesheet intake -->
     <string name="share_sheet_label">SHARED TO LANDING KIT</string>

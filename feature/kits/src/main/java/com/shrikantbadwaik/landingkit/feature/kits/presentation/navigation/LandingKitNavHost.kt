@@ -46,6 +46,7 @@ import com.shrikantbadwaik.landingkit.core.model.ChecklistTemplate
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.LandingKitViewModel
 import com.shrikantbadwaik.landingkit.feature.kits.PendingSharedAttachments
+import com.shrikantbadwaik.landingkit.feature.kits.PendingAttachmentAuthentication
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.toUserMessage
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.LoadingScreen
@@ -65,6 +66,9 @@ internal fun LandingKitNavHost(
     trips: List<Trip>,
     personalTemplates: List<ChecklistTemplate>,
     pendingSharedAttachments: PendingSharedAttachments?,
+    attachmentProtectionEnabled: Boolean,
+    isAttachmentAccessUnlocked: Boolean,
+    pendingAttachmentAuthentication: PendingAttachmentAuthentication?,
     viewModel: LandingKitViewModel,
     navController: NavHostController = rememberNavController(),
 ) {
@@ -222,6 +226,16 @@ internal fun LandingKitNavHost(
                         onLoadAttachmentThumbnail = viewModel::attachmentThumbnail,
                         onPrepareAttachment = viewModel::prepareAttachment,
                         onDeleteAttachment = viewModel::deleteAttachment,
+                        attachmentProtectionEnabled = attachmentProtectionEnabled,
+                        isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
+                        pendingAttachmentAuthentication = pendingAttachmentAuthentication,
+                        onSetAttachmentProtection = viewModel::setAttachmentProtectionEnabled,
+                        onRequestAttachmentAuthentication =
+                            viewModel::requestAttachmentAuthentication,
+                        onFinishAttachmentAuthentication =
+                            viewModel::finishAttachmentAuthentication,
+                        onUnlockAttachmentAccess = viewModel::unlockAttachmentAccess,
+                        onLockAttachmentAccess = viewModel::lockAttachmentAccess,
                     )
                 }
             }

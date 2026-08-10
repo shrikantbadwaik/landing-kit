@@ -13,6 +13,7 @@ import com.shrikantbadwaik.landingkit.core.data.TripRepository
 import com.shrikantbadwaik.landingkit.core.model.ChecklistTemplate
 import com.shrikantbadwaik.landingkit.core.model.KitAttachment
 import com.shrikantbadwaik.landingkit.core.model.Trip
+import com.shrikantbadwaik.landingkit.core.data.preferences.UserPreferences
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.KitForm
 import com.shrikantbadwaik.landingkit.feature.kits.sample.SampleTripContent
 import com.shrikantbadwaik.landingkit.feature.kits.sample.sampleTrip
@@ -27,6 +28,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -35,11 +38,26 @@ class LandingKitViewModel @Inject constructor(
     private val repository: TripRepository,
     private val templateRepository: ChecklistTemplateRepository,
     private val attachmentRepository: AttachmentRepository,
+    private val userPreferences: UserPreferences,
 ) : ViewModel() {
     private val _pendingSharedAttachments = MutableStateFlow<PendingSharedAttachments?>(null)
     private val sharedAttachmentImports = ConcurrentHashMap.newKeySet<String>()
+    private val _isAttachmentAccessUnlocked = MutableStateFlow(false)
+    private val _pendingAttachmentAuthentication =
+        MutableStateFlow<PendingAttachmentAuthentication?>(null)
+    private var attachmentRelockJob: Job? = null
     val pendingSharedAttachments: StateFlow<PendingSharedAttachments?> =
         _pendingSharedAttachments.asStateFlow()
+    internal val attachmentProtectionEnabled: StateFlow<Boolean> =
+        userPreferences.attachmentProtectionEnabled.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false,
+        )
+    internal val isAttachmentAccessUnlocked: StateFlow<Boolean> =
+        _isAttachmentAccessUnlocked.asStateFlow()
+    internal val pendingAttachmentAuthentication: StateFlow<PendingAttachmentAuthentication?> =
+        _pendingAttachmentAuthentication.asStateFlow()
 
     internal val trips: StateFlow<TripCollectionState> = repository.observeTrips()
         .map<List<Trip>, TripCollectionState>(TripCollectionState::Ready)
@@ -112,6 +130,41 @@ class LandingKitViewModel @Inject constructor(
         viewModelScope.launch {
             onComplete(importAttachmentSources(tripId, sources))
         }
+    }
+
+    internal fun setAttachmentProtectionEnabled(enabled: Boolean) {
+        viewModelScope.launch { userPreferences.setAttachmentProtectionEnabled(enabled) }
+    }
+
+    internal fun requestAttachmentAuthentication(action: ProtectedAttachmentAction) {
+        if (_pendingAttachmentAuthentication.value != null) return
+        _pendingAttachmentAuthentication.value = PendingAttachmentAuthentication(
+            id = UUID.randomUUID().toString(),
+            action = action,
+        )
+    }
+
+    internal fun finishAttachmentAuthentication(requestId: String) {
+        _pendingAttachmentAuthentication.compareAndSet(
+            expect = _pendingAttachmentAuthentication.value?.takeIf { it.id == requestId },
+            update = null,
+        )
+    }
+
+    internal fun unlockAttachmentAccess() {
+        attachmentRelockJob?.cancel()
+        _isAttachmentAccessUnlocked.value = true
+        attachmentRelockJob = viewModelScope.launch {
+            delay(ATTACHMENT_UNLOCK_DURATION_MILLIS)
+            _isAttachmentAccessUnlocked.value = false
+        }
+    }
+
+    fun lockAttachmentAccess() {
+        attachmentRelockJob?.cancel()
+        attachmentRelockJob = null
+        _isAttachmentAccessUnlocked.value = false
+        _pendingAttachmentAuthentication.value = null
     }
 
     fun acceptSharedAttachments(sources: List<Uri>) {
@@ -217,6 +270,23 @@ data class PendingSharedAttachments(
     val id: String,
     val sources: List<Uri>,
 )
+
+internal data class PendingAttachmentAuthentication(
+    val id: String,
+    val action: ProtectedAttachmentAction,
+)
+
+internal sealed interface ProtectedAttachmentAction {
+    data class Open(val attachmentId: String) : ProtectedAttachmentAction
+    data class SetProtection(val enabled: Boolean) : ProtectedAttachmentAction
+}
+
+internal fun requiresAttachmentAuthentication(
+    protectionEnabled: Boolean,
+    accessUnlocked: Boolean,
+): Boolean = protectionEnabled && !accessUnlocked
+
+private const val ATTACHMENT_UNLOCK_DURATION_MILLIS = 5 * 60 * 1_000L
 
 private const val ATTACHMENT_LOG_TAG = "LandingKitAttachment"
 

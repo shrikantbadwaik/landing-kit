@@ -2,17 +2,17 @@ package com.shrikantbadwaik.landingkit
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.fragment.app.FragmentActivity
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitTheme
 import com.shrikantbadwaik.landingkit.feature.kits.LandingKitApp
 import com.shrikantbadwaik.landingkit.feature.kits.LandingKitViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     private val viewModel: LandingKitViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +30,11 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         receiveSharedAttachments(intent)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) viewModel.lockAttachmentAccess()
     }
 
     private fun receiveSharedAttachments(incomingIntent: Intent?) {
