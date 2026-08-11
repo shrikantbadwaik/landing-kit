@@ -12,6 +12,7 @@ import java.io.DataOutputStream
 import java.io.File
 import java.io.InputStream
 import java.io.IOException
+import java.io.OutputStream
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -105,6 +106,20 @@ class EncryptedAttachmentStore(context: Context) {
             return destination
         } finally {
             temporary.delete()
+        }
+    }
+
+    fun exists(tripId: String, attachmentId: String): Boolean =
+        attachmentFile(tripId, attachmentId).isFile
+
+    fun verifyDecryptable(tripId: String, attachmentId: String): Boolean {
+        val source = attachmentFile(tripId, attachmentId)
+        if (!source.isFile) return false
+        return try {
+            decryptFile(source, OutputStream.nullOutputStream(), MAX_ATTACHMENT_BYTES)
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 

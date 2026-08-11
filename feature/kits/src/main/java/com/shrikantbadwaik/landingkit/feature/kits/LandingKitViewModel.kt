@@ -12,6 +12,8 @@ import com.shrikantbadwaik.landingkit.core.data.UnsupportedAttachmentException
 import com.shrikantbadwaik.landingkit.core.data.TripRepository
 import com.shrikantbadwaik.landingkit.core.model.ChecklistTemplate
 import com.shrikantbadwaik.landingkit.core.model.KitAttachment
+import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalCheckResult
+import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalContentFingerprint
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.core.data.preferences.UserPreferences
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.KitForm
@@ -48,6 +50,12 @@ class LandingKitViewModel @Inject constructor(
     private val _isAttachmentAccessUnlocked = MutableStateFlow(false)
     private val _pendingAttachmentAuthentication =
         MutableStateFlow<PendingAttachmentAuthentication?>(null)
+    private val offlineArrivalCheckRunner = OfflineArrivalCheckRunner(
+        tripRepository = repository,
+        attachmentRepository = attachmentRepository,
+    )
+    private val _offlineArrivalCheckState =
+        MutableStateFlow<OfflineArrivalCheckUiState>(OfflineArrivalCheckUiState.Idle)
     private var attachmentRelockJob: Job? = null
     val pendingSharedAttachments: StateFlow<PendingSharedAttachments?> =
         _pendingSharedAttachments.asStateFlow()
@@ -63,6 +71,8 @@ class LandingKitViewModel @Inject constructor(
         _isAttachmentAccessUnlocked.asStateFlow()
     internal val pendingAttachmentAuthentication: StateFlow<PendingAttachmentAuthentication?> =
         _pendingAttachmentAuthentication.asStateFlow()
+    internal val offlineArrivalCheckState: StateFlow<OfflineArrivalCheckUiState> =
+        _offlineArrivalCheckState.asStateFlow()
 
     internal val trips: StateFlow<TripCollectionState> = repository.observeTrips()
         .map<List<Trip>, TripCollectionState>(TripCollectionState::Ready)
@@ -280,6 +290,31 @@ class LandingKitViewModel @Inject constructor(
         }
     }
 
+    internal fun runOfflineArrivalCheck(
+        trip: Trip,
+        attachments: List<KitAttachment>,
+    ) {
+        if (_offlineArrivalCheckState.value is OfflineArrivalCheckUiState.Checking) return
+        _offlineArrivalCheckState.value = OfflineArrivalCheckUiState.Checking(trip.id)
+        viewModelScope.launch {
+            _offlineArrivalCheckState.value = try {
+                OfflineArrivalCheckUiState.Complete(
+                    tripId = trip.id,
+                    result = offlineArrivalCheckRunner.run(trip, attachments),
+                    contentFingerprint = OfflineArrivalContentFingerprint.derive(
+                        trip,
+                        attachments,
+                    ),
+                )
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Throwable) {
+                Log.e(ATTACHMENT_LOG_TAG, "Offline arrival check failed", error)
+                OfflineArrivalCheckUiState.Failed(trip.id)
+            }
+        }
+    }
+
     internal fun deleteAttachment(
         attachmentId: String,
         onDeleted: (Result<Unit>) -> Unit,
@@ -352,6 +387,7 @@ internal data class PendingAttachmentAuthentication(
 internal sealed interface ProtectedAttachmentAction {
     data class Open(val attachmentId: String) : ProtectedAttachmentAction
     data class SetProtection(val enabled: Boolean) : ProtectedAttachmentAction
+    data class VerifyOfflineCheck(val tripId: String) : ProtectedAttachmentAction
 }
 
 internal fun requiresAttachmentAuthentication(
@@ -366,4 +402,15 @@ private const val ATTACHMENT_LOG_TAG = "LandingKitAttachment"
 internal sealed interface TripCollectionState {
     data object Loading : TripCollectionState
     data class Ready(val trips: List<Trip>) : TripCollectionState
+}
+
+internal sealed interface OfflineArrivalCheckUiState {
+    data object Idle : OfflineArrivalCheckUiState
+    data class Checking(val tripId: String) : OfflineArrivalCheckUiState
+    data class Complete(
+        val tripId: String,
+        val result: OfflineArrivalCheckResult,
+        val contentFingerprint: String,
+    ) : OfflineArrivalCheckUiState
+    data class Failed(val tripId: String) : OfflineArrivalCheckUiState
 }

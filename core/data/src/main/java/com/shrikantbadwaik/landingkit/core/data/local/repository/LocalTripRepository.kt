@@ -5,6 +5,7 @@ import com.shrikantbadwaik.landingkit.core.data.local.dao.TripDao
 import com.shrikantbadwaik.landingkit.core.data.local.attachment.EncryptedAttachmentStore
 import com.shrikantbadwaik.landingkit.core.data.local.mapper.toEntity
 import com.shrikantbadwaik.landingkit.core.data.local.mapper.toModel
+import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalCheckStatus
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.core.model.TripValidator
 import kotlinx.coroutines.flow.Flow
@@ -28,8 +29,20 @@ class LocalTripRepository(
     override suspend fun saveTrip(trip: Trip) = writeMutex.withLock {
         val errors = TripValidator.validate(trip)
         require(errors.isEmpty()) { errors.joinToString() }
+        val existing = tripDao.getTrip(trip.id)?.trip
+        val tripToSave = if (existing == null) {
+            trip
+        } else {
+            trip.copy(
+                offlineCheckStatus = OfflineArrivalCheckStatus.valueOf(
+                    existing.offlineCheckStatus,
+                ),
+                offlineCheckedAtMillis = existing.offlineCheckedAtMillis,
+                offlineCheckContentFingerprint = existing.offlineCheckContentFingerprint,
+            )
+        }
         tripDao.replaceTrip(
-            trip = trip.toEntity(),
+            trip = tripToSave.toEntity(),
             items = trip.items.mapIndexed { index, item -> item.toEntity(trip.id, index) },
         )
     }
@@ -52,5 +65,19 @@ class LocalTripRepository(
         enabled: Boolean,
     ) = writeMutex.withLock {
         tripDao.setArrivalReminderEnabled(tripId = tripId, enabled = enabled)
+    }
+
+    override suspend fun recordOfflineArrivalCheck(
+        tripId: String,
+        status: OfflineArrivalCheckStatus,
+        checkedAtMillis: Long,
+        contentFingerprint: String,
+    ) = writeMutex.withLock {
+        tripDao.recordOfflineArrivalCheck(
+            tripId = tripId,
+            status = status.name,
+            checkedAtMillis = checkedAtMillis,
+            contentFingerprint = contentFingerprint,
+        )
     }
 }

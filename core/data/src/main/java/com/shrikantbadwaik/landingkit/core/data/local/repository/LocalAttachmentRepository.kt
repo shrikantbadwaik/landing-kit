@@ -120,6 +120,15 @@ class LocalAttachmentRepository(
             }
         }
 
+    override suspend fun verifyAttachmentReadable(attachmentId: String): Boolean =
+        withContext(Dispatchers.IO) {
+            attachmentMutex.withLock {
+                val attachment = dao.getAttachment(attachmentId) ?: return@withLock false
+                store.exists(attachment.tripId, attachment.id) &&
+                    store.verifyDecryptable(attachment.tripId, attachment.id)
+            }
+        }
+
     override suspend fun setQuickAccessAttachment(
         tripId: String,
         attachmentId: String?,

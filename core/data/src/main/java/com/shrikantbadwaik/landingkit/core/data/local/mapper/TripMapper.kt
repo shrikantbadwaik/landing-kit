@@ -4,6 +4,7 @@ import com.shrikantbadwaik.landingkit.core.data.local.entity.ArrivalItemEntity
 import com.shrikantbadwaik.landingkit.core.data.local.entity.TripEntity
 import com.shrikantbadwaik.landingkit.core.data.local.model.TripWithItems
 import com.shrikantbadwaik.landingkit.core.model.ArrivalCard
+import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalCheckStatus
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -24,6 +25,9 @@ internal fun TripWithItems.toModel() = Trip(
     ),
     items = items.sortedBy(ArrivalItemEntity::sortOrder).map(ArrivalItemEntity::toModel),
     arrivalReminderEnabled = trip.arrivalReminderEnabled,
+    offlineCheckStatus = OfflineArrivalCheckStatus.valueOf(trip.offlineCheckStatus),
+    offlineCheckedAtMillis = trip.offlineCheckedAtMillis,
+    offlineCheckContentFingerprint = trip.offlineCheckContentFingerprint,
 )
 
 internal fun Trip.toEntity() = TripEntity(
@@ -39,6 +43,9 @@ internal fun Trip.toEntity() = TripEntity(
     emergencyContact = arrivalCard.emergencyContact,
     dietaryPhrase = arrivalCard.dietaryPhrase,
     arrivalReminderEnabled = arrivalReminderEnabled,
+    offlineCheckStatus = offlineCheckStatus.name,
+    offlineCheckedAtMillis = offlineCheckedAtMillis,
+    offlineCheckContentFingerprint = offlineCheckContentFingerprint,
 )
 
 private fun String.toArrivalDate(): LocalDate = runCatching(LocalDate::parse)

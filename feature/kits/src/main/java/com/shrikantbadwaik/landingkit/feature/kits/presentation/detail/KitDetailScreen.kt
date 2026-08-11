@@ -42,7 +42,9 @@ import com.shrikantbadwaik.landingkit.core.data.PreparedAttachment
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.ArrivalItem
 import com.shrikantbadwaik.landingkit.core.model.KitAttachment
+import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalContentFingerprint
 import com.shrikantbadwaik.landingkit.core.model.Trip
+import com.shrikantbadwaik.landingkit.core.model.effectiveOfflineCheckStatus
 import com.shrikantbadwaik.landingkit.feature.kits.AttachmentImportResult
 import com.shrikantbadwaik.landingkit.feature.kits.PendingAttachmentAuthentication
 import com.shrikantbadwaik.landingkit.feature.kits.ProtectedAttachmentAction
@@ -61,6 +63,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.EditKitAction
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.EmptyChecklistCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.KitDangerZone
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.OfflineCheckStatusCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.PastArrivalNotice
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPhase
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.arrivalPhase
@@ -76,6 +79,7 @@ internal fun KitDetailScreen(
     attachments: List<KitAttachment>,
     onBack: () -> Unit,
     onArrivalMode: () -> Unit,
+    onOfflineCheck: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onCheck: (ArrivalItem, Boolean) -> Unit,
@@ -106,6 +110,11 @@ internal fun KitDetailScreen(
     var arrivalReminderChangeFailed by remember(trip.id) { mutableStateOf(false) }
     val dateFormatter = DateTimeFormatter.ofPattern(stringResource(R.string.date_format_detail))
     val phase = remember(trip.arrivalDate) { trip.arrivalPhase(LocalDate.now()) }
+    val offlineCheckStatus = remember(trip, attachments) {
+        trip.effectiveOfflineCheckStatus(
+            OfflineArrivalContentFingerprint.derive(trip, attachments),
+        )
+    }
     val showAttachmentFeedback: (String) -> Unit = { message ->
         attachmentFeedback = message
         attachmentFeedbackVersion++
@@ -309,6 +318,12 @@ internal fun KitDetailScreen(
                         onEnabledChange = setArrivalReminder,
                     )
                 }
+            }
+            item(key = "detail_offline_check") {
+                OfflineCheckStatusCard(
+                    status = offlineCheckStatus,
+                    onClick = onOfflineCheck,
+                )
             }
             item(key = "detail_attachments") {
                 AttachmentSection(

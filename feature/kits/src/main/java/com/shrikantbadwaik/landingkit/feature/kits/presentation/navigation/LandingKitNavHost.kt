@@ -57,6 +57,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.arrivalmode.Arri
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.KitDetailScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.KitEditorScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.HomeScreen
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.offlinecheck.OfflineCheckScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.curatedChecklistTemplates
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.defaultChecklistContent
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.sampleTripContent
@@ -82,6 +83,7 @@ internal fun LandingKitNavHost(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val offlineCheckState by viewModel.offlineArrivalCheckState.collectAsStateWithLifecycle()
     var importingSharedAttachmentsInto by remember(pendingSharedAttachments?.id) {
         mutableStateOf<String?>(null)
     }
@@ -221,6 +223,9 @@ internal fun LandingKitNavHost(
                         onArrivalMode = {
                             navController.navigate(KitRoute.ArrivalMode(trip.id))
                         },
+                        onOfflineCheck = {
+                            navController.navigate(KitRoute.OfflineCheck(trip.id))
+                        },
                         onEdit = { navController.navigate(KitRoute.Edit(trip.id)) },
                         onDelete = {
                             viewModel.deleteKit(trip.id) {
@@ -267,6 +272,58 @@ internal fun LandingKitNavHost(
                         attachmentProtectionEnabled = attachmentProtectionEnabled,
                         isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
                         pendingAttachmentAuthentication = pendingAttachmentAuthentication,
+                        onSetAttachmentProtection = viewModel::setAttachmentProtectionEnabled,
+                        onRequestAttachmentAuthentication =
+                            viewModel::requestAttachmentAuthentication,
+                        onFinishAttachmentAuthentication =
+                            viewModel::finishAttachmentAuthentication,
+                        onUnlockAttachmentAccess = viewModel::unlockAttachmentAccess,
+                        onLockAttachmentAccess = viewModel::lockAttachmentAccess,
+                    )
+                }
+            }
+
+            composable<KitRoute.OfflineCheck> { backStackEntry ->
+                val route = backStackEntry.toRoute<KitRoute.OfflineCheck>()
+                val trip = trips.firstOrNull { it.id == route.tripId }
+                val attachments by remember(route.tripId) {
+                    viewModel.attachments(route.tripId)
+                }.collectAsStateWithLifecycle(initialValue = emptyList())
+                var missingRouteConfirmed by remember(route.tripId) { mutableStateOf(false) }
+
+                LaunchedEffect(route.tripId, trip) {
+                    if (trip == null) {
+                        delay(MISSING_ROUTE_GRACE_MILLIS)
+                        missingRouteConfirmed = true
+                    } else {
+                        missingRouteConfirmed = false
+                    }
+                }
+
+                if (trip == null) {
+                    if (missingRouteConfirmed) {
+                        MissingKitScreen(onHome = returnHome)
+                    } else {
+                        LoadingScreen()
+                    }
+                } else {
+                    OfflineCheckScreen(
+                        trip = trip,
+                        attachments = attachments,
+                        state = offlineCheckState,
+                        onBack = { navController.popBackStack() },
+                        onRunCheck = {
+                            viewModel.runOfflineArrivalCheck(trip, attachments)
+                        },
+                        onEdit = { navController.navigate(KitRoute.Edit(trip.id)) },
+                        onManageEvidence = { navController.popBackStack() },
+                        onOpenArrivalMode = {
+                            navController.navigate(KitRoute.ArrivalMode(trip.id))
+                        },
+                        attachmentProtectionEnabled = attachmentProtectionEnabled,
+                        isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
+                        pendingAttachmentAuthentication = pendingAttachmentAuthentication,
+                        onPrepareAttachment = viewModel::prepareAttachment,
                         onSetAttachmentProtection = viewModel::setAttachmentProtectionEnabled,
                         onRequestAttachmentAuthentication =
                             viewModel::requestAttachmentAuthentication,

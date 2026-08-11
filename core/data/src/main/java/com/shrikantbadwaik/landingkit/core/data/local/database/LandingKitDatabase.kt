@@ -19,7 +19,7 @@ import com.shrikantbadwaik.landingkit.core.data.local.entity.TripEntity
         ChecklistTemplateItemEntity::class,
         AttachmentEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class LandingKitDatabase : RoomDatabase() {

@@ -203,6 +203,36 @@
     <string name="arrival_reminder_notification_body">Open your %1$s arrival details.</string>
     <string name="date_format_detail">EEEE, d MMMM yyyy</string>
 
+    <!-- Verified offline arrival check -->
+    <string name="offline_check_header">OFFLINE ARRIVAL CHECK</string>
+    <string name="offline_check_badge">On this phone</string>
+    <string name="offline_check_card_title">Check this arrival kit</string>
+    <string name="offline_check_card_not_checked">Not checked</string>
+    <string name="offline_check_card_ready">Ready on this phone</string>
+    <string name="offline_check_card_attention">Needs attention</string>
+    <string name="offline_check_card_description">Verify the stay, address and selected ticket before signal disappears.</string>
+    <string name="offline_check_card_action">Check  →</string>
+    <string name="offline_check_intro">A quick device-local test of the essentials you’ll need after landing.</string>
+    <string name="offline_check_status_not_checked">Not checked</string>
+    <string name="offline_check_status_ready">Ready on this phone</string>
+    <string name="offline_check_status_attention">Needs attention</string>
+    <string name="offline_check_status_checking">Checking this phone…</string>
+    <string name="offline_check_status_failed">The check couldn’t finish. Try again.</string>
+    <string name="offline_check_checked_now">Checked just now</string>
+    <string name="offline_check_checked_at">Last checked %1$s</string>
+    <string name="offline_check_run_action">Run offline check</string>
+    <string name="offline_check_run_again_action">Check again</string>
+    <string name="offline_check_rule_stay">Stay saved</string>
+    <string name="offline_check_rule_address">Address of the stay saved</string>
+    <string name="offline_check_rule_evidence">Quick-access document selected</string>
+    <string name="offline_check_rule_readable">Selected evidence decrypts on this phone</string>
+    <string name="offline_check_fix_details">Edit stay or address</string>
+    <string name="offline_check_fix_evidence">Choose quick-access document</string>
+    <string name="offline_check_rehearse_action">View in Arrival Mode</string>
+    <string name="offline_check_honesty_title">What this check means</string>
+    <string name="offline_check_honesty_copy">This confirms a locally saved copy on this phone, not a live pass. Keep a backup for phone loss or an empty battery.</string>
+    <string name="offline_check_unlock_cancelled">Unlock was cancelled. This kit remains not checked.</string>
+
     <!-- Arrival mode -->
     <string name="arrival_mode_action">Arrival mode  →</string>
     <string name="arrival_mode_header">ARRIVAL MODE</string>

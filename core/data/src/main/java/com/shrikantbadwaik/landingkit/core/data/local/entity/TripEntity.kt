@@ -18,4 +18,8 @@ data class TripEntity(
     @ColumnInfo(name = "emergency_contact") val emergencyContact: String,
     @ColumnInfo(name = "dietary_phrase") val dietaryPhrase: String,
     @ColumnInfo(name = "arrival_reminder_enabled") val arrivalReminderEnabled: Boolean,
+    @ColumnInfo(name = "offline_check_status") val offlineCheckStatus: String,
+    @ColumnInfo(name = "offline_checked_at") val offlineCheckedAtMillis: Long?,
+    @ColumnInfo(name = "offline_check_content_fingerprint")
+    val offlineCheckContentFingerprint: String?,
 )

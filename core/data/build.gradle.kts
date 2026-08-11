@@ -11,7 +11,12 @@ android {
     namespace = "com.shrikantbadwaik.landingkit.core.data"
     compileSdk = libs.versions.compile.sdk.get().toInt()
 
-    defaultConfig { minSdk = libs.versions.min.sdk.get().toInt() }
+    defaultConfig {
+        minSdk = libs.versions.min.sdk.get().toInt()
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    sourceSets["androidTest"].assets.srcDir("$projectDir/schemas")
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -35,6 +40,9 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.android.compiler)
+    androidTestImplementation(libs.androidx.room.testing)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
 }
 
 ksp {

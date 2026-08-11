@@ -47,6 +47,20 @@ interface TripDao {
     )
     suspend fun setArrivalReminderEnabled(tripId: String, enabled: Boolean)
 
+    @Query(
+        """UPDATE trips
+            SET offline_check_status = :status,
+                offline_checked_at = :checkedAtMillis,
+                offline_check_content_fingerprint = :contentFingerprint
+            WHERE id = :tripId""",
+    )
+    suspend fun recordOfflineArrivalCheck(
+        tripId: String,
+        status: String,
+        checkedAtMillis: Long,
+        contentFingerprint: String,
+    )
+
     @Transaction
     suspend fun replaceTrip(trip: TripEntity, items: List<ArrivalItemEntity>) {
         deleteItems(trip.id)

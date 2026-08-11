@@ -29,6 +29,8 @@ internal fun rememberProtectedAttachmentOpener(
     onUnlockAccess: () -> Unit,
     onLockAccess: () -> Unit,
     onFeedback: (String) -> Unit,
+    onOfflineCheckAuthenticated: (String) -> Unit = {},
+    onAuthenticationCancelled: (ProtectedAttachmentAction) -> Unit = {},
 ): (KitAttachment) -> Unit {
     val context = LocalContext.current
     val activity = remember(context) { context.findFragmentActivity() }
@@ -37,6 +39,8 @@ internal fun rememberProtectedAttachmentOpener(
     val authenticationSubtitle = stringResource(R.string.attachment_auth_prompt_subtitle)
     val latestAttachments = rememberUpdatedState(attachments)
     val latestFeedback = rememberUpdatedState(onFeedback)
+    val latestOfflineCheckAuthenticated = rememberUpdatedState(onOfflineCheckAuthenticated)
+    val latestAuthenticationCancelled = rememberUpdatedState(onAuthenticationCancelled)
 
     val openAttachment: (KitAttachment) -> Unit = { attachment ->
         onPrepareAttachment(attachment.id) { result ->
@@ -84,9 +88,16 @@ internal fun rememberProtectedAttachmentOpener(
                             onSetProtection(action.enabled)
                             if (action.enabled) onUnlockAccess() else onLockAccess()
                         }
+                        is ProtectedAttachmentAction.VerifyOfflineCheck -> {
+                            onUnlockAccess()
+                            latestOfflineCheckAuthenticated.value(action.tripId)
+                        }
                     }
                 },
-                onCancelled = { onFinishAuthentication(request.id) },
+                onCancelled = {
+                    onFinishAuthentication(request.id)
+                    latestAuthenticationCancelled.value(request.action)
+                },
                 onError = {
                     onFinishAuthentication(request.id)
                     latestFeedback.value(

@@ -184,12 +184,19 @@ This is a post-MVP enhancement phase and is not a prerequisite for the first bet
 
 Priority: P0
 
-- [ ] Add a “Check my arrival kit” rehearsal that verifies essential arrival details are present.
-- [ ] Prove that the selected ticket or confirmation exists in app-owned storage, decrypts successfully, and can be rendered locally.
-- [ ] Use concrete results such as “Ready on this phone”, “Needs attention”, and “Not checked” instead of a percentage or safety score.
-- [ ] Record when the kit was last checked and invalidate that result after relevant details, attachments, or quick-access choices change.
-- [ ] Clearly distinguish a static saved copy from a live pass and explain that rotating codes or changed travel details may still require the original provider.
-- [ ] State honestly that readiness on this phone does not protect against a lost, broken, or discharged device.
+- [x] Add a “Check my arrival kit” rehearsal that verifies essential arrival details are present.
+- [x] Prove that the selected ticket or confirmation exists in app-owned storage, decrypts successfully, and can be rendered locally.
+- [x] Use concrete results such as “Ready on this phone”, “Needs attention”, and “Not checked” instead of a percentage or safety score.
+- [x] Record when the kit was last checked and invalidate that result after relevant details, attachments, or quick-access choices change.
+- [x] Clearly distinguish a static saved copy from a live pass and explain that rotating codes or changed travel details may still require the original provider.
+- [x] State honestly that readiness on this phone does not protect against a lost, broken, or discharged device.
+
+Verification completed 11 August 2026: model, data, feature-unit, app-assembly,
+Room migration, encrypted-store, and Compose accessibility suites passed. On a
+Pixel 9 Pro Android 17 emulator at 200% font scale, the selected PDF produced
+“Ready on this phone”, persisted after a force-stop/relaunch, changed to “Not
+checked” when quick access was removed, and could be rendered from Arrival Mode
+in airplane mode alongside the preferred local-language address.
 
 Exit condition: in airplane mode, the traveller can open Arrival Mode, retrieve the local-language address, and display the selected ticket or confirmation without unavailable content or an unexpected dependency.
 

@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.ArrivalItem
+import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalCheckStatus
 import com.shrikantbadwaik.landingkit.feature.kits.R
 
 @Composable
@@ -230,6 +231,60 @@ internal fun ArrivalReminderCard(
             Switch(
                 checked = enabled,
                 onCheckedChange = null,
+            )
+        }
+    }
+}
+
+@Composable
+internal fun OfflineCheckStatusCard(
+    status: OfflineArrivalCheckStatus,
+    onClick: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = when (status) {
+            OfflineArrivalCheckStatus.ReadyOnThisPhone ->
+                LandingKitColors.Seafoam.copy(alpha = .28f)
+            OfflineArrivalCheckStatus.NeedsAttention ->
+                LandingKitColors.Coral.copy(alpha = .16f)
+            OfflineArrivalCheckStatus.NotChecked -> MaterialTheme.colorScheme.surface
+        },
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Column(Modifier.padding(18.dp)) {
+            Text(
+                text = stringResource(R.string.offline_check_card_title),
+                style = MaterialTheme.typography.titleSmall,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(
+                    when (status) {
+                        OfflineArrivalCheckStatus.ReadyOnThisPhone ->
+                            R.string.offline_check_card_ready
+                        OfflineArrivalCheckStatus.NeedsAttention ->
+                            R.string.offline_check_card_attention
+                        OfflineArrivalCheckStatus.NotChecked ->
+                            R.string.offline_check_card_not_checked
+                    },
+                ),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(Modifier.height(5.dp))
+            Text(
+                text = stringResource(R.string.offline_check_card_description),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = stringResource(R.string.offline_check_card_action),
+                style = MaterialTheme.typography.labelLarge,
             )
         }
     }

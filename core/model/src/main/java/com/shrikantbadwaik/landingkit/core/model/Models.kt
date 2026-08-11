@@ -10,6 +10,10 @@ data class Trip(
     val arrivalCard: ArrivalCard,
     val items: List<ArrivalItem>,
     val arrivalReminderEnabled: Boolean = false,
+    val offlineCheckStatus: OfflineArrivalCheckStatus =
+        OfflineArrivalCheckStatus.NotChecked,
+    val offlineCheckedAtMillis: Long? = null,
+    val offlineCheckContentFingerprint: String? = null,
 )
 
 data class ArrivalCard(
