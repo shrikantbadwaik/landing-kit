@@ -331,7 +331,7 @@ private fun ArrivalEvidenceAction(
                 Text(
                     text = stringResource(R.string.arrival_mode_evidence_open),
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = LandingKitColors.Ink,
                 )
             }
         }

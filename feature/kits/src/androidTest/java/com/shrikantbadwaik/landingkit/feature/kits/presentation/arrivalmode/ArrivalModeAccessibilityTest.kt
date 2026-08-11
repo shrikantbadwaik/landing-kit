@@ -1,25 +1,31 @@
 package com.shrikantbadwaik.landingkit.feature.kits.presentation.arrivalmode
 
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertWidthIsAtLeast
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollToKey
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitTheme
 import com.shrikantbadwaik.landingkit.core.model.ArrivalCard
 import com.shrikantbadwaik.landingkit.core.model.KitAttachment
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import java.time.LocalDate
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -84,10 +90,60 @@ class ArrivalModeAccessibilityTest {
         ).assert(isHeading)
     }
 
+    @Test
+    fun evidence_open_text_meets_normal_text_contrast_in_dark_theme() {
+        val openLabel = composeRule.activity.getString(R.string.arrival_mode_evidence_open)
+
+        composeRule.setContent {
+            LandingKitTheme(darkTheme = true) {
+                ArrivalModeScreen(
+                    trip = sampleTrip,
+                    attachments = listOf(sampleAttachment),
+                    onBack = {},
+                    onPrepareAttachment = { _, _ -> },
+                    attachmentProtectionEnabled = false,
+                    isAttachmentAccessUnlocked = true,
+                    pendingAttachmentAuthentication = null,
+                    onSetAttachmentProtection = {},
+                    onRequestAttachmentAuthentication = {},
+                    onFinishAttachmentAuthentication = {},
+                    onUnlockAttachmentAccess = {},
+                    onLockAttachmentAccess = {},
+                )
+            }
+        }
+
+        composeRule.onNode(hasScrollAction()).performScrollToKey("arrival_mode_attachment")
+        val pixels = composeRule.onNodeWithText(openLabel, useUnmergedTree = true)
+            .captureToImage()
+            .toPixelMap()
+        var maximumContrast = 1f
+        for (x in 0 until pixels.width) {
+            for (y in 0 until pixels.height) {
+                maximumContrast = maxOf(
+                    maximumContrast,
+                    contrastRatio(pixels[x, y], LandingKitColors.Sun),
+                )
+            }
+        }
+
+        assertTrue(
+            "Open action contrast was $maximumContrast; expected at least $MINIMUM_TEXT_CONTRAST",
+            maximumContrast >= MINIMUM_TEXT_CONTRAST,
+        )
+    }
+
+    private fun contrastRatio(first: Color, second: Color): Float {
+        val lighter = maxOf(first.luminance(), second.luminance())
+        val darker = minOf(first.luminance(), second.luminance())
+        return (lighter + 0.05f) / (darker + 0.05f)
+    }
+
     private companion object {
         val isHeading = SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)
         const val LOCAL_ADDRESS = "京都市東山区祇園町南側 570-123 2F"
         const val ATTACHMENT_NAME = "Boarding pass.pdf"
+        const val MINIMUM_TEXT_CONTRAST = 4.5f
 
         val sampleTrip = Trip(
             id = "trip",

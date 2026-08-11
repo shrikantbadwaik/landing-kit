@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -338,7 +339,8 @@ private fun AttachmentPickerTile(
     Column(
         modifier = Modifier
             .padding(top = 12.dp, end = 12.dp)
-            .size(tileSize)
+            .width(tileSize)
+            .heightIn(min = tileSize)
             .clip(shape)
             .background(LandingKitColors.Sky.copy(alpha = .16f))
             .drawBehind {
@@ -387,7 +389,7 @@ private fun AttachmentPickerTile(
             },
             style = MaterialTheme.typography.labelSmall,
             color = outlineColor,
-            maxLines = 2,
+            maxLines = 3,
             textAlign = TextAlign.Center,
         )
     }
