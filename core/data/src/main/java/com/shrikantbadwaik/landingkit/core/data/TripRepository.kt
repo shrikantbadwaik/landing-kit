@@ -17,4 +17,10 @@ interface TripRepository {
         checkedAtMillis: Long,
         contentFingerprint: String,
     )
+    suspend fun recordPlanBCheck(
+        tripId: String,
+        status: OfflineArrivalCheckStatus,
+        checkedAtMillis: Long,
+        contentFingerprint: String,
+    )
 }

@@ -204,11 +204,18 @@ Exit condition: in airplane mode, the traveller can open Arrival Mode, retrieve 
 
 Priority: P0
 
-- [ ] Store fallback transport, user-recorded last-service information, accommodation check-in cutoff, late-arrival instructions, and accommodation contact details.
-- [ ] Allow an optional expected cost or payment fallback and alternate-stay note without turning Landing Kit into a live transport or booking service.
-- [ ] Record when volatile details were last checked and present them as traveller-supplied notes rather than live truth.
-- [ ] Add a focused “If delayed” card to Arrival Mode.
-- [ ] Extend the offline arrival test with independent Plan B readiness rules.
+- [x] Store fallback transport, user-recorded last-service information, accommodation check-in cutoff, late-arrival instructions, and accommodation contact details.
+- [x] Allow an optional expected cost or payment fallback and alternate-stay note without turning Landing Kit into a live transport or booking service.
+- [x] Record when volatile details were last checked and present them as traveller-supplied notes rather than live truth.
+- [x] Add a focused “If delayed” card to Arrival Mode.
+- [x] Extend the offline arrival test with independent Plan B readiness rules.
+
+Verification completed 21 August 2026: model and feature unit tests, the Room
+6-to-7 migration test, and Compose accessibility tests passed. On a Pixel 9 Pro
+Android 17 emulator at 200% font scale, Plan B independently reported missing
+recovery details, persisted its result and timestamp after force-stop/relaunch,
+and remained visible directly after the primary transfer instructions in Arrival
+Mode with airplane mode enabled.
 
 Exit condition: when the primary transfer or check-in plan fails, the traveller can find an actionable, previously prepared fallback without connectivity.
 

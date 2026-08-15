@@ -1,6 +1,12 @@
 package com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.component
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -67,19 +73,24 @@ internal fun FormSection(
     number: String,
     title: String,
     accent: Color,
+    expanded: Boolean? = null,
+    onToggle: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
+    val collapsible = expanded != null && onToggle != null
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(if (collapsible) Modifier.clickable { onToggle() } else Modifier),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Surface(
                     color = accent,
                     contentColor = LandingKitColors.Ink,
@@ -92,9 +103,38 @@ internal fun FormSection(
                     )
                 }
                 Spacer(Modifier.width(12.dp))
-                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    title,
+                    modifier = if (collapsible) Modifier.weight(1f) else Modifier,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                if (collapsible) {
+                    Text(
+                        text = if (expanded) "−" else "+",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
-            content()
+            if (collapsible) {
+                AnimatedVisibility(
+                    visible = expanded,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(top = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        content()
+                    }
+                }
+            } else {
+                Spacer(Modifier.height(16.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    content()
+                }
+            }
         }
     }
 }

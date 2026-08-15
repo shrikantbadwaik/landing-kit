@@ -22,4 +22,14 @@ data class TripEntity(
     @ColumnInfo(name = "offline_checked_at") val offlineCheckedAtMillis: Long?,
     @ColumnInfo(name = "offline_check_content_fingerprint")
     val offlineCheckContentFingerprint: String?,
+    @ColumnInfo(name = "fallback_transport") val fallbackTransport: String,
+    @ColumnInfo(name = "last_service_info") val lastServiceInfo: String,
+    @ColumnInfo(name = "check_in_cutoff") val checkInCutoff: String,
+    @ColumnInfo(name = "late_arrival_instructions") val lateArrivalInstructions: String,
+    @ColumnInfo(name = "accommodation_contact") val accommodationContact: String,
+    @ColumnInfo(name = "expected_cost_note") val expectedCostNote: String,
+    @ColumnInfo(name = "alternate_stay_note") val alternateStayNote: String,
+    @ColumnInfo(name = "plan_b_check_status") val planBCheckStatus: String,
+    @ColumnInfo(name = "plan_b_checked_at") val planBCheckedAtMillis: Long?,
+    @ColumnInfo(name = "plan_b_content_fingerprint") val planBContentFingerprint: String?,
 )

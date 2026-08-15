@@ -14,6 +14,8 @@ import com.shrikantbadwaik.landingkit.core.model.ChecklistTemplate
 import com.shrikantbadwaik.landingkit.core.model.KitAttachment
 import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalCheckResult
 import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalContentFingerprint
+import com.shrikantbadwaik.landingkit.core.model.PlanBCheckResult
+import com.shrikantbadwaik.landingkit.core.model.PlanBContentFingerprint
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.core.data.preferences.UserPreferences
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.KitForm
@@ -54,8 +56,11 @@ class LandingKitViewModel @Inject constructor(
         tripRepository = repository,
         attachmentRepository = attachmentRepository,
     )
+    private val planBCheckRunner = PlanBCheckRunner(tripRepository = repository)
     private val _offlineArrivalCheckState =
         MutableStateFlow<OfflineArrivalCheckUiState>(OfflineArrivalCheckUiState.Idle)
+    private val _planBCheckState =
+        MutableStateFlow<PlanBCheckUiState>(PlanBCheckUiState.Idle)
     private var attachmentRelockJob: Job? = null
     val pendingSharedAttachments: StateFlow<PendingSharedAttachments?> =
         _pendingSharedAttachments.asStateFlow()
@@ -73,6 +78,8 @@ class LandingKitViewModel @Inject constructor(
         _pendingAttachmentAuthentication.asStateFlow()
     internal val offlineArrivalCheckState: StateFlow<OfflineArrivalCheckUiState> =
         _offlineArrivalCheckState.asStateFlow()
+    internal val planBCheckState: StateFlow<PlanBCheckUiState> =
+        _planBCheckState.asStateFlow()
 
     internal val trips: StateFlow<TripCollectionState> = repository.observeTrips()
         .map<List<Trip>, TripCollectionState>(TripCollectionState::Ready)
@@ -315,6 +322,25 @@ class LandingKitViewModel @Inject constructor(
         }
     }
 
+    internal fun runPlanBCheck(trip: Trip) {
+        if (_planBCheckState.value is PlanBCheckUiState.Checking) return
+        _planBCheckState.value = PlanBCheckUiState.Checking(trip.id)
+        viewModelScope.launch {
+            _planBCheckState.value = try {
+                PlanBCheckUiState.Complete(
+                    tripId = trip.id,
+                    result = planBCheckRunner.run(trip),
+                    contentFingerprint = PlanBContentFingerprint.derive(trip),
+                )
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Throwable) {
+                Log.e(ATTACHMENT_LOG_TAG, "Plan B check failed", error)
+                PlanBCheckUiState.Failed(trip.id)
+            }
+        }
+    }
+
     internal fun deleteAttachment(
         attachmentId: String,
         onDeleted: (Result<Unit>) -> Unit,
@@ -413,4 +439,15 @@ internal sealed interface OfflineArrivalCheckUiState {
         val contentFingerprint: String,
     ) : OfflineArrivalCheckUiState
     data class Failed(val tripId: String) : OfflineArrivalCheckUiState
+}
+
+internal sealed interface PlanBCheckUiState {
+    data object Idle : PlanBCheckUiState
+    data class Checking(val tripId: String) : PlanBCheckUiState
+    data class Complete(
+        val tripId: String,
+        val result: PlanBCheckResult,
+        val contentFingerprint: String,
+    ) : PlanBCheckUiState
+    data class Failed(val tripId: String) : PlanBCheckUiState
 }

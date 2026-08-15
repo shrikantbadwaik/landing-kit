@@ -66,6 +66,13 @@ private val LandingKitTypography = Typography(
         lineHeight = 36.sp,
         letterSpacing = (-0.6).sp,
     ),
+    headlineSmall = TextStyle(
+        fontFamily = Fraunces,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 24.sp,
+        lineHeight = 30.sp,
+        letterSpacing = (-0.2).sp,
+    ),
     titleLarge = TextStyle(
         fontFamily = Fraunces,
         fontWeight = FontWeight.SemiBold,

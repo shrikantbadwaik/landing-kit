@@ -12,6 +12,7 @@ import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollToKey
@@ -25,6 +26,7 @@ import com.shrikantbadwaik.landingkit.core.model.KitAttachment
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import java.time.LocalDate
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -80,6 +82,16 @@ class ArrivalModeAccessibilityTest {
         composeRule.onNodeWithText(
             composeRule.activity.getString(R.string.arrival_mode_transfer),
         ).assert(isHeading)
+        composeRule.onNode(hasScrollAction()).performScrollToKey("arrival_mode_if_delayed")
+        composeRule.onNodeWithText(
+            composeRule.activity.getString(R.string.arrival_mode_if_delayed),
+        ).assert(isHeading)
+        assertEquals(
+            0,
+            composeRule.onAllNodesWithText(
+                composeRule.activity.getString(R.string.plan_b_status_not_checked),
+            ).fetchSemanticsNodes().size,
+        )
         composeRule.onNode(hasScrollAction()).performScrollToKey("arrival_mode_attachment")
         composeRule.onNodeWithContentDescription(openDescription)
             .assertHasClickAction()
@@ -156,6 +168,9 @@ class ArrivalModeAccessibilityTest {
                 bookingReference = "LK-4821",
                 transferInstructions = "Take the train to Kyoto Station, then a taxi to Gion.",
                 emergencyContact = "Japan emergency: 110 police · 119 ambulance/fire",
+                fallbackTransport = "Taxi rank at arrivals",
+                accommodationContact = "+81 75 555 1234",
+                lateArrivalInstructions = "Use the key safe by the entrance",
             ),
             items = emptyList(),
         )

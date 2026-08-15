@@ -84,6 +84,7 @@ internal fun LandingKitNavHost(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val offlineCheckState by viewModel.offlineArrivalCheckState.collectAsStateWithLifecycle()
+    val planBCheckState by viewModel.planBCheckState.collectAsStateWithLifecycle()
     var importingSharedAttachmentsInto by remember(pendingSharedAttachments?.id) {
         mutableStateOf<String?>(null)
     }
@@ -311,10 +312,12 @@ internal fun LandingKitNavHost(
                         trip = trip,
                         attachments = attachments,
                         state = offlineCheckState,
+                        planBState = planBCheckState,
                         onBack = { navController.popBackStack() },
                         onRunCheck = {
                             viewModel.runOfflineArrivalCheck(trip, attachments)
                         },
+                        onRunPlanBCheck = { viewModel.runPlanBCheck(trip) },
                         onEdit = { navController.navigate(KitRoute.Edit(trip.id)) },
                         onManageEvidence = { navController.popBackStack() },
                         onOpenArrivalMode = {

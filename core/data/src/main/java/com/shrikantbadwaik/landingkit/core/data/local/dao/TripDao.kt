@@ -61,6 +61,20 @@ interface TripDao {
         contentFingerprint: String,
     )
 
+    @Query(
+        """UPDATE trips
+            SET plan_b_check_status = :status,
+                plan_b_checked_at = :checkedAtMillis,
+                plan_b_content_fingerprint = :contentFingerprint
+            WHERE id = :tripId""",
+    )
+    suspend fun recordPlanBCheck(
+        tripId: String,
+        status: String,
+        checkedAtMillis: Long,
+        contentFingerprint: String,
+    )
+
     @Transaction
     suspend fun replaceTrip(trip: TripEntity, items: List<ArrivalItemEntity>) {
         deleteItems(trip.id)

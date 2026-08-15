@@ -19,6 +19,13 @@ internal data class KitForm(
     val currency: String = "",
     val emergencyContact: String = "",
     val dietaryPhrase: String = "",
+    val fallbackTransport: String = "",
+    val lastServiceInfo: String = "",
+    val checkInCutoff: String = "",
+    val lateArrivalInstructions: String = "",
+    val accommodationContact: String = "",
+    val expectedCostNote: String = "",
+    val alternateStayNote: String = "",
     val checklist: List<ArrivalItem> = emptyList(),
 ) {
     fun toTrip(
@@ -36,6 +43,13 @@ internal data class KitForm(
             currencyNote = currency.trim(),
             emergencyContact = emergencyContact.trim(),
             dietaryPhrase = dietaryPhrase.trim(),
+            fallbackTransport = fallbackTransport.trim(),
+            lastServiceInfo = lastServiceInfo.trim(),
+            checkInCutoff = checkInCutoff.trim(),
+            lateArrivalInstructions = lateArrivalInstructions.trim(),
+            accommodationContact = accommodationContact.trim(),
+            expectedCostNote = expectedCostNote.trim(),
+            alternateStayNote = alternateStayNote.trim(),
         )
 
         return existingTrip?.copy(
@@ -151,6 +165,13 @@ internal data class KitForm(
             currency = trip.arrivalCard.currencyNote,
             emergencyContact = trip.arrivalCard.emergencyContact,
             dietaryPhrase = trip.arrivalCard.dietaryPhrase,
+            fallbackTransport = trip.arrivalCard.fallbackTransport,
+            lastServiceInfo = trip.arrivalCard.lastServiceInfo,
+            checkInCutoff = trip.arrivalCard.checkInCutoff,
+            lateArrivalInstructions = trip.arrivalCard.lateArrivalInstructions,
+            accommodationContact = trip.arrivalCard.accommodationContact,
+            expectedCostNote = trip.arrivalCard.expectedCostNote,
+            alternateStayNote = trip.arrivalCard.alternateStayNote,
             checklist = trip.items,
         )
 
@@ -190,7 +211,7 @@ internal data class KitFormValidation(
         get() = when {
             destinationMissing || arrivalDateMissing || arrivalDateInvalid -> 2
             stayNameMissing || addressMissing -> 3
-            blankChecklistItem -> 5
+            blankChecklistItem -> 6
             else -> 0
         }
 }

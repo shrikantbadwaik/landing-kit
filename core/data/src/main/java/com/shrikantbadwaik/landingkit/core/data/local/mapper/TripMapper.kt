@@ -22,12 +22,22 @@ internal fun TripWithItems.toModel() = Trip(
         currencyNote = trip.currencyNote,
         emergencyContact = trip.emergencyContact,
         dietaryPhrase = trip.dietaryPhrase,
+        fallbackTransport = trip.fallbackTransport,
+        lastServiceInfo = trip.lastServiceInfo,
+        checkInCutoff = trip.checkInCutoff,
+        lateArrivalInstructions = trip.lateArrivalInstructions,
+        accommodationContact = trip.accommodationContact,
+        expectedCostNote = trip.expectedCostNote,
+        alternateStayNote = trip.alternateStayNote,
     ),
     items = items.sortedBy(ArrivalItemEntity::sortOrder).map(ArrivalItemEntity::toModel),
     arrivalReminderEnabled = trip.arrivalReminderEnabled,
     offlineCheckStatus = OfflineArrivalCheckStatus.valueOf(trip.offlineCheckStatus),
     offlineCheckedAtMillis = trip.offlineCheckedAtMillis,
     offlineCheckContentFingerprint = trip.offlineCheckContentFingerprint,
+    planBCheckStatus = OfflineArrivalCheckStatus.valueOf(trip.planBCheckStatus),
+    planBCheckedAtMillis = trip.planBCheckedAtMillis,
+    planBContentFingerprint = trip.planBContentFingerprint,
 )
 
 internal fun Trip.toEntity() = TripEntity(
@@ -46,6 +56,16 @@ internal fun Trip.toEntity() = TripEntity(
     offlineCheckStatus = offlineCheckStatus.name,
     offlineCheckedAtMillis = offlineCheckedAtMillis,
     offlineCheckContentFingerprint = offlineCheckContentFingerprint,
+    fallbackTransport = arrivalCard.fallbackTransport,
+    lastServiceInfo = arrivalCard.lastServiceInfo,
+    checkInCutoff = arrivalCard.checkInCutoff,
+    lateArrivalInstructions = arrivalCard.lateArrivalInstructions,
+    accommodationContact = arrivalCard.accommodationContact,
+    expectedCostNote = arrivalCard.expectedCostNote,
+    alternateStayNote = arrivalCard.alternateStayNote,
+    planBCheckStatus = planBCheckStatus.name,
+    planBCheckedAtMillis = planBCheckedAtMillis,
+    planBContentFingerprint = planBContentFingerprint,
 )
 
 private fun String.toArrivalDate(): LocalDate = runCatching(LocalDate::parse)

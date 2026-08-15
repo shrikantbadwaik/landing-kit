@@ -91,6 +91,21 @@ internal fun KitEditorScreen(
     }
     var templateFeedbackEvent by remember(trip?.id) { mutableIntStateOf(0) }
     var hasAttemptedSave by remember(trip?.id) { mutableStateOf(false) }
+    val hasPlanBData = form.fallbackTransport.isNotBlank() ||
+        form.lastServiceInfo.isNotBlank() ||
+        form.checkInCutoff.isNotBlank() ||
+        form.lateArrivalInstructions.isNotBlank() ||
+        form.accommodationContact.isNotBlank() ||
+        form.expectedCostNote.isNotBlank() ||
+        form.alternateStayNote.isNotBlank()
+    var planBExpanded by remember(trip?.id) { mutableStateOf(hasPlanBData) }
+    var planBMoreExpanded by remember(trip?.id) {
+        mutableStateOf(
+            form.lastServiceInfo.isNotBlank() ||
+                form.expectedCostNote.isNotBlank() ||
+                form.alternateStayNote.isNotBlank(),
+        )
+    }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val validation = form.validate()
@@ -212,7 +227,10 @@ internal fun KitEditorScreen(
                         label = stringResource(
                             if (isEditing) R.string.editor_header_edit else R.string.editor_header_new,
                         ),
-                        badge = stringResource(R.string.editor_step_count),
+                        badge = stringResource(
+                            if (planBExpanded) R.string.editor_step_count_5
+                            else R.string.editor_step_count_4,
+                        ),
                     )
                 }
             }
@@ -464,6 +482,92 @@ internal fun KitEditorScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.error,
                             )
+                        }
+                    }
+                }
+            }
+            item(key = "editor_plan_b") {
+                MotionReveal(index = 6, animate = animateEntrance) {
+                    FormSection(
+                        number = stringResource(R.string.editor_step_plan_b),
+                        title = stringResource(R.string.plan_b_section_title),
+                        accent = LandingKitColors.Moss,
+                        expanded = planBExpanded,
+                        onToggle = { planBExpanded = !planBExpanded },
+                    ) {
+                        Text(
+                            text = stringResource(R.string.plan_b_section_description),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = stringResource(R.string.plan_b_required_guidance),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        LandingTextField(
+                            label = stringResource(R.string.plan_b_fallback_transport_label),
+                            value = form.fallbackTransport,
+                            placeholder = stringResource(R.string.plan_b_fallback_transport_hint),
+                            multiline = true,
+                            onChange = { form = form.copy(fallbackTransport = it) },
+                        )
+                        LandingTextField(
+                            label = stringResource(R.string.plan_b_accommodation_contact_label),
+                            value = form.accommodationContact,
+                            placeholder = stringResource(
+                                R.string.plan_b_accommodation_contact_hint,
+                            ),
+                            onChange = { form = form.copy(accommodationContact = it) },
+                        )
+                        LandingTextField(
+                            label = stringResource(R.string.plan_b_check_in_cutoff_label),
+                            value = form.checkInCutoff,
+                            placeholder = stringResource(R.string.plan_b_check_in_cutoff_hint),
+                            onChange = { form = form.copy(checkInCutoff = it) },
+                        )
+                        LandingTextField(
+                            label = stringResource(R.string.plan_b_late_arrival_label),
+                            value = form.lateArrivalInstructions,
+                            placeholder = stringResource(R.string.plan_b_late_arrival_hint),
+                            multiline = true,
+                            onChange = { form = form.copy(lateArrivalInstructions = it) },
+                        )
+                        TextButton(onClick = { planBMoreExpanded = !planBMoreExpanded }) {
+                            Text(
+                                stringResource(
+                                    if (planBMoreExpanded) {
+                                        R.string.plan_b_fewer_details
+                                    } else {
+                                        R.string.plan_b_more_details
+                                    },
+                                ),
+                            )
+                        }
+                        AnimatedVisibility(visible = planBMoreExpanded) {
+                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                LandingTextField(
+                                    label = stringResource(R.string.plan_b_last_service_label),
+                                    value = form.lastServiceInfo,
+                                    placeholder = stringResource(R.string.plan_b_last_service_hint),
+                                    onChange = { form = form.copy(lastServiceInfo = it) },
+                                )
+                                LandingTextField(
+                                    label = stringResource(R.string.plan_b_expected_cost_label),
+                                    value = form.expectedCostNote,
+                                    placeholder = stringResource(R.string.plan_b_expected_cost_hint),
+                                    onChange = { form = form.copy(expectedCostNote = it) },
+                                )
+                                LandingTextField(
+                                    label = stringResource(R.string.plan_b_alternate_stay_label),
+                                    value = form.alternateStayNote,
+                                    placeholder = stringResource(
+                                        R.string.plan_b_alternate_stay_hint,
+                                    ),
+                                    multiline = true,
+                                    onChange = { form = form.copy(alternateStayNote = it) },
+                                )
+                            }
                         }
                     }
                 }

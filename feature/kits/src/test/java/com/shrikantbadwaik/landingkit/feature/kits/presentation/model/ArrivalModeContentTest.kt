@@ -40,6 +40,31 @@ class ArrivalModeContentTest {
         assertNull(content.bookingReference)
         assertNull(content.transferInstructions)
         assertNull(content.emergencyContact)
+        assertNull(content.ifDelayed)
+    }
+
+    @Test
+    fun `if delayed content trims and carries all seven plan b notes`() {
+        val base = trip(address = "10 Quiet Street")
+        val content = base.copy(
+            arrivalCard = base.arrivalCard.copy(
+                fallbackTransport = "  Taxi rank  ",
+                lastServiceInfo = " Last train 23:15 ",
+                checkInCutoff = " Midnight ",
+                lateArrivalInstructions = " Call ahead ",
+                accommodationContact = " +81 75 555 1234 ",
+                expectedCostNote = " About ¥3,000 ",
+                alternateStayNote = " Hotel nearby ",
+            ),
+        ).toArrivalModeContent(emptyList()).ifDelayed
+
+        assertEquals("Taxi rank", content?.fallbackTransport)
+        assertEquals("Last train 23:15", content?.lastServiceInfo)
+        assertEquals("Midnight", content?.checkInCutoff)
+        assertEquals("Call ahead", content?.lateArrivalInstructions)
+        assertEquals("+81 75 555 1234", content?.accommodationContact)
+        assertEquals("About ¥3,000", content?.expectedCostNote)
+        assertEquals("Hotel nearby", content?.alternateStayNote)
     }
 
     @Test

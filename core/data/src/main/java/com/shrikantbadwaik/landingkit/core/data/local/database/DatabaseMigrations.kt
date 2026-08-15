@@ -89,3 +89,49 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
         )
     }
 }
+
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """ALTER TABLE `trips`
+                ADD COLUMN `fallback_transport` TEXT NOT NULL DEFAULT ''""".trimIndent(),
+        )
+        db.execSQL(
+            """ALTER TABLE `trips`
+                ADD COLUMN `last_service_info` TEXT NOT NULL DEFAULT ''""".trimIndent(),
+        )
+        db.execSQL(
+            """ALTER TABLE `trips`
+                ADD COLUMN `check_in_cutoff` TEXT NOT NULL DEFAULT ''""".trimIndent(),
+        )
+        db.execSQL(
+            """ALTER TABLE `trips`
+                ADD COLUMN `late_arrival_instructions` TEXT NOT NULL DEFAULT ''""".trimIndent(),
+        )
+        db.execSQL(
+            """ALTER TABLE `trips`
+                ADD COLUMN `accommodation_contact` TEXT NOT NULL DEFAULT ''""".trimIndent(),
+        )
+        db.execSQL(
+            """ALTER TABLE `trips`
+                ADD COLUMN `expected_cost_note` TEXT NOT NULL DEFAULT ''""".trimIndent(),
+        )
+        db.execSQL(
+            """ALTER TABLE `trips`
+                ADD COLUMN `alternate_stay_note` TEXT NOT NULL DEFAULT ''""".trimIndent(),
+        )
+        db.execSQL(
+            """ALTER TABLE `trips`
+                ADD COLUMN `plan_b_check_status`
+                TEXT NOT NULL DEFAULT 'NotChecked'""".trimIndent(),
+        )
+        db.execSQL(
+            """ALTER TABLE `trips`
+                ADD COLUMN `plan_b_checked_at` INTEGER""".trimIndent(),
+        )
+        db.execSQL(
+            """ALTER TABLE `trips`
+                ADD COLUMN `plan_b_content_fingerprint` TEXT""".trimIndent(),
+        )
+    }
+}

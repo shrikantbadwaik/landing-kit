@@ -14,6 +14,10 @@ data class Trip(
         OfflineArrivalCheckStatus.NotChecked,
     val offlineCheckedAtMillis: Long? = null,
     val offlineCheckContentFingerprint: String? = null,
+    val planBCheckStatus: OfflineArrivalCheckStatus =
+        OfflineArrivalCheckStatus.NotChecked,
+    val planBCheckedAtMillis: Long? = null,
+    val planBContentFingerprint: String? = null,
 )
 
 data class ArrivalCard(
@@ -25,6 +29,13 @@ data class ArrivalCard(
     val currencyNote: String = "",
     val emergencyContact: String = "",
     val dietaryPhrase: String = "",
+    val fallbackTransport: String = "",
+    val lastServiceInfo: String = "",
+    val checkInCutoff: String = "",
+    val lateArrivalInstructions: String = "",
+    val accommodationContact: String = "",
+    val expectedCostNote: String = "",
+    val alternateStayNote: String = "",
 )
 
 data class ArrivalItem(

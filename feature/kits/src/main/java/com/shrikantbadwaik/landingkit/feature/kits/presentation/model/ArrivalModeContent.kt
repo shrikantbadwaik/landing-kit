@@ -10,6 +10,17 @@ internal data class ArrivalModeContent(
     val transferInstructions: String?,
     val emergencyContact: String?,
     val primaryAttachment: KitAttachment?,
+    val ifDelayed: IfDelayedContent?,
+)
+
+internal data class IfDelayedContent(
+    val fallbackTransport: String?,
+    val lastServiceInfo: String?,
+    val checkInCutoff: String?,
+    val lateArrivalInstructions: String?,
+    val accommodationContact: String?,
+    val expectedCostNote: String?,
+    val alternateStayNote: String?,
 )
 
 internal fun Trip.toArrivalModeContent(
@@ -17,6 +28,7 @@ internal fun Trip.toArrivalModeContent(
 ): ArrivalModeContent {
     val localAddress = arrivalCard.localAddress.trim()
     val regularAddress = arrivalCard.address.trim()
+    val ifDelayed = buildIfDelayedContent(arrivalCard)
     return ArrivalModeContent(
         address = localAddress.ifBlank { regularAddress },
         supportingAddress = regularAddress.takeIf {
@@ -25,8 +37,32 @@ internal fun Trip.toArrivalModeContent(
         bookingReference = arrivalCard.bookingReference.trim().ifBlank { null },
         transferInstructions = arrivalCard.transferInstructions.trim().ifBlank { null },
         emergencyContact = arrivalCard.emergencyContact.trim().ifBlank { null },
-        // Attachment streams are newest-first, which keeps the unselected fallback deterministic.
         primaryAttachment = attachments.firstOrNull(KitAttachment::isQuickAccess)
             ?: attachments.firstOrNull(),
+        ifDelayed = ifDelayed,
+    )
+}
+
+private fun buildIfDelayedContent(
+    card: com.shrikantbadwaik.landingkit.core.model.ArrivalCard,
+): IfDelayedContent? {
+    val fallback = card.fallbackTransport.trim().ifBlank { null }
+    val lastService = card.lastServiceInfo.trim().ifBlank { null }
+    val cutoff = card.checkInCutoff.trim().ifBlank { null }
+    val lateInstructions = card.lateArrivalInstructions.trim().ifBlank { null }
+    val contact = card.accommodationContact.trim().ifBlank { null }
+    val cost = card.expectedCostNote.trim().ifBlank { null }
+    val alternate = card.alternateStayNote.trim().ifBlank { null }
+    if (listOfNotNull(fallback, lastService, cutoff, lateInstructions, contact, cost, alternate).isEmpty()) {
+        return null
+    }
+    return IfDelayedContent(
+        fallbackTransport = fallback,
+        lastServiceInfo = lastService,
+        checkInCutoff = cutoff,
+        lateArrivalInstructions = lateInstructions,
+        accommodationContact = contact,
+        expectedCostNote = cost,
+        alternateStayNote = alternate,
     )
 }

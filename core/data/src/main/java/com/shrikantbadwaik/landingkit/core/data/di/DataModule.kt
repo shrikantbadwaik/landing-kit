@@ -14,6 +14,7 @@ import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_2_3
 import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_3_4
 import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_4_5
 import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_5_6
+import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_6_7
 import com.shrikantbadwaik.landingkit.core.data.local.database.LandingKitDatabase
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalChecklistTemplateRepository
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalAttachmentRepository
@@ -43,6 +44,7 @@ object DataModule {
         MIGRATION_3_4,
         MIGRATION_4_5,
         MIGRATION_5_6,
+        MIGRATION_6_7,
     ).build()
 
     @Provides

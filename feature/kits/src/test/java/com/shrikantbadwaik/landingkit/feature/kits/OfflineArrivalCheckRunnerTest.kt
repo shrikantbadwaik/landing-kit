@@ -8,6 +8,7 @@ import com.shrikantbadwaik.landingkit.core.model.ArrivalCard
 import com.shrikantbadwaik.landingkit.core.model.KitAttachment
 import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalCheckIssue
 import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalCheckStatus
+import com.shrikantbadwaik.landingkit.core.model.PlanBContentFingerprint
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import java.io.File
 import java.time.LocalDate
@@ -52,9 +53,38 @@ class OfflineArrivalCheckRunnerTest {
         assertEquals(OfflineArrivalCheckStatus.NeedsAttention, tripRepository.status)
     }
 
+    @Test
+    fun `plan b check persists an independent ready snapshot`() = runBlocking {
+        val tripRepository = FakeTripRepository()
+        val runner = PlanBCheckRunner(
+            tripRepository = tripRepository,
+            currentTimeMillis = { 456L },
+        )
+        val trip = trip().copy(
+            arrivalCard = trip().arrivalCard.copy(
+                fallbackTransport = "Taxi rank at arrivals",
+                accommodationContact = "+81 75 555 1234",
+                lateArrivalInstructions = "Use the key safe",
+            ),
+        )
+
+        val result = runner.run(trip)
+
+        assertEquals(OfflineArrivalCheckStatus.ReadyOnThisPhone, result.status)
+        assertEquals(OfflineArrivalCheckStatus.ReadyOnThisPhone, tripRepository.planBStatus)
+        assertEquals(456L, tripRepository.planBCheckedAtMillis)
+        assertEquals(
+            PlanBContentFingerprint.derive(trip),
+            tripRepository.planBContentFingerprint,
+        )
+    }
+
     private class FakeTripRepository : TripRepository {
         var status: OfflineArrivalCheckStatus? = null
         var checkedAtMillis: Long? = null
+        var planBStatus: OfflineArrivalCheckStatus? = null
+        var planBCheckedAtMillis: Long? = null
+        var planBContentFingerprint: String? = null
 
         override fun observeTrips(): Flow<List<Trip>> = emptyFlow()
         override suspend fun getTrip(id: String): Trip? = null
@@ -76,6 +106,17 @@ class OfflineArrivalCheckRunnerTest {
         ) {
             this.status = status
             this.checkedAtMillis = checkedAtMillis
+        }
+
+        override suspend fun recordPlanBCheck(
+            tripId: String,
+            status: OfflineArrivalCheckStatus,
+            checkedAtMillis: Long,
+            contentFingerprint: String,
+        ) {
+            planBStatus = status
+            planBCheckedAtMillis = checkedAtMillis
+            planBContentFingerprint = contentFingerprint
         }
     }
 

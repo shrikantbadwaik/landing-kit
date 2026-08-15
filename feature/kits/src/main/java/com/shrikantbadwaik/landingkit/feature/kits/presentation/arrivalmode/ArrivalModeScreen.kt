@@ -42,6 +42,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.PendingAttachmentAuthenticati
 import com.shrikantbadwaik.landingkit.feature.kits.ProtectedAttachmentAction
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.IfDelayedContent
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.toArrivalModeContent
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.rememberProtectedAttachmentOpener
 import kotlinx.coroutines.launch
@@ -171,6 +172,11 @@ internal fun ArrivalModeScreen(
                     )
                 }
             }
+            content.ifDelayed?.let { delayed ->
+                item(key = "arrival_mode_if_delayed") {
+                    ArrivalModeIfDelayedCard(content = delayed)
+                }
+            }
             content.primaryAttachment?.let { attachment ->
                 item(key = "arrival_mode_attachment") {
                     ArrivalEvidenceAction(
@@ -210,22 +216,23 @@ internal fun ArrivalModeScreen(
 @Composable
 private fun ArrivalModeInfoCard(
     label: String,
-    value: String,
     accent: Color,
     emphasized: Boolean = false,
+    value: String? = null,
+    content: (@Composable () -> Unit)? = null,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = if (emphasized) {
-            LandingKitColors.Coral.copy(alpha = 0.12f)
+            accent.copy(alpha = 0.12f)
         } else {
             MaterialTheme.colorScheme.surface
         },
         border = BorderStroke(
             width = 1.dp,
             color = if (emphasized) {
-                LandingKitColors.Coral.copy(alpha = 0.46f)
+                accent.copy(alpha = 0.46f)
             } else {
                 MaterialTheme.colorScheme.outlineVariant
             },
@@ -249,15 +256,19 @@ private fun ArrivalModeInfoCard(
                     color = MaterialTheme.colorScheme.secondary,
                 )
                 Spacer(Modifier.height(8.dp))
-                Text(
-                    text = value,
-                    style = if (emphasized) {
-                        MaterialTheme.typography.titleMedium
-                    } else {
-                        MaterialTheme.typography.bodyLarge
-                    },
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                if (content != null) {
+                    content()
+                } else if (value != null) {
+                    Text(
+                        text = value,
+                        style = if (emphasized) {
+                            MaterialTheme.typography.titleMedium
+                        } else {
+                            MaterialTheme.typography.bodyLarge
+                        },
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
         }
     }
@@ -335,6 +346,76 @@ private fun ArrivalEvidenceAction(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ArrivalModeIfDelayedCard(
+    content: IfDelayedContent,
+) {
+    ArrivalModeInfoCard(
+        label = stringResource(R.string.arrival_mode_if_delayed),
+        accent = LandingKitColors.Lavender,
+    ) {
+        content.fallbackTransport?.let {
+            IfDelayedRow(
+                label = stringResource(R.string.plan_b_fallback_transport_label),
+                value = it,
+            )
+        }
+        content.lastServiceInfo?.let {
+            IfDelayedRow(
+                label = stringResource(R.string.plan_b_last_service_label),
+                value = it,
+            )
+        }
+        content.checkInCutoff?.let {
+            IfDelayedRow(
+                label = stringResource(R.string.plan_b_check_in_cutoff_label),
+                value = it,
+            )
+        }
+        content.lateArrivalInstructions?.let {
+            IfDelayedRow(
+                label = stringResource(R.string.plan_b_late_arrival_label),
+                value = it,
+            )
+        }
+        content.accommodationContact?.let {
+            IfDelayedRow(
+                label = stringResource(R.string.plan_b_accommodation_contact_label),
+                value = it,
+            )
+        }
+        content.expectedCostNote?.let {
+            IfDelayedRow(
+                label = stringResource(R.string.plan_b_expected_cost_label),
+                value = it,
+            )
+        }
+        content.alternateStayNote?.let {
+            IfDelayedRow(
+                label = stringResource(R.string.plan_b_alternate_stay_label),
+                value = it,
+            )
+        }
+    }
+}
+
+@Composable
+private fun IfDelayedRow(label: String, value: String) {
+    Column(Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(3.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 

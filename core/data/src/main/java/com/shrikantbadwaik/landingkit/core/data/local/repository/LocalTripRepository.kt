@@ -39,6 +39,11 @@ class LocalTripRepository(
                 ),
                 offlineCheckedAtMillis = existing.offlineCheckedAtMillis,
                 offlineCheckContentFingerprint = existing.offlineCheckContentFingerprint,
+                planBCheckStatus = OfflineArrivalCheckStatus.valueOf(
+                    existing.planBCheckStatus,
+                ),
+                planBCheckedAtMillis = existing.planBCheckedAtMillis,
+                planBContentFingerprint = existing.planBContentFingerprint,
             )
         }
         tripDao.replaceTrip(
@@ -74,6 +79,20 @@ class LocalTripRepository(
         contentFingerprint: String,
     ) = writeMutex.withLock {
         tripDao.recordOfflineArrivalCheck(
+            tripId = tripId,
+            status = status.name,
+            checkedAtMillis = checkedAtMillis,
+            contentFingerprint = contentFingerprint,
+        )
+    }
+
+    override suspend fun recordPlanBCheck(
+        tripId: String,
+        status: OfflineArrivalCheckStatus,
+        checkedAtMillis: Long,
+        contentFingerprint: String,
+    ) = writeMutex.withLock {
+        tripDao.recordPlanBCheck(
             tripId = tripId,
             status = status.name,
             checkedAtMillis = checkedAtMillis,

@@ -38,9 +38,14 @@ import com.shrikantbadwaik.landingkit.core.model.KitAttachment
 import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalCheckIssue
 import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalCheckStatus
 import com.shrikantbadwaik.landingkit.core.model.OfflineArrivalContentFingerprint
+import com.shrikantbadwaik.landingkit.core.model.PlanBContentFingerprint
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.core.model.effectiveOfflineCheckStatus
+import com.shrikantbadwaik.landingkit.core.model.effectivePlanBCheckStatus
+import com.shrikantbadwaik.landingkit.core.model.hasPlanBData
+import com.shrikantbadwaik.landingkit.core.model.isPlanBCheckStale
 import com.shrikantbadwaik.landingkit.feature.kits.OfflineArrivalCheckUiState
+import com.shrikantbadwaik.landingkit.feature.kits.PlanBCheckUiState
 import com.shrikantbadwaik.landingkit.feature.kits.PendingAttachmentAuthentication
 import com.shrikantbadwaik.landingkit.feature.kits.ProtectedAttachmentAction
 import com.shrikantbadwaik.landingkit.feature.kits.R
@@ -55,8 +60,10 @@ internal fun OfflineCheckScreen(
     trip: Trip,
     attachments: List<KitAttachment>,
     state: OfflineArrivalCheckUiState,
+    planBState: PlanBCheckUiState,
     onBack: () -> Unit,
     onRunCheck: () -> Unit,
+    onRunPlanBCheck: () -> Unit,
     onEdit: () -> Unit,
     onManageEvidence: () -> Unit,
     onOpenArrivalMode: () -> Unit,
@@ -131,6 +138,26 @@ internal fun OfflineCheckScreen(
             onRunCheck()
         }
     }
+    val hasPlanBData = trip.hasPlanBData()
+    val planBFingerprint = remember(trip) { PlanBContentFingerprint.derive(trip) }
+    val completedPlanB = planBState as? PlanBCheckUiState.Complete
+    val runtimePlanBResult = completedPlanB?.takeIf {
+        it.tripId == trip.id && it.contentFingerprint == planBFingerprint
+    }?.result
+    val effectivePlanBState = if (completedPlanB != null && runtimePlanBResult == null) {
+        PlanBCheckUiState.Idle
+    } else {
+        planBState
+    }
+    val planBStatus = when {
+        planBState is PlanBCheckUiState.Checking && planBState.tripId == trip.id ->
+            OfflineArrivalCheckStatus.NotChecked
+        runtimePlanBResult != null -> runtimePlanBResult.status
+        else -> trip.effectivePlanBCheckStatus(planBFingerprint)
+    }
+    val planBStale = trip.isPlanBCheckStale(planBFingerprint)
+    val hasCheckInRecovery = trip.arrivalCard.checkInCutoff.isNotBlank() ||
+        trip.arrivalCard.lateArrivalInstructions.isNotBlank()
 
     Scaffold(
         modifier = Modifier.semantics { paneTitle = title },
@@ -197,32 +224,106 @@ internal fun OfflineCheckScreen(
                     }
                 }
             }
-            item(key = "offline_check_action") {
-                Button(
-                    onClick = checkAction,
-                    enabled = state !is OfflineArrivalCheckUiState.Checking,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(18.dp),
-                ) {
-                    Text(
-                        stringResource(
-                            if (status == OfflineArrivalCheckStatus.NotChecked) {
-                                R.string.offline_check_run_action
-                            } else {
-                                R.string.offline_check_run_again_action
-                            },
-                        ),
-                    )
+            if (status != OfflineArrivalCheckStatus.ReadyOnThisPhone) {
+                item(key = "offline_check_action") {
+                    Button(
+                        onClick = checkAction,
+                        enabled = state !is OfflineArrivalCheckUiState.Checking,
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = RoundedCornerShape(18.dp),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (status == OfflineArrivalCheckStatus.NotChecked) {
+                                    R.string.offline_check_run_action
+                                } else {
+                                    R.string.offline_check_run_again_action
+                                },
+                            ),
+                        )
+                    }
                 }
             }
-            if (status == OfflineArrivalCheckStatus.NeedsAttention) {
+            if (hasPlanBData) {
+                item(key = "offline_check_plan_b_status") {
+                    PlanBCheckStatusPanel(
+                        status = planBStatus,
+                        state = effectivePlanBState,
+                        tripId = trip.id,
+                        checkedAtMillis = trip.planBCheckedAtMillis,
+                        stale = planBStale,
+                    )
+                }
+                item(key = "offline_check_plan_b_rules") {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        color = MaterialTheme.colorScheme.surface,
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            RuleRow(
+                                stringResource(R.string.plan_b_check_rule_fallback),
+                                trip.arrivalCard.fallbackTransport.isNotBlank(),
+                            )
+                            RuleRow(
+                                stringResource(R.string.plan_b_check_rule_contact),
+                                trip.arrivalCard.accommodationContact.isNotBlank(),
+                            )
+                            RuleRow(
+                                stringResource(R.string.plan_b_check_rule_recovery),
+                                hasCheckInRecovery,
+                            )
+                        }
+                    }
+                }
+                if (planBStatus != OfflineArrivalCheckStatus.ReadyOnThisPhone) {
+                    item(key = "offline_check_plan_b_action") {
+                        Button(
+                            onClick = onRunPlanBCheck,
+                            enabled = planBState !is PlanBCheckUiState.Checking,
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(18.dp),
+                        ) {
+                            Text(
+                                stringResource(
+                                    if (
+                                        planBStatus == OfflineArrivalCheckStatus.NotChecked ||
+                                        planBStale
+                                    ) {
+                                        R.string.plan_b_run_action
+                                    } else {
+                                        R.string.offline_check_run_again_action
+                                    },
+                                ),
+                            )
+                        }
+                    }
+                }
+            }
+            val planBIncomplete = hasPlanBData && (
+                trip.arrivalCard.fallbackTransport.isBlank() ||
+                    trip.arrivalCard.accommodationContact.isBlank() ||
+                    !hasCheckInRecovery
+                )
+            if (status == OfflineArrivalCheckStatus.NeedsAttention || planBIncomplete) {
                 item(key = "offline_check_fixes") {
                     Column {
-                        TextButton(onClick = onEdit) {
-                            Text(stringResource(R.string.offline_check_fix_details))
+                        if (status == OfflineArrivalCheckStatus.NeedsAttention) {
+                            TextButton(onClick = onEdit) {
+                                Text(stringResource(R.string.offline_check_fix_details))
+                            }
+                            TextButton(onClick = onManageEvidence) {
+                                Text(stringResource(R.string.offline_check_fix_evidence))
+                            }
                         }
-                        TextButton(onClick = onManageEvidence) {
-                            Text(stringResource(R.string.offline_check_fix_evidence))
+                        if (planBIncomplete) {
+                            TextButton(onClick = onEdit) {
+                                Text(stringResource(R.string.plan_b_check_fix_action))
+                            }
                         }
                     }
                 }
@@ -313,6 +414,68 @@ private fun OfflineCheckStatusPanel(
                                 .format(Date(checkedAtMillis)),
                         )
                     else -> stringResource(R.string.offline_check_intro)
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlanBCheckStatusPanel(
+    status: OfflineArrivalCheckStatus,
+    state: PlanBCheckUiState,
+    tripId: String,
+    checkedAtMillis: Long?,
+    stale: Boolean,
+) {
+    val isChecking = state is PlanBCheckUiState.Checking && state.tripId == tripId
+    val isFailed = state is PlanBCheckUiState.Failed && state.tripId == tripId
+    val statusText = stringResource(
+        when {
+            isChecking -> R.string.plan_b_status_checking
+            isFailed -> R.string.plan_b_status_failed
+            stale -> R.string.plan_b_status_stale
+            status == OfflineArrivalCheckStatus.ReadyOnThisPhone ->
+                R.string.plan_b_status_ready
+            status == OfflineArrivalCheckStatus.NeedsAttention ->
+                R.string.plan_b_status_attention
+            else -> R.string.plan_b_status_not_checked
+        },
+    )
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        color = when {
+            stale -> LandingKitColors.Sun.copy(alpha = .18f)
+            status == OfflineArrivalCheckStatus.ReadyOnThisPhone ->
+                LandingKitColors.Seafoam.copy(alpha = .32f)
+            status == OfflineArrivalCheckStatus.NeedsAttention ->
+                LandingKitColors.Coral.copy(alpha = .18f)
+            else -> MaterialTheme.colorScheme.surface
+        },
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Column(Modifier.padding(22.dp)) {
+            Text(
+                text = statusText,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.semantics { heading() },
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = when {
+                    state is PlanBCheckUiState.Complete && state.tripId == tripId ->
+                        stringResource(R.string.plan_b_checked_now)
+                    checkedAtMillis != null && !stale &&
+                        status != OfflineArrivalCheckStatus.NotChecked ->
+                        stringResource(
+                            R.string.plan_b_checked_at,
+                            DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
+                                .format(Date(checkedAtMillis)),
+                        )
+                    else -> stringResource(R.string.plan_b_intro)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -57,7 +57,8 @@
     <string name="editor_save_offline_kit">Save my kit  →</string>
     <string name="editor_header_edit">EDIT ARRIVAL KIT</string>
     <string name="editor_header_new">NEW ARRIVAL KIT</string>
-    <string name="editor_step_count">4 steps</string>
+    <string name="editor_step_count_4">4 steps</string>
+    <string name="editor_step_count_5">5 steps</string>
     <string name="editor_edit_headline">Keep your arrival\nup to date.</string>
     <string name="editor_create_headline">Build a calmer\narrival.</string>
     <string name="editor_edit_intro">Update the details you’ll want close at hand when you land.</string>
@@ -66,6 +67,7 @@
     <string name="editor_step_stay" translatable="false">02</string>
     <string name="editor_step_first_minutes" translatable="false">03</string>
     <string name="editor_step_checklist" translatable="false">04</string>
+    <string name="editor_step_plan_b" translatable="false">05</string>
     <string name="editor_trip_details">Trip details</string>
     <string name="editor_destination_label">Destination *</string>
     <string name="editor_destination_placeholder">e.g. Kyoto, Japan</string>
@@ -77,7 +79,7 @@
     <string name="editor_stay_name_required">Add the name of your stay.</string>
     <string name="editor_address_required">Add the address you’ll need on arrival.</string>
     <string name="editor_past_arrival_notice">This date has passed. The kit will stay available under Past arrivals.</string>
-    <string name="editor_validation_title">A few details still need you</string>
+    <string name="editor_validation_title">A few details still needed from you</string>
     <plurals name="editor_validation_summary">
         <item quantity="one">Add %d more detail before saving.</item>
         <item quantity="other">Add %d more details before saving.</item>
@@ -206,7 +208,7 @@
     <!-- Verified offline arrival check -->
     <string name="offline_check_header">OFFLINE ARRIVAL CHECK</string>
     <string name="offline_check_badge">On this phone</string>
-    <string name="offline_check_card_title">Check this arrival kit</string>
+    <string name="offline_check_card_title">This arrival kit</string>
     <string name="offline_check_card_not_checked">Not checked</string>
     <string name="offline_check_card_ready">Ready on this phone</string>
     <string name="offline_check_card_attention">Needs attention</string>
@@ -226,8 +228,8 @@
     <string name="offline_check_rule_address">Address of the stay saved</string>
     <string name="offline_check_rule_evidence">Quick-access document selected</string>
     <string name="offline_check_rule_readable">Selected evidence decrypts on this phone</string>
-    <string name="offline_check_fix_details">Edit stay or address</string>
-    <string name="offline_check_fix_evidence">Choose quick-access document</string>
+    <string name="offline_check_fix_details">Edit stay or address  →</string>
+    <string name="offline_check_fix_evidence">Choose quick-access document  →</string>
     <string name="offline_check_rehearse_action">View in Arrival Mode</string>
     <string name="offline_check_honesty_title">What this check means</string>
     <string name="offline_check_honesty_copy">This confirms a locally saved copy on this phone, not a live pass. Keep a backup for phone loss or an empty battery.</string>
@@ -247,6 +249,42 @@
     <string name="arrival_mode_evidence_open">Open  →</string>
     <string name="arrival_mode_no_evidence">No tickets or confirmations saved yet.</string>
     <string name="arrival_mode_footer">LARGE, ESSENTIAL, AVAILABLE WITHOUT SIGNAL</string>
+    <string name="arrival_mode_if_delayed">IF PLANS CHANGED</string>
+
+    <!-- Plan B fields -->
+    <string name="plan_b_section_title">If plans change</string>
+    <string name="plan_b_section_description">Keep a backup ready for delays, cancellations, or late check-in.</string>
+    <string name="plan_b_required_guidance">To check this plan, add another way to get there, a stay contact, and either the check-in closing time or late-arrival instructions.</string>
+    <string name="plan_b_more_details">More details</string>
+    <string name="plan_b_fewer_details">Hide details</string>
+    <string name="plan_b_fallback_transport_label">Alternative way to get there</string>
+    <string name="plan_b_fallback_transport_hint">e.g. Taxi rank at arrivals, bus route 42</string>
+    <string name="plan_b_last_service_label">Last departure</string>
+    <string name="plan_b_last_service_hint">e.g. Last train at 23:15</string>
+    <string name="plan_b_check_in_cutoff_label">Check-in closes at</string>
+    <string name="plan_b_check_in_cutoff_hint">e.g. Midnight, or call ahead after 22:00</string>
+    <string name="plan_b_late_arrival_label">If arriving late</string>
+    <string name="plan_b_late_arrival_hint">e.g. Key safe code 4821, lockbox by entrance</string>
+    <string name="plan_b_accommodation_contact_label">Stay contact</string>
+    <string name="plan_b_accommodation_contact_hint">e.g. +81 75 555 1234</string>
+    <string name="plan_b_expected_cost_label">Expected cost</string>
+    <string name="plan_b_expected_cost_hint">e.g. Taxi ≈ ¥3,000 from station</string>
+    <string name="plan_b_alternate_stay_label">Another place to stay</string>
+    <string name="plan_b_alternate_stay_hint">e.g. Hotel nearby as a backup, ref ABC-123</string>
+    <string name="plan_b_check_rule_fallback">Another way to get there</string>
+    <string name="plan_b_check_rule_contact">A way to contact your stay</string>
+    <string name="plan_b_check_rule_recovery">Late check-in details</string>
+    <string name="plan_b_check_fix_action">Complete Plan B</string>
+    <string name="plan_b_status_not_checked">Plan B hasn’t been checked</string>
+    <string name="plan_b_status_stale">Plan B needs another check</string>
+    <string name="plan_b_status_ready">Plan B is ready</string>
+    <string name="plan_b_status_attention">Plan B needs a few details</string>
+    <string name="plan_b_status_checking">Checking Plan B…</string>
+    <string name="plan_b_status_failed">We couldn’t check Plan B.</string>
+    <string name="plan_b_intro">Make sure your backup arrival details are complete.</string>
+    <string name="plan_b_checked_now">Checked just now</string>
+    <string name="plan_b_checked_at">Last checked %1$s</string>
+    <string name="plan_b_run_action">Check</string>
 
     <!-- Tickets and confirmations -->
     <string name="attachment_section_label">TICKETS &amp; CONFIRMATIONS</string>

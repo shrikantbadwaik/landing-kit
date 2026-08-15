@@ -146,6 +146,75 @@ class OfflineArrivalCheckTest {
         )
     }
 
+    @Test
+    fun `plan b ready requires transport contact and check in recovery`() {
+        val result = OfflineArrivalCheckEngine.evaluatePlanB(
+            planBTrip(
+                fallbackTransport = "Taxi rank at arrivals",
+                accommodationContact = "+81 75 555 1234",
+                checkInCutoff = "Call after 22:00",
+            ),
+        )
+
+        assertEquals(OfflineArrivalCheckStatus.ReadyOnThisPhone, result.status)
+        assertEquals(emptyList<PlanBCheckIssue>(), result.issues)
+    }
+
+    @Test
+    fun `late instructions satisfy plan b check in recovery rule`() {
+        val result = OfflineArrivalCheckEngine.evaluatePlanB(
+            planBTrip(
+                fallbackTransport = "Night bus 42",
+                accommodationContact = "+81 75 555 1234",
+                lateArrivalInstructions = "Use the key safe by the entrance",
+            ),
+        )
+
+        assertEquals(OfflineArrivalCheckStatus.ReadyOnThisPhone, result.status)
+    }
+
+    @Test
+    fun `partial plan b reports each missing essential`() {
+        val result = OfflineArrivalCheckEngine.evaluatePlanB(planBTrip())
+
+        assertEquals(OfflineArrivalCheckStatus.NeedsAttention, result.status)
+        assertEquals(
+            listOf(
+                PlanBCheckIssue.MissingFallbackTransport,
+                PlanBCheckIssue.MissingAccommodationContact,
+                PlanBCheckIssue.MissingCheckInRecovery,
+            ),
+            result.issues,
+        )
+    }
+
+    @Test
+    fun `plan b fingerprint invalidates checked status after any note changes`() {
+        val originalTrip = planBTrip(
+            fallbackTransport = "Taxi",
+            accommodationContact = "+81 75 555 1234",
+            checkInCutoff = "22:00",
+        )
+        val originalFingerprint = PlanBContentFingerprint.derive(originalTrip)
+        val checkedTrip = originalTrip.copy(
+            planBCheckStatus = OfflineArrivalCheckStatus.ReadyOnThisPhone,
+            planBCheckedAtMillis = 123L,
+            planBContentFingerprint = originalFingerprint,
+        )
+        val changedFingerprint = PlanBContentFingerprint.derive(
+            checkedTrip.copy(
+                arrivalCard = checkedTrip.arrivalCard.copy(expectedCostNote = "About ¥3,000"),
+            ),
+        )
+
+        assertEquals(
+            OfflineArrivalCheckStatus.NotChecked,
+            checkedTrip.effectivePlanBCheckStatus(changedFingerprint),
+        )
+        assertEquals(true, checkedTrip.isPlanBCheckStale(changedFingerprint))
+        assertNotEquals(originalFingerprint, changedFingerprint)
+    }
+
     private fun trip(
         stayName: String = "Machiya Stay",
         address: String = "10 Quiet Street",
@@ -160,6 +229,20 @@ class OfflineArrivalCheckTest {
             localAddress = localAddress,
         ),
         items = emptyList(),
+    )
+
+    private fun planBTrip(
+        fallbackTransport: String = "",
+        accommodationContact: String = "",
+        checkInCutoff: String = "",
+        lateArrivalInstructions: String = "",
+    ) = trip().copy(
+        arrivalCard = trip().arrivalCard.copy(
+            fallbackTransport = fallbackTransport,
+            accommodationContact = accommodationContact,
+            checkInCutoff = checkInCutoff,
+            lateArrivalInstructions = lateArrivalInstructions,
+        ),
     )
 
     private fun attachment(

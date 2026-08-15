@@ -5,6 +5,10 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,14 +22,17 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -33,9 +40,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.PointerInputModifierNode
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.shrikantbadwaik.landingkit.core.data.PreparedAttachment
@@ -49,15 +66,14 @@ import com.shrikantbadwaik.landingkit.feature.kits.AttachmentImportResult
 import com.shrikantbadwaik.landingkit.feature.kits.PendingAttachmentAuthentication
 import com.shrikantbadwaik.landingkit.feature.kits.ProtectedAttachmentAction
 import com.shrikantbadwaik.landingkit.feature.kits.R
-import com.shrikantbadwaik.landingkit.feature.kits.toUserMessage
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.TicketIllustration
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AnimatedChecklistItem
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.ArrivalModeAction
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.ArrivalReminderCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AttachmentSection
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DeleteAttachmentDialog
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.ClearAttachmentsDialog
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DeleteAttachmentDialog
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DeleteKitDialog
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.DetailCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.EditKitAction
@@ -69,9 +85,10 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPha
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.arrivalPhase
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.shouldOfferAttachmentCleanup
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.rememberProtectedAttachmentOpener
+import com.shrikantbadwaik.landingkit.feature.kits.toUserMessage
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import kotlinx.coroutines.delay
 
 @Composable
 internal fun KitDetailScreen(
@@ -235,13 +252,40 @@ internal fun KitDetailScreen(
         )
     }
 
+    val density = LocalDensity.current
+    var heroHeightDp by remember { mutableStateOf(0.dp) }
+    var heroHeightPx by remember { mutableStateOf(0f) }
+    val listState = rememberLazyListState()
+
+    val scrollProgress by remember {
+        derivedStateOf {
+            if (listState.firstVisibleItemIndex == 0) {
+                (listState.firstVisibleItemScrollOffset / heroHeightPx.coerceAtLeast(1f)).coerceIn(
+                    0f,
+                    1f,
+                )
+            } else {
+                1f
+            }
+        }
+    }
+    val heroScale by animateFloatAsState(
+        targetValue = 1f - (scrollProgress * 0.04f),
+        animationSpec = tween(durationMillis = 80, easing = LinearEasing),
+        label = "heroScale",
+    )
+
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(22.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
         ) {
-            item(key = "detail_header") {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 22.dp),
+            ) {
                 ScreenHeader(
                     onBack = onBack,
                     label = stringResource(R.string.arrival_card_label),
@@ -253,18 +297,34 @@ internal fun KitDetailScreen(
                         },
                     ),
                 )
-            }
-            item(key = "detail_hero") {
+                Spacer(Modifier.height(16.dp))
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onGloballyPositioned { coordinates ->
+                            with(density) {
+                                heroHeightDp = coordinates.size.height.toDp()
+                            }
+                            heroHeightPx = coordinates.size.height.toFloat()
+                        }
+                        .graphicsLayer {
+                            scaleX = heroScale
+                            scaleY = heroScale
+                        },
                     colors = CardDefaults.cardColors(containerColor = LandingKitColors.Forest),
                     shape = RoundedCornerShape(30.dp),
                 ) {
                     Box {
                         TicketIllustration(
-                            Modifier.align(Alignment.TopEnd).offset(x = 42.dp, y = (-40).dp),
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 42.dp, y = (-40).dp),
                         )
-                        Column(Modifier.fillMaxWidth().padding(24.dp)) {
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                        ) {
                             Text(
                                 stringResource(
                                     when (phase) {
@@ -303,165 +363,277 @@ internal fun KitDetailScreen(
                     }
                 }
             }
-            if (phase == ArrivalPhase.PAST) {
-                item(key = "detail_past_notice") {
-                    PastArrivalNotice()
-                }
-            }
-            if (phase != ArrivalPhase.PAST) {
-                item(key = "detail_arrival_reminder") {
-                    ArrivalReminderCard(
-                        enabled = trip.arrivalReminderEnabled,
-                        arrivalDate = trip.arrivalDate.format(dateFormatter),
-                        permissionDenied = arrivalReminderPermissionDenied,
-                        changeFailed = arrivalReminderChangeFailed,
-                        onEnabledChange = setArrivalReminder,
-                    )
-                }
-            }
-            item(key = "detail_offline_check") {
-                OfflineCheckStatusCard(
-                    status = offlineCheckStatus,
-                    onClick = onOfflineCheck,
-                )
-            }
-            item(key = "detail_attachments") {
-                AttachmentSection(
-                    attachments = attachments,
-                    isImporting = isImportingAttachment,
-                    feedback = attachmentFeedback,
-                    protectionEnabled = attachmentProtectionEnabled,
-                    protectionControlEnabled = pendingAttachmentAuthentication == null,
-                    showRetentionCleanup = shouldOfferAttachmentCleanup(
-                        arrivalPhase = phase,
-                        attachmentCount = attachments.size,
-                    ),
-                    onLoadThumbnail = onLoadAttachmentThumbnail,
-                    onImport = {
-                        attachmentPicker.launch(arrayOf(PDF_MIME_TYPE, IMAGE_MIME_TYPE))
-                    },
-                    onOpen = openAttachment,
-                    onQuickAccess = { attachment ->
-                        val attachmentId = attachment.takeUnless(KitAttachment::isQuickAccess)?.id
-                        onSetQuickAccessAttachment(attachmentId) { result ->
-                            if (result.isFailure) {
-                                showAttachmentFeedback(
-                                    context.getString(R.string.attachment_quick_access_failed),
+
+            val headerOffset = 56.dp + 16.dp
+            val panelTopPadding = headerOffset + heroHeightDp + 16.dp
+
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .sharePointerInputWithSiblings()
+                    .align(Alignment.TopStart),
+                contentPadding = PaddingValues(
+                    top = panelTopPadding,
+                    bottom = 22.dp,
+                ),
+            ) {
+                item(key = "detail_panel_handle") {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                        color = MaterialTheme.colorScheme.background,
+                        shadowElevation = 4.dp,
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp, bottom = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Surface(
+                                modifier = Modifier
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp)),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .28f),
+                            ) {
+                                Spacer(
+                                    Modifier
+                                        .height(4.dp)
+                                        .padding(horizontal = 20.dp),
                                 )
                             }
                         }
-                    },
-                    onProtectionChange = { enabled ->
-                        if (!enabled && isAttachmentAccessUnlocked) {
-                            onSetAttachmentProtection(false)
-                            onLockAttachmentAccess()
-                        } else {
-                            onRequestAttachmentAuthentication(
-                                ProtectedAttachmentAction.SetProtection(enabled),
+                    }
+                }
+                if (phase == ArrivalPhase.PAST) {
+                    item(key = "detail_past_notice") {
+                        PanelItem { PastArrivalNotice() }
+                    }
+                }
+                if (phase != ArrivalPhase.PAST) {
+                    item(key = "detail_arrival_reminder") {
+                        PanelItem {
+                            ArrivalReminderCard(
+                                enabled = trip.arrivalReminderEnabled,
+                                arrivalDate = trip.arrivalDate.format(dateFormatter),
+                                permissionDenied = arrivalReminderPermissionDenied,
+                                changeFailed = arrivalReminderChangeFailed,
+                                onEnabledChange = setArrivalReminder,
                             )
                         }
-                    },
-                    onClearAttachments = { showClearAttachmentsConfirmation = true },
-                    onDelete = { attachmentPendingDeletion = it },
-                )
-            }
-            item(key = "detail_driver_address") {
-                DetailCard(
-                    stringResource(R.string.detail_show_driver),
-                    trip.arrivalCard.localAddress.ifBlank { trip.arrivalCard.address },
-                    LandingKitColors.Sun,
-                )
-            }
-            item(key = "detail_stay") {
-                DetailCard(
-                    stringResource(R.string.detail_stay),
-                    stringResource(
-                        R.string.detail_stay_value,
-                        trip.arrivalCard.accommodationName,
-                        trip.arrivalCard.address,
-                    ),
-                    LandingKitColors.Seafoam,
-                )
-            }
-            if (trip.arrivalCard.bookingReference.isNotBlank()) {
-                item(key = "detail_booking") {
-                    DetailCard(
-                        stringResource(R.string.detail_booking_reference),
-                        trip.arrivalCard.bookingReference,
-                        LandingKitColors.Sky,
-                    )
+                    }
                 }
-            }
-            if (trip.arrivalCard.transferInstructions.isNotBlank()) {
-                item(key = "detail_transfer") {
-                    DetailCard(
-                        stringResource(R.string.detail_from_airport),
-                        trip.arrivalCard.transferInstructions,
-                        LandingKitColors.Coral.copy(alpha = .55f),
-                    )
+                item(key = "detail_offline_check") {
+                    PanelItem {
+                        OfflineCheckStatusCard(
+                            status = offlineCheckStatus,
+                            onClick = onOfflineCheck,
+                        )
+                    }
                 }
-            }
-            if (trip.arrivalCard.currencyNote.isNotBlank()) {
-                item(key = "detail_money") {
-                    DetailCard(
-                        stringResource(R.string.detail_money),
-                        trip.arrivalCard.currencyNote,
-                        LandingKitColors.Sun,
-                    )
+                item(key = "detail_attachments") {
+                    PanelItem {
+                        AttachmentSection(
+                            attachments = attachments,
+                            isImporting = isImportingAttachment,
+                            feedback = attachmentFeedback,
+                            protectionEnabled = attachmentProtectionEnabled,
+                            protectionControlEnabled = pendingAttachmentAuthentication == null,
+                            showRetentionCleanup = shouldOfferAttachmentCleanup(
+                                arrivalPhase = phase,
+                                attachmentCount = attachments.size,
+                            ),
+                            onLoadThumbnail = onLoadAttachmentThumbnail,
+                            onImport = {
+                                attachmentPicker.launch(arrayOf(PDF_MIME_TYPE, IMAGE_MIME_TYPE))
+                            },
+                            onOpen = openAttachment,
+                            onQuickAccess = { attachment ->
+                                val attachmentId =
+                                    attachment.takeUnless(KitAttachment::isQuickAccess)?.id
+                                onSetQuickAccessAttachment(attachmentId) { result ->
+                                    if (result.isFailure) {
+                                        showAttachmentFeedback(
+                                            context.getString(
+                                                R.string.attachment_quick_access_failed,
+                                            ),
+                                        )
+                                    }
+                                }
+                            },
+                            onProtectionChange = { enabled ->
+                                if (!enabled && isAttachmentAccessUnlocked) {
+                                    onSetAttachmentProtection(false)
+                                    onLockAttachmentAccess()
+                                } else {
+                                    onRequestAttachmentAuthentication(
+                                        ProtectedAttachmentAction.SetProtection(enabled),
+                                    )
+                                }
+                            },
+                            onClearAttachments = { showClearAttachmentsConfirmation = true },
+                            onDelete = { attachmentPendingDeletion = it },
+                        )
+                    }
                 }
-            }
-            if (trip.arrivalCard.emergencyContact.isNotBlank()) {
-                item(key = "detail_emergency") {
-                    DetailCard(
-                        stringResource(R.string.detail_emergency),
-                        trip.arrivalCard.emergencyContact,
-                        LandingKitColors.Lavender,
-                    )
+                item(key = "detail_driver_address") {
+                    PanelItem {
+                        DetailCard(
+                            stringResource(R.string.detail_show_driver),
+                            trip.arrivalCard.localAddress.ifBlank { trip.arrivalCard.address },
+                            LandingKitColors.Sun,
+                        )
+                    }
                 }
-            }
-            if (trip.arrivalCard.dietaryPhrase.isNotBlank()) {
-                item(key = "detail_dietary") {
-                    DetailCard(
-                        stringResource(R.string.detail_dietary_phrase),
-                        trip.arrivalCard.dietaryPhrase,
-                        LandingKitColors.Seafoam,
-                    )
+                item(key = "detail_stay") {
+                    PanelItem {
+                        DetailCard(
+                            stringResource(R.string.detail_stay),
+                            stringResource(
+                                R.string.detail_stay_value,
+                                trip.arrivalCard.accommodationName,
+                                trip.arrivalCard.address,
+                            ),
+                            LandingKitColors.Seafoam,
+                        )
+                    }
                 }
-            }
-            item(key = "detail_checklist_header") {
-                Text(
-                    stringResource(
-                        if (phase == ArrivalPhase.PAST) {
-                            R.string.detail_arrival_checklist
-                        } else {
-                            R.string.detail_ready_before_landing
-                        },
-                    ),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-            }
-            if (trip.items.isEmpty()) {
-                item(key = "detail_checklist_empty") {
-                    EmptyChecklistCard()
+                if (trip.arrivalCard.bookingReference.isNotBlank()) {
+                    item(key = "detail_booking") {
+                        PanelItem {
+                            DetailCard(
+                                stringResource(R.string.detail_booking_reference),
+                                trip.arrivalCard.bookingReference,
+                                LandingKitColors.Sky,
+                            )
+                        }
+                    }
                 }
-            } else {
-                items(trip.items, key = { it.id }) { item ->
-                    AnimatedChecklistItem(item = item, onCheck = { onCheck(item, it) })
+                if (trip.arrivalCard.transferInstructions.isNotBlank()) {
+                    item(key = "detail_transfer") {
+                        PanelItem {
+                            DetailCard(
+                                stringResource(R.string.detail_from_airport),
+                                trip.arrivalCard.transferInstructions,
+                                LandingKitColors.Coral.copy(alpha = .55f),
+                            )
+                        }
+                    }
                 }
-            }
-            item(key = "detail_danger_zone") {
-                KitDangerZone(onDelete = { showDeleteConfirmation = true })
-            }
-            item(key = "detail_privacy_footer") {
-                Text(
-                    stringResource(R.string.detail_privacy_footer),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                if (trip.arrivalCard.currencyNote.isNotBlank()) {
+                    item(key = "detail_money") {
+                        PanelItem {
+                            DetailCard(
+                                stringResource(R.string.detail_money),
+                                trip.arrivalCard.currencyNote,
+                                LandingKitColors.Sun,
+                            )
+                        }
+                    }
+                }
+                if (trip.arrivalCard.emergencyContact.isNotBlank()) {
+                    item(key = "detail_emergency") {
+                        PanelItem {
+                            DetailCard(
+                                stringResource(R.string.detail_emergency),
+                                trip.arrivalCard.emergencyContact,
+                                LandingKitColors.Lavender,
+                            )
+                        }
+                    }
+                }
+                if (trip.arrivalCard.dietaryPhrase.isNotBlank()) {
+                    item(key = "detail_dietary") {
+                        PanelItem {
+                            DetailCard(
+                                stringResource(R.string.detail_dietary_phrase),
+                                trip.arrivalCard.dietaryPhrase,
+                                LandingKitColors.Seafoam,
+                            )
+                        }
+                    }
+                }
+                item(key = "detail_checklist_header") {
+                    PanelItem {
+                        Text(
+                            stringResource(
+                                if (phase == ArrivalPhase.PAST) {
+                                    R.string.detail_arrival_checklist
+                                } else {
+                                    R.string.detail_ready_before_landing
+                                },
+                            ),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                    }
+                }
+                if (trip.items.isEmpty()) {
+                    item(key = "detail_checklist_empty") {
+                        PanelItem { EmptyChecklistCard() }
+                    }
+                } else {
+                    items(trip.items, key = { it.id }) { item ->
+                        PanelItem {
+                            AnimatedChecklistItem(item = item, onCheck = { onCheck(item, it) })
+                        }
+                    }
+                }
+                item(key = "detail_danger_zone") {
+                    PanelItem {
+                        KitDangerZone(onDelete = { showDeleteConfirmation = true })
+                    }
+                }
+                item(key = "detail_privacy_footer") {
+                    PanelItem {
+                        Text(
+                            stringResource(R.string.detail_privacy_footer),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
     }
+}
+
+@Composable
+private fun PanelItem(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 22.dp, vertical = 8.dp),
+    ) {
+        content()
+    }
+}
+
+private fun Modifier.sharePointerInputWithSiblings(): Modifier =
+    this then SharePointerInputElement
+
+private data object SharePointerInputElement : ModifierNodeElement<SharePointerInputNode>() {
+    override fun create() = SharePointerInputNode()
+
+    override fun update(node: SharePointerInputNode) = Unit
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "sharePointerInputWithSiblings"
+    }
+}
+
+private class SharePointerInputNode : Modifier.Node(), PointerInputModifierNode {
+    override fun onPointerEvent(
+        pointerEvent: PointerEvent,
+        pass: PointerEventPass,
+        bounds: IntSize,
+    ) = Unit
+
+    override fun onCancelPointerInput() = Unit
+
+    override fun sharePointerInputWithSiblings() = true
 }
 
 private const val PDF_MIME_TYPE = "application/pdf"
