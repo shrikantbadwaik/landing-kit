@@ -204,18 +204,19 @@ Exit condition: in airplane mode, the traveller can open Arrival Mode, retrieve 
 
 Priority: P0
 
-- [x] Store fallback transport, user-recorded last-service information, accommodation check-in cutoff, late-arrival instructions, and accommodation contact details.
-- [x] Allow an optional expected cost or payment fallback and alternate-stay note without turning Landing Kit into a live transport or booking service.
-- [x] Record when volatile details were last checked and present them as traveller-supplied notes rather than live truth.
-- [x] Add a focused “If delayed” card to Arrival Mode.
+- [x] Store another way to get there, user-recorded last-departure information, accommodation check-in cutoff, late-arrival instructions, and stay contact details.
+- [x] Allow an optional expected-cost or payment note and another-place-to-stay note without turning Landing Kit into a live transport or booking service.
+- [x] Record when volatile details were last checked in Offline Arrival Check and treat manually entered details as saved notes, never live status.
+- [x] Add a focused “If plans change” card to Arrival Mode.
 - [x] Extend the offline arrival test with independent Plan B readiness rules.
 
 Verification completed 21 August 2026: model and feature unit tests, the Room
 6-to-7 migration test, and Compose accessibility tests passed. On a Pixel 9 Pro
 Android 17 emulator at 200% font scale, Plan B independently reported missing
 recovery details, persisted its result and timestamp after force-stop/relaunch,
-and remained visible directly after the primary transfer instructions in Arrival
-Mode with airplane mode enabled.
+hid unconfigured and completed check actions when they were no longer useful,
+and showed the prepared instructions without check metadata directly after the
+primary transfer instructions in Arrival Mode with airplane mode enabled.
 
 Exit condition: when the primary transfer or check-in plan fails, the traveller can find an actionable, previously prepared fallback without connectivity.
 
@@ -223,10 +224,20 @@ Exit condition: when the primary transfer or check-in plan fails, the traveller 
 
 Priority: P1
 
-- [ ] Show only traveller-selected local-language content such as the stay name, address, phone number, or prepared phrase.
-- [ ] Hide booking references, attachments, notes, and navigation paths that could expose the rest of the kit while the phone is handed to another person.
-- [ ] Use large, high-contrast, scroll-safe text with screen-reader support.
-- [ ] Return to protected app content when the handoff ends or times out.
+- [x] Show only traveller-selected local-language content such as the stay name, address, phone number, or prepared phrase.
+- [x] Hide booking references, attachments, notes, and navigation paths that could expose the rest of the kit while the phone is handed to another person.
+- [x] Use large, high-contrast, scroll-safe text with screen-reader support.
+- [x] Return to protected app content when the handoff ends or times out.
+
+Verification completed 21 August 2026: feature unit tests and all ten Compose
+accessibility tests passed, including selected-content isolation and automatic
+timeout coverage. On a Pixel 9 Pro Android 17 emulator at 200% font scale, the
+traveller could independently select the saved stay name, stay address, and
+local-language address, enter an optional session-only checked phrase, present
+only those details on a dedicated
+high-contrast screen, and return directly to Arrival Mode with the pinned End
+handoff action. Booking references, attachments, trip notes, and navigation
+controls were absent from the active handoff screen.
 
 Deferred from this sub-milestone: offline text-to-speech. Reconsider it only when the required on-device voice exists and user testing shows that speech improves the handoff.
 

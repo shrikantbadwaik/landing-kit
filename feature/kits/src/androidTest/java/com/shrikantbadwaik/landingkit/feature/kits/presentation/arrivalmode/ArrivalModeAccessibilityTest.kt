@@ -52,6 +52,7 @@ class ArrivalModeAccessibilityTest {
                     trip = sampleTrip,
                     attachments = listOf(sampleAttachment),
                     onBack = {},
+                    onPrivateHandoff = {},
                     onPrepareAttachment = { _, _ -> },
                     attachmentProtectionEnabled = false,
                     isAttachmentAccessUnlocked = true,
@@ -74,6 +75,9 @@ class ArrivalModeAccessibilityTest {
             .assertHeightIsAtLeast(48.dp)
         composeRule.onNodeWithText(screenTitle).assert(isHeading)
         composeRule.onNodeWithText(LOCAL_ADDRESS).assert(isHeading)
+        composeRule.onNodeWithText(
+            composeRule.activity.getString(R.string.handoff_entry_title),
+        ).assertHasClickAction()
         composeRule.onNodeWithText(
             composeRule.activity.getString(R.string.arrival_mode_booking),
         ).assert(isHeading)
@@ -112,6 +116,7 @@ class ArrivalModeAccessibilityTest {
                     trip = sampleTrip,
                     attachments = listOf(sampleAttachment),
                     onBack = {},
+                    onPrivateHandoff = {},
                     onPrepareAttachment = { _, _ -> },
                     attachmentProtectionEnabled = false,
                     isAttachmentAccessUnlocked = true,

@@ -249,7 +249,33 @@
     <string name="arrival_mode_evidence_open">Open  →</string>
     <string name="arrival_mode_no_evidence">No tickets or confirmations saved yet.</string>
     <string name="arrival_mode_footer">LARGE, ESSENTIAL, AVAILABLE WITHOUT SIGNAL</string>
-    <string name="arrival_mode_if_delayed">IF PLANS CHANGED</string>
+    <string name="arrival_mode_if_delayed">IF PLANS CHANGE</string>
+
+    <!-- Private handoff -->
+    <string name="handoff_entry_label">SHOW SOMEONE</string>
+    <string name="handoff_entry_title">Show only what they need</string>
+    <string name="handoff_entry_description">Choose a few details before handing over your phone.</string>
+    <string name="handoff_setup_header">SHOW SOMEONE</string>
+    <string name="handoff_setup_badge">On this phone</string>
+    <string name="handoff_setup_title">Choose what to show</string>
+    <string name="handoff_setup_description">Booking references, tickets, notes, and the rest of your kit stay hidden.</string>
+    <string name="handoff_option_stay_name">Stay name</string>
+    <string name="handoff_option_address">Address</string>
+    <string name="handoff_option_local_address">Local-language address</string>
+    <string name="handoff_option_stay_contact">Stay phone number</string>
+    <string name="handoff_phrase_label">Optional phrase</string>
+    <string name="handoff_phrase_support">Type a phrase you have already checked.</string>
+    <string name="handoff_start_action">Show these details</string>
+    <string name="handoff_active_pane">Handoff mode</string>
+    <string name="handoff_active_label">SHOWING ONLY BELOW DETAILS</string>
+    <string name="handoff_display_stay">STAY</string>
+    <string name="handoff_display_address">ADDRESS</string>
+    <string name="handoff_display_local_address">ADDRESS IN LOCAL-LANGUAGE</string>
+    <string name="handoff_display_phone">PHONE</string>
+    <string name="handoff_display_message">MESSAGE</string>
+    <string name="handoff_timeout_note">This screen closes automatically after 2 minutes.</string>
+    <string name="handoff_end_action">End handoff</string>
+    <string name="handoff_close_symbol" translatable="false">×</string>
 
     <!-- Plan B fields -->
     <string name="plan_b_section_title">If plans change</string>

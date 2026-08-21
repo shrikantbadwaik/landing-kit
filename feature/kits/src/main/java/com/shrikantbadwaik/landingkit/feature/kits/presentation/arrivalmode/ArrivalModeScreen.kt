@@ -52,6 +52,7 @@ internal fun ArrivalModeScreen(
     trip: Trip,
     attachments: List<KitAttachment>,
     onBack: () -> Unit,
+    onPrivateHandoff: () -> Unit,
     onPrepareAttachment: (String, (Result<PreparedAttachment>) -> Unit) -> Unit,
     attachmentProtectionEnabled: Boolean,
     isAttachmentAccessUnlocked: Boolean,
@@ -151,6 +152,35 @@ internal fun ArrivalModeScreen(
                                 )
                             }
                         }
+                    }
+                }
+            }
+            item(key = "arrival_mode_handoff") {
+                Surface(
+                    onClick = onPrivateHandoff,
+                    modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+                    shape = RoundedCornerShape(24.dp),
+                    color = LandingKitColors.Seafoam.copy(alpha = 0.34f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.handoff_entry_label),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                        )
+                        Text(
+                            text = stringResource(R.string.handoff_entry_title),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            text = stringResource(R.string.handoff_entry_description),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }

@@ -57,6 +57,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.arrivalmode.Arri
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.KitDetailScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.KitEditorScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.HomeScreen
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.handoff.HandoffScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.offlinecheck.OfflineCheckScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.curatedChecklistTemplates
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.defaultChecklistContent
@@ -366,6 +367,9 @@ internal fun LandingKitNavHost(
                         trip = trip,
                         attachments = attachments,
                         onBack = { navController.popBackStack() },
+                        onPrivateHandoff = {
+                            navController.navigate(KitRoute.Handoff(trip.id))
+                        },
                         onPrepareAttachment = viewModel::prepareAttachment,
                         attachmentProtectionEnabled = attachmentProtectionEnabled,
                         isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
@@ -377,6 +381,35 @@ internal fun LandingKitNavHost(
                             viewModel::finishAttachmentAuthentication,
                         onUnlockAttachmentAccess = viewModel::unlockAttachmentAccess,
                         onLockAttachmentAccess = viewModel::lockAttachmentAccess,
+                    )
+                }
+            }
+
+            composable<KitRoute.Handoff> { backStackEntry ->
+                val route = backStackEntry.toRoute<KitRoute.Handoff>()
+                val trip = trips.firstOrNull { it.id == route.tripId }
+                var missingRouteConfirmed by remember(route.tripId) { mutableStateOf(false) }
+
+                LaunchedEffect(route.tripId, trip) {
+                    if (trip == null) {
+                        delay(MISSING_ROUTE_GRACE_MILLIS)
+                        missingRouteConfirmed = true
+                    } else {
+                        missingRouteConfirmed = false
+                    }
+                }
+
+                if (trip == null) {
+                    if (missingRouteConfirmed) {
+                        MissingKitScreen(onHome = returnHome)
+                    } else {
+                        LoadingScreen()
+                    }
+                } else {
+                    HandoffScreen(
+                        trip = trip,
+                        onBack = { navController.popBackStack() },
+                        onFinish = { navController.popBackStack() },
                     )
                 }
             }
