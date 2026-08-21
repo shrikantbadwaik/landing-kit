@@ -1,6 +1,6 @@
 # Landing Kit Product Plan
 
-Last updated: 10 August 2026
+Last updated: 21 August 2026
 
 ## Product vision
 
@@ -234,8 +234,8 @@ accessibility tests passed, including selected-content isolation and automatic
 timeout coverage. On a Pixel 9 Pro Android 17 emulator at 200% font scale, the
 traveller could independently select the saved stay name, stay address, and
 local-language address, enter an optional session-only checked phrase, present
-only those details on a dedicated
-high-contrast screen, and return directly to Arrival Mode with the pinned End
+only those details on a dedicated high-contrast screen, and return directly to
+Arrival Mode with the pinned End
 handoff action. Booking references, attachments, trip notes, and navigation
 controls were absent from the active handoff screen.
 
@@ -317,6 +317,80 @@ Success condition: users repeatedly reuse Landing Kit before travel rather than 
 - Validate with frequent, solo, first-time, anxious, and neurodivergent travellers.
 - Test whether the first-90-minutes framing is immediately understandable.
 - Measure whether users can find critical information faster than with their existing workaround.
+
+## Considered, deferred, and superseded register
+
+This register preserves ideas that came up during planning but were not required
+to complete the milestone in which they appeared. An entry here is not a roadmap
+commitment. It must have a concrete revisit trigger before being promoted into a
+milestone.
+
+Status meanings:
+
+- **Future candidate**: worth retaining, but not scheduled.
+- **Promoted**: now tracked by a later roadmap milestone; do not duplicate it here
+  as unfinished earlier work.
+- **Deferred decision**: a product or technical choice that must be resolved at a
+  specific gate.
+- **Superseded or rejected**: intentionally not backlog unless new evidence changes
+  the decision.
+
+This register was reconstructed on 21 August 2026 from the Phase 1–3 decision
+log, Codex session `019fd6c6-a757-7791-a003-f8ffb4e35b26`, and the subsequent
+Claude project handoff history.
+
+### Phase 1 — Kit lifecycle
+
+| Considered item | Status | Why it was parked | Revisit trigger or destination |
+|---|---|---|---|
+| Final product name and the possible “Thikana” rebrand | Deferred decision | Extensive naming exploration reached diminishing returns, so Landing Kit remained the working product name even though the Android package later adopted `travel.with.thikana`. | Resolve before store listing, trademark work, public privacy copy, and permanent application ID decisions. |
+| Arrival date and time | Superseded | The product deliberately stores an arrival date only. A required time added form friction and implied precision the core arrival flow did not need. | Reconsider only if traveller testing demonstrates a task that cannot be handled by arrival date, check-in cutoff, or saved last-departure information. |
+| Creating kits for historical arrival dates | Rejected for creation | New and edited kits allow today or a future date, while existing past arrivals remain readable and maintainable as references. | Reconsider only if importing or reconstructing past trips becomes a validated job. |
+
+### Phase 2 — Arrival evidence
+
+| Considered item | Status | Why it was parked | Revisit trigger or destination |
+|---|---|---|---|
+| Passport scans and similarly high-risk identity documents | Future candidate | The first attachment release was designed for tickets, confirmations, images, PDFs, and QR codes. Identity documents materially increase disclosure impact and recovery requirements. | Require a dedicated threat model, security review, recovery policy, and direct evidence that travellers want Landing Kit to store them. |
+| Dedicated Privacy & Security settings | Future candidate | Attachment protection was retained as an optional inline control so Phase 2 could ship, but it is too prominent and repetitive as a per-kit surface. | Add when settings architecture or another privacy control is introduced; move the existing protection preference without weakening discoverability. |
+| Biometric- or credential-bound encryption keys | Future security candidate | The shipped design encrypts files at rest and uses authentication as an app-level viewing gate. Binding decryption keys to authentication would change recovery, invalidation, and device-credential behaviour. | Reconsider alongside identity-document support or a higher-assurance security tier, with migration and credential-removal recovery designed first. |
+| Silent attachment expiry or scheduled deletion | Rejected | Tickets and receipts may remain useful after arrival. Silent deletion conflicts with an offline reliability product, so evidence remains until explicit per-file or confirmed bulk cleanup. | Do not revive without strong retention research and a user-controlled, recoverable policy. |
+
+### Phase 3 — Arrival Mode
+
+| Considered item | Status | Why it was parked | Revisit trigger or destination |
+|---|---|---|---|
+| Proper launcher and notification icon | Future release-polish item | Notification behaviour was complete, but Android still used the default application icon. | Complete before a public beta or store release, together with final branding. |
+| Exact 8:00 AM arrival reminder | Rejected | A battery-friendly inexact alarm avoids exact-alarm permission and Play policy costs. The UI therefore promises availability “from” or “around” 8:00 AM. | Reconsider only if user research proves exact-minute delivery is essential and policy costs are justified. |
+| In-app ticket presentation with fit, zoom, rotation, brightness, and screen-awake behaviour | Promoted | The Phase 3 path reliably opens protected evidence, but a checkpoint-quality presenter needed its own reliability and privacy milestone. | Phase 3.5.4 — Honest Ticket Presentation. |
+| Home-screen widget and app shortcuts | Promoted | Faster entry looked useful, but it was not proven faster and could expose private destination details outside the app. | Phase 3.5.6 — Faster Entry Experiment. |
+| Controlled export, printable summary, encrypted backup, and trusted-person copy | Promoted | These address phone loss, damage, battery failure, uninstall, and replacement rather than the on-device Arrival Mode itself. | Phase 4 — Controlled backup and handoff. |
+
+### Post-Phase 3 opportunity backlog
+
+These ideas surfaced during the arrival-resilience review but were intentionally
+kept outside the Phase 3.5 commitments shown above.
+
+| Considered item | Status | Why it was parked | Revisit trigger or destination |
+|---|---|---|---|
+| Offline text-to-speech for handoff content | Future candidate | The required language voice may not be installed offline, and pronunciation quality varies. Visual handoff already satisfies 3.5.3 without making an unreliable speech promise. | Reconsider after user testing shows speech improves handoff and the offline readiness check can verify that the required voice is installed and tested. |
+| Connectivity preparation pack | Future candidate | Roaming, eSIM, offline-map, offline-translation, Wi-Fi, and manual-network notes may help, but can easily become generic travel preparation scope. | Validate repeated arrival failures and fit it into Phase 5 preparation plus the independent readiness engine. |
+| Bag recovery pack | Future candidate | Luggage photos, baggage tags, airline contacts, and missing-bag references are adjacent to arrival resilience but form a distinct recovery workflow. | Promote only after research shows it is frequent and urgent enough to remain inside the first-90-minutes boundary. |
+| User-initiated “I arrived” message | Future candidate | A prefilled system share avoids tracking, but traveller demand is mixed and formal check-ins can create unwanted safety expectations. | Validate demand during 3.5.5; keep it explicit, user-initiated, and free of background monitoring. |
+| Duplicate an arrival kit | Future candidate | Reuse may help frequent travellers, but curated and personal checklist templates already cover part of the need. | Validate whether users need whole-kit duplication before adding it to Phase 5. |
+
+### Explicit boundaries, not future enhancements
+
+The following were discussed but should not be interpreted as parked work:
+
+- Full itinerary planning, live transport or flight tracking, booking, discovery,
+  expense splitting, social feeds, automatic email scanning, and AI itinerary
+  generation remain product non-goals.
+- Mandatory accounts, automatic cloud synchronisation, collaborative editing, and
+  automated safety check-ins require a separate backend, privacy, security, cost,
+  and operational decision.
+- The rejected card-animation recreation is not a future roadmap item; only calm,
+  maintainable motion that improves comprehension belongs in the product.
 
 ## Non-goals
 
@@ -413,6 +487,10 @@ Early validation should focus on behaviour rather than download volume:
 - Added Phase 3.5 as a non-blocking, evidence-led arrival-resilience phase. It focuses on offline rehearsal, explicit fallback plans, privacy-safe human handoff, faster Android entry points, reliable ticket presentation, and user-initiated contact actions without broadening Landing Kit into a live itinerary or tracking service.
 - Structured Phase 3.5 into six independently shippable sub-milestones: verified offline arrival, operational Plan B, private handoff, honest ticket presentation, travel-day actions, and a measured faster-entry experiment. Connected their readiness rules and validation explicitly to Phases 4, 5, and 6.
 - Connected the Android app to Firebase using the Google Services plugin `4.5.0`, Firebase BoM `34.17.0`, and the main Firebase Analytics module through the central version catalog. This intentionally replaces the earlier no-analytics/no-network posture while keeping all kit content device-local and every arrival feature independent of Firebase availability. Disabled Advertising ID collection and ad-personalization signals and removed advertising-related SDK permissions.
+
+### 21 August 2026
+
+- Added the considered, deferred, and superseded register after reconstructing Phase 1–3 decisions from the Codex session and Claude handoff history. Future candidates now have explicit revisit triggers, promoted ideas point to their owning milestone, and rejected decisions are separated from backlog.
 
 ## Maintaining this plan
 
