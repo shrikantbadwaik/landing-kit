@@ -19,6 +19,9 @@ internal sealed interface KitRoute {
     data class Handoff(val tripId: String) : KitRoute
 
     @Serializable
+    data class TicketPresentation(val tripId: String, val attachmentId: String) : KitRoute
+
+    @Serializable
     data class OfflineCheck(val tripId: String) : KitRoute
 
     @Serializable

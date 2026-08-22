@@ -116,7 +116,7 @@ class EncryptedAttachmentStore(context: Context) {
         val source = attachmentFile(tripId, attachmentId)
         if (!source.isFile) return false
         return try {
-            decryptFile(source, OutputStream.nullOutputStream(), MAX_ATTACHMENT_BYTES)
+            decryptFile(source, DISCARDING_OUTPUT_STREAM, MAX_ATTACHMENT_BYTES)
             true
         } catch (_: Exception) {
             false
@@ -223,6 +223,10 @@ class EncryptedAttachmentStore(context: Context) {
         private const val TRANSFORMATION = "AES/GCM/NoPadding"
         private val MAGIC = byteArrayOf(0x4C, 0x4B, 0x41, 0x31)
         private val KEY_LOCK = Any()
+        private val DISCARDING_OUTPUT_STREAM = object : OutputStream() {
+            override fun write(value: Int) = Unit
+            override fun write(buffer: ByteArray, offset: Int, length: Int) = Unit
+        }
     }
 }
 

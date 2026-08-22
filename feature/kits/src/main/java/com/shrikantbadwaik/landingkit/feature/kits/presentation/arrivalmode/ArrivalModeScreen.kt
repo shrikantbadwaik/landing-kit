@@ -53,6 +53,7 @@ internal fun ArrivalModeScreen(
     attachments: List<KitAttachment>,
     onBack: () -> Unit,
     onPrivateHandoff: () -> Unit,
+    onPresentAttachment: (KitAttachment) -> Unit,
     onPrepareAttachment: (String, (Result<PreparedAttachment>) -> Unit) -> Unit,
     attachmentProtectionEnabled: Boolean,
     isAttachmentAccessUnlocked: Boolean,
@@ -79,6 +80,7 @@ internal fun ArrivalModeScreen(
         onUnlockAccess = onUnlockAttachmentAccess,
         onLockAccess = onLockAttachmentAccess,
         onFeedback = { message -> scope.launch { snackbarHostState.showSnackbar(message) } },
+        onPresentAttachment = onPresentAttachment,
     )
 
     Scaffold(

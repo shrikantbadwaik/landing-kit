@@ -247,10 +247,51 @@ Exit condition: a traveller can show a driver or receptionist the needed informa
 
 Priority: P1
 
-- [ ] Present saved images, PDFs, tickets, and QR codes without cropping, with fit-to-screen and deliberate zoom.
-- [ ] Support rotation, temporary display brightness, and screen-awake behaviour while presenting the ticket.
-- [ ] Show saved-copy and freshness context without implying that static information is live.
-- [ ] Keep exit and return-to-arrival actions obvious and accessible.
+- [x] Present saved images, PDFs, tickets, and QR codes without cropping, with fit-to-screen and deliberate zoom.
+- [x] Support rotation, temporary display brightness, and screen-awake behaviour while presenting the ticket.
+- [x] Avoid implying that imported evidence is live, without adding saved-date or status chrome.
+- [x] Keep exit and return-to-arrival actions obvious and accessible.
+
+Research-locked presentation direction:
+
+- Preserve the imported image or PDF as the source of truth. Do not reconstruct
+  provider data as a decorative wallet card, because doing so can omit or alter
+  checkpoint evidence.
+- Open on a dark, distraction-free stage with the complete image or PDF page
+  fitted and uncropped. Let the traveller deliberately isolate a PDF page or
+  pinch and pan an image, with a visible Fit reset.
+- Include every attachment from the active arrival kit. Open the pinned file
+  first when one exists, order the rest newest-first, and provide explicit
+  previous/next navigation. Decrypt and render only the file currently shown.
+- Use only a short fade between Arrival Mode and the presenter. Avoid ticket
+  folding, flipping, or other decorative choreography while someone is trying
+  to scan the evidence.
+- Keep a persistent close action, but omit saved-date, freshness, and status
+  labels that compete with the evidence.
+- Temporarily raise display brightness and keep the screen awake while the
+  presenter is visible, restoring both settings on exit. The layout must remain
+  usable in portrait and landscape.
+
+References used to establish this direction: [Dribbble boarding-pass
+patterns](https://dribbble.com/search/boarding-pass-ui), including the focused
+[tap-to-enlarge QR interaction](https://dribbble.com/shots/2643696-Boarding-Pass-Animation);
+the [Figma Apple Wallet templates](https://www.figma.com/community/file/1116649452413390881/apple-wallet-templates)
+for information hierarchy; [Behance ticketing case
+studies](https://www.behance.net/search/projects/ticketing%20travel%20app%20design)
+and [Canva boarding-pass templates](https://www.canva.com/templates/s/boarding-pass/)
+for visual comparison; and Android's [PDF viewer
+guidance](https://developer.android.com/develop/ui/views/layout/pdf/pdf-viewer)
+for platform rendering, zoom, pagination, and accessibility expectations.
+
+Verification completed 22 August 2026: the targeted presenter accessibility
+test, feature unit tests, and Android lint passed. On a Pixel 9 Pro Android 17
+emulator at 200% text, a six-file kit opened its older pinned ticket first,
+then navigated newest-first through an opaque QR screenshot, portrait and
+landscape images, an eight-page mixed-orientation PDF, and an existing booking
+PDF. Complete-edge fitting, focused PDF pages and return to all pages, portrait
+and landscape safe areas, background return, and direct exit to Arrival Mode
+were verified. Temporary brightness and screen-awake activation and restoration
+are covered by the passing presenter test.
 
 Exit condition: common portrait, landscape, long-document, and QR-code evidence can be presented reliably at a checkpoint without exposing unrelated attachments.
 

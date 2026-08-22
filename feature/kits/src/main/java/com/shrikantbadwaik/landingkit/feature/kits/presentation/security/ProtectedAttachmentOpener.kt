@@ -29,6 +29,7 @@ internal fun rememberProtectedAttachmentOpener(
     onUnlockAccess: () -> Unit,
     onLockAccess: () -> Unit,
     onFeedback: (String) -> Unit,
+    onPresentAttachment: ((KitAttachment) -> Unit)? = null,
     onOfflineCheckAuthenticated: (String) -> Unit = {},
     onAuthenticationCancelled: (ProtectedAttachmentAction) -> Unit = {},
 ): (KitAttachment) -> Unit {
@@ -39,10 +40,11 @@ internal fun rememberProtectedAttachmentOpener(
     val authenticationSubtitle = stringResource(R.string.attachment_auth_prompt_subtitle)
     val latestAttachments = rememberUpdatedState(attachments)
     val latestFeedback = rememberUpdatedState(onFeedback)
+    val latestPresentAttachment = rememberUpdatedState(onPresentAttachment)
     val latestOfflineCheckAuthenticated = rememberUpdatedState(onOfflineCheckAuthenticated)
     val latestAuthenticationCancelled = rememberUpdatedState(onAuthenticationCancelled)
 
-    val openAttachment: (KitAttachment) -> Unit = { attachment ->
+    val openExternally: (KitAttachment) -> Unit = { attachment ->
         onPrepareAttachment(attachment.id) { result ->
             result.onSuccess { prepared ->
                 val contentUri = FileProvider.getUriForFile(
@@ -64,6 +66,9 @@ internal fun rememberProtectedAttachmentOpener(
                 latestFeedback.value(context.getString(R.string.attachment_open_failed))
             }
         }
+    }
+    val openAttachment: (KitAttachment) -> Unit = { attachment ->
+        latestPresentAttachment.value?.invoke(attachment) ?: openExternally(attachment)
     }
     val latestOpenAttachment = rememberUpdatedState(openAttachment)
 

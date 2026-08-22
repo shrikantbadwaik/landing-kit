@@ -250,6 +250,16 @@
     <string name="arrival_mode_no_evidence">No tickets or confirmations saved yet.</string>
     <string name="arrival_mode_footer">LARGE, ESSENTIAL, AVAILABLE WITHOUT SIGNAL</string>
     <string name="arrival_mode_if_delayed">IF PLANS CHANGE</string>
+    <string name="ticket_presenter_pane_description">Saved ticket or confirmation</string>
+    <string name="ticket_presenter_fit">Fit</string>
+    <string name="ticket_presenter_all_pages">All pages</string>
+    <string name="ticket_presenter_exit_description">Back to Arrival Mode</string>
+    <string name="ticket_presenter_image_description">Saved ticket or confirmation</string>
+    <string name="ticket_presenter_pdf_page_description">Page %1$d of %2$d. Tap to enlarge.</string>
+    <string name="ticket_presenter_open_failed">This saved copy couldn’t be shown.</string>
+    <string name="ticket_presenter_previous_description">Previous attachment</string>
+    <string name="ticket_presenter_next_description">Next attachment</string>
+    <string name="ticket_presenter_position">%1$d of %2$d</string>
 
     <!-- Private handoff -->
     <string name="handoff_entry_label">SHOW SOMEONE</string>

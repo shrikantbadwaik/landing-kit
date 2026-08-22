@@ -59,6 +59,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.KitEditor
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.HomeScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.handoff.HandoffScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.offlinecheck.OfflineCheckScreen
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.ticket.TicketPresentationScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.curatedChecklistTemplates
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.defaultChecklistContent
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.sampleTripContent
@@ -370,6 +371,11 @@ internal fun LandingKitNavHost(
                         onPrivateHandoff = {
                             navController.navigate(KitRoute.Handoff(trip.id))
                         },
+                        onPresentAttachment = { attachment ->
+                            navController.navigate(
+                                KitRoute.TicketPresentation(trip.id, attachment.id),
+                            )
+                        },
                         onPrepareAttachment = viewModel::prepareAttachment,
                         attachmentProtectionEnabled = attachmentProtectionEnabled,
                         isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
@@ -381,6 +387,31 @@ internal fun LandingKitNavHost(
                             viewModel::finishAttachmentAuthentication,
                         onUnlockAttachmentAccess = viewModel::unlockAttachmentAccess,
                         onLockAttachmentAccess = viewModel::lockAttachmentAccess,
+                    )
+                }
+            }
+
+            composable<KitRoute.TicketPresentation>(
+                enterTransition = { fadeIn(tween(180)) },
+                exitTransition = { fadeOut(tween(140)) },
+                popEnterTransition = { fadeIn(tween(180)) },
+                popExitTransition = { fadeOut(tween(140)) },
+            ) { backStackEntry ->
+                val route = backStackEntry.toRoute<KitRoute.TicketPresentation>()
+                val attachments by remember(route.tripId) {
+                    viewModel.attachments(route.tripId)
+                }.collectAsStateWithLifecycle(initialValue = emptyList())
+
+                if (attachments.isEmpty()) {
+                    LoadingScreen()
+                } else {
+                    TicketPresentationScreen(
+                        attachments = attachments,
+                        initialAttachmentId = route.attachmentId,
+                        attachmentProtectionEnabled = attachmentProtectionEnabled,
+                        isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
+                        onPrepareAttachment = viewModel::prepareAttachment,
+                        onExit = { navController.popBackStack() },
                     )
                 }
             }
