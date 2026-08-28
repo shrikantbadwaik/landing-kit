@@ -87,6 +87,19 @@ class OfflineCheckAccessibilityTest {
             .assertHasClickAction()
             .assertWidthIsAtLeast(48.dp)
             .assertHeightIsAtLeast(48.dp)
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.getString(
+                R.string.offline_check_edit_arrival_details_description,
+            ),
+        )
+            .assertHasClickAction()
+            .assertWidthIsAtLeast(48.dp)
+            .assertHeightIsAtLeast(48.dp)
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.getString(R.string.offline_check_fix_evidence),
+        )
+            .assertHasClickAction()
+            .assertHeightIsAtLeast(48.dp)
         composeRule.onNodeWithText(ready).assertExists()
         composeRule.onNodeWithText(rehearse).assertHasClickAction()
         assertEquals(
@@ -137,13 +150,18 @@ class OfflineCheckAccessibilityTest {
             }
         }
 
-        composeRule.onNode(hasScrollAction()).performScrollToKey("offline_check_plan_b_status")
+        composeRule.onNode(hasScrollAction()).performScrollToKey("offline_check_plan_b_group")
         composeRule.onNodeWithText(
             composeRule.activity.getString(R.string.plan_b_status_not_checked),
         ).assertExists()
-        composeRule.onNode(hasScrollAction()).performScrollToKey("offline_check_plan_b_action")
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.getString(R.string.offline_check_edit_plan_b_description),
+        )
+            .assertHasClickAction()
+            .assertWidthIsAtLeast(48.dp)
+            .assertHeightIsAtLeast(48.dp)
         composeRule.onNodeWithText(
-            composeRule.activity.getString(R.string.plan_b_run_action),
+            composeRule.activity.getString(R.string.offline_check_run_again_action),
         ).assertHasClickAction()
     }
 
@@ -190,7 +208,7 @@ class OfflineCheckAccessibilityTest {
             }
         }
 
-        composeRule.onNode(hasScrollAction()).performScrollToKey("offline_check_plan_b_status")
+        composeRule.onNode(hasScrollAction()).performScrollToKey("offline_check_plan_b_group")
         composeRule.onNodeWithText(
             composeRule.activity.getString(R.string.plan_b_status_ready),
         ).assertExists()

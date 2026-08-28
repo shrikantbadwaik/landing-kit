@@ -299,12 +299,52 @@ Exit condition: common portrait, landscape, long-document, and QR-code evidence 
 
 Priority: P2
 
-- [ ] Add one-tap, user-initiated call, message, copy-address, and open-in-map actions through Android system capabilities.
-- [ ] Validate whether travellers want an optional prefilled “I arrived” system share before adding it.
+Status: Complete
+
+- [x] Add one-tap, user-initiated call, message, copy-address, and open-in-map actions through Android system capabilities.
+
+Deferred research: validate whether travellers want an optional prefilled “I
+arrived” system share before adding it. This is tracked in Future Opportunities
+and does not block this sub-milestone.
+
+Research-locked interaction direction:
+
+- Keep actions beside the information they use: map and copy actions belong
+  with the address; call and message actions belong with the saved stay
+  contact. Avoid a generic overflow menu or a separate action dashboard.
+- Keep every action deliberate and reversible inside Landing Kit. Open the
+  system dialler rather than placing a call, open the message composer without
+  sending, and hand map queries to an installed map app. Check that a receiving
+  app exists and explain when one is unavailable.
+- Copy both visible address forms when a local-language address exists, mark
+  the clipboard content as sensitive where Android supports it, and use the
+  regular address plus stay name for the map query.
+- Use compact circular symbol controls paired with short, visible labels. Keep
+  their touch targets usable one-handed and their meaning clear at 200% text;
+  do not hide frequent travel-day actions behind an icon-only control, gesture,
+  or confirmation sheet.
+- Keep the optional “I arrived” message out of this implementation until
+  traveller research establishes demand and acceptable wording. If promoted,
+  use Android's Sharesheet rather than a custom recipient picker, and never
+  infer arrival or send in the background.
+
+Research sources: Android's [common-intent
+guidance](https://developer.android.com/guide/components/intents-common) for
+safe dialler, messaging, and map handoffs; the [Android
+Sharesheet](https://developer.android.com/develop/ui/compose/sharing/send) for
+user-controlled sharing; [Google Maps intent
+guidance](https://developer.android.com/guide/components/google-maps-intents)
+for encoded location queries and receiver checks; Figma's [real-world action
+option pattern library](https://www.figma.com/community/file/1597505948890421166/ios-action-options-screens-500-real-world-patterns)
+for contextual placement and risk-based hierarchy; and travel-app comparisons
+across [Dribbble](https://dribbble.com/search/travel-app-actions) and
+[Behance](https://www.behance.net/search/projects/travel%20app%20actions) for
+visible, destination-adjacent quick actions.
 
 Excluded from this sub-milestone: background location, automatic monitoring, missed-check-in escalation, and emergency-response claims.
 
-Exit condition: the traveller can contact the accommodation, hand an address to another app, or deliberately notify someone without Landing Kit tracking them or requiring a backend.
+Exit condition: the traveller can contact the accommodation or hand an address
+to another app without Landing Kit tracking them or requiring a backend.
 
 #### 3.5.6 — Faster Entry Experiment
 

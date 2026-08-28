@@ -6,6 +6,8 @@ import com.shrikantbadwaik.landingkit.core.model.Trip
 internal data class ArrivalModeContent(
     val address: String,
     val supportingAddress: String?,
+    val copyableAddress: String,
+    val mapQuery: String,
     val bookingReference: String?,
     val transferInstructions: String?,
     val emergencyContact: String?,
@@ -29,11 +31,20 @@ internal fun Trip.toArrivalModeContent(
     val localAddress = arrivalCard.localAddress.trim()
     val regularAddress = arrivalCard.address.trim()
     val ifDelayed = buildIfDelayedContent(arrivalCard)
+    val primaryAddress = localAddress.ifBlank { regularAddress }
+    val supportingAddress = regularAddress.takeIf {
+        localAddress.isNotBlank() && !regularAddress.equals(localAddress, ignoreCase = true)
+    }
+    val mapAddress = regularAddress.ifBlank { localAddress }
     return ArrivalModeContent(
-        address = localAddress.ifBlank { regularAddress },
-        supportingAddress = regularAddress.takeIf {
-            localAddress.isNotBlank() && !regularAddress.equals(localAddress, ignoreCase = true)
-        },
+        address = primaryAddress,
+        supportingAddress = supportingAddress,
+        copyableAddress = listOfNotNull(primaryAddress, supportingAddress)
+            .joinToString(separator = "\n"),
+        mapQuery = listOf(arrivalCard.accommodationName.trim(), mapAddress, destination.trim())
+            .filter(String::isNotBlank)
+            .distinctBy { it.lowercase() }
+            .joinToString(separator = ", "),
         bookingReference = arrivalCard.bookingReference.trim().ifBlank { null },
         transferInstructions = arrivalCard.transferInstructions.trim().ifBlank { null },
         emergencyContact = arrivalCard.emergencyContact.trim().ifBlank { null },

@@ -18,6 +18,14 @@ class ArrivalModeContentTest {
 
         assertEquals("京都市東山区祇園町南側 570 2F", content.address)
         assertEquals("2F, 570 Gionmachi, Kyoto", content.supportingAddress)
+        assertEquals(
+            "京都市東山区祇園町南側 570 2F\n2F, 570 Gionmachi, Kyoto",
+            content.copyableAddress,
+        )
+        assertEquals(
+            "Machiya Stay Gion, 2F, 570 Gionmachi, Kyoto, Kyoto, Japan",
+            content.mapQuery,
+        )
     }
 
     @Test
@@ -26,6 +34,11 @@ class ArrivalModeContentTest {
 
         assertEquals("10 Quiet Street", content.address)
         assertNull(content.supportingAddress)
+        assertEquals("10 Quiet Street", content.copyableAddress)
+        assertEquals(
+            "Machiya Stay Gion, 10 Quiet Street, Kyoto, Japan",
+            content.mapQuery,
+        )
     }
 
     @Test

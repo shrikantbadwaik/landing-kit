@@ -15,6 +15,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToKey
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
@@ -53,6 +54,7 @@ class ArrivalModeAccessibilityTest {
                     attachments = listOf(sampleAttachment),
                     onBack = {},
                     onPrivateHandoff = {},
+                    onTravelDayAction = { TravelDayActionResult.Started },
                     onPresentAttachment = {},
                     onPrepareAttachment = { _, _ -> },
                     attachmentProtectionEnabled = false,
@@ -79,6 +81,7 @@ class ArrivalModeAccessibilityTest {
         composeRule.onNodeWithText(
             composeRule.activity.getString(R.string.handoff_entry_title),
         ).assertHasClickAction()
+        composeRule.onNode(hasScrollAction()).performScrollToKey("arrival_mode_booking")
         composeRule.onNodeWithText(
             composeRule.activity.getString(R.string.arrival_mode_booking),
         ).assert(isHeading)
@@ -118,6 +121,7 @@ class ArrivalModeAccessibilityTest {
                     attachments = listOf(sampleAttachment),
                     onBack = {},
                     onPrivateHandoff = {},
+                    onTravelDayAction = { TravelDayActionResult.Started },
                     onPresentAttachment = {},
                     onPrepareAttachment = { _, _ -> },
                     attachmentProtectionEnabled = false,
@@ -149,6 +153,69 @@ class ArrivalModeAccessibilityTest {
         assertTrue(
             "Open action contrast was $maximumContrast; expected at least $MINIMUM_TEXT_CONTRAST",
             maximumContrast >= MINIMUM_TEXT_CONTRAST,
+        )
+    }
+
+    @Test
+    fun travel_day_actions_are_accessible_and_use_visible_trip_details() {
+        val actions = mutableListOf<TravelDayAction>()
+
+        composeRule.setContent {
+            LandingKitTheme(darkTheme = true) {
+                ArrivalModeScreen(
+                    trip = sampleTrip,
+                    attachments = listOf(sampleAttachment),
+                    onBack = {},
+                    onPrivateHandoff = {},
+                    onTravelDayAction = {
+                        actions += it
+                        TravelDayActionResult.Started
+                    },
+                    onPresentAttachment = {},
+                    onPrepareAttachment = { _, _ -> },
+                    attachmentProtectionEnabled = false,
+                    isAttachmentAccessUnlocked = true,
+                    pendingAttachmentAuthentication = null,
+                    onSetAttachmentProtection = {},
+                    onRequestAttachmentAuthentication = {},
+                    onFinishAttachmentAuthentication = {},
+                    onUnlockAttachmentAccess = {},
+                    onLockAttachmentAccess = {},
+                )
+            }
+        }
+
+        fun assertAndClick(description: Int) {
+            composeRule.onNodeWithContentDescription(
+                composeRule.activity.getString(description),
+            )
+                .assertHasClickAction()
+                .assertWidthIsAtLeast(48.dp)
+                .assertHeightIsAtLeast(48.dp)
+                .performClick()
+        }
+
+        assertAndClick(R.string.arrival_mode_open_map_description)
+        assertAndClick(R.string.arrival_mode_copy_address_description)
+        composeRule.onNode(hasScrollAction()).performScrollToKey("arrival_mode_if_delayed")
+        assertAndClick(R.string.arrival_mode_call_stay_description)
+        assertAndClick(R.string.arrival_mode_message_stay_description)
+
+        assertEquals(
+            listOf(
+                TravelDayAction.OpenMap(
+                    "Machiya Stay Gion, " +
+                        "2F, 570-123 Gionmachi Minamigawa, Higashiyama-ku, Kyoto, " +
+                        "Kyoto, Japan",
+                ),
+                TravelDayAction.CopyAddress(
+                    "$LOCAL_ADDRESS\n" +
+                        "2F, 570-123 Gionmachi Minamigawa, Higashiyama-ku, Kyoto",
+                ),
+                TravelDayAction.CallStay("+81 75 555 1234"),
+                TravelDayAction.MessageStay("+81 75 555 1234"),
+            ),
+            actions,
         )
     }
 

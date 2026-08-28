@@ -54,6 +54,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.toUserMessage
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.LoadingScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.MissingKitScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.arrivalmode.ArrivalModeScreen
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.arrivalmode.AndroidTravelDayActionHandler
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.KitDetailScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.KitEditorScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.HomeScreen
@@ -85,6 +86,7 @@ internal fun LandingKitNavHost(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val travelDayActionHandler = remember(context) { AndroidTravelDayActionHandler(context) }
     val offlineCheckState by viewModel.offlineArrivalCheckState.collectAsStateWithLifecycle()
     val planBCheckState by viewModel.planBCheckState.collectAsStateWithLifecycle()
     var importingSharedAttachmentsInto by remember(pendingSharedAttachments?.id) {
@@ -371,6 +373,7 @@ internal fun LandingKitNavHost(
                         onPrivateHandoff = {
                             navController.navigate(KitRoute.Handoff(trip.id))
                         },
+                        onTravelDayAction = travelDayActionHandler::perform,
                         onPresentAttachment = { attachment ->
                             navController.navigate(
                                 KitRoute.TicketPresentation(trip.id, attachment.id),

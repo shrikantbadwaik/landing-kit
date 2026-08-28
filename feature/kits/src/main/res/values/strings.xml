@@ -222,14 +222,15 @@
     <string name="offline_check_status_failed">The check couldn’t finish. Try again.</string>
     <string name="offline_check_checked_now">Checked just now</string>
     <string name="offline_check_checked_at">Last checked %1$s</string>
-    <string name="offline_check_run_action">Run offline check</string>
-    <string name="offline_check_run_again_action">Check again</string>
+    <string name="offline_check_run_again_action">Check</string>
     <string name="offline_check_rule_stay">Stay saved</string>
     <string name="offline_check_rule_address">Address of the stay saved</string>
     <string name="offline_check_rule_evidence">Quick-access document selected</string>
     <string name="offline_check_rule_readable">Selected evidence decrypts on this phone</string>
-    <string name="offline_check_fix_details">Edit stay or address  →</string>
-    <string name="offline_check_fix_evidence">Choose quick-access document  →</string>
+    <string name="offline_check_edit_arrival_details_description">Edit arrival details</string>
+    <string name="offline_check_edit_plan_b_description">Edit Plan B details</string>
+    <string name="offline_check_fix_evidence">Choose quick-access document</string>
+    <string name="offline_check_evidence_action_symbol" translatable="false">→</string>
     <string name="offline_check_rehearse_action">View in Arrival Mode</string>
     <string name="offline_check_honesty_title">What this check means</string>
     <string name="offline_check_honesty_copy">This confirms a locally saved copy on this phone, not a live pass. Keep a backup for phone loss or an empty battery.</string>
@@ -250,6 +251,18 @@
     <string name="arrival_mode_no_evidence">No tickets or confirmations saved yet.</string>
     <string name="arrival_mode_footer">LARGE, ESSENTIAL, AVAILABLE WITHOUT SIGNAL</string>
     <string name="arrival_mode_if_delayed">IF PLANS CHANGE</string>
+    <string name="arrival_mode_open_map">Open map</string>
+    <string name="arrival_mode_open_map_description">Open the stay address in a map app</string>
+    <string name="arrival_mode_copy_address">Copy address</string>
+    <string name="arrival_mode_copy_address_description">Copy the stay address</string>
+    <string name="arrival_mode_call_stay">Call</string>
+    <string name="arrival_mode_call_stay_description">Open the phone app with the stay number</string>
+    <string name="arrival_mode_message_stay">Message</string>
+    <string name="arrival_mode_message_stay_description">Open the message app with the stay number</string>
+    <string name="arrival_mode_address_copied">Address copied.</string>
+    <string name="arrival_mode_map_unavailable">No map app is available on this phone.</string>
+    <string name="arrival_mode_call_unavailable">No calling app is available on this phone.</string>
+    <string name="arrival_mode_message_unavailable">No messaging app is available on this phone.</string>
     <string name="ticket_presenter_pane_description">Saved ticket or confirmation</string>
     <string name="ticket_presenter_fit">Fit</string>
     <string name="ticket_presenter_all_pages">All pages</string>
@@ -310,7 +323,6 @@
     <string name="plan_b_check_rule_fallback">Another way to get there</string>
     <string name="plan_b_check_rule_contact">A way to contact your stay</string>
     <string name="plan_b_check_rule_recovery">Late check-in details</string>
-    <string name="plan_b_check_fix_action">Complete Plan B</string>
     <string name="plan_b_status_not_checked">Plan B hasn’t been checked</string>
     <string name="plan_b_status_stale">Plan B needs another check</string>
     <string name="plan_b_status_ready">Plan B is ready</string>
@@ -320,7 +332,6 @@
     <string name="plan_b_intro">Make sure your backup arrival details are complete.</string>
     <string name="plan_b_checked_now">Checked just now</string>
     <string name="plan_b_checked_at">Last checked %1$s</string>
-    <string name="plan_b_run_action">Check</string>
 
     <!-- Tickets and confirmations -->
     <string name="attachment_section_label">TICKETS &amp; CONFIRMATIONS</string>

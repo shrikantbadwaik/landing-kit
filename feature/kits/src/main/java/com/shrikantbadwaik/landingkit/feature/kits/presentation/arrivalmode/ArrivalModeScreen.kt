@@ -1,6 +1,7 @@
 package com.shrikantbadwaik.landingkit.feature.kits.presentation.arrivalmode
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -28,10 +30,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.data.PreparedAttachment
@@ -53,6 +57,7 @@ internal fun ArrivalModeScreen(
     attachments: List<KitAttachment>,
     onBack: () -> Unit,
     onPrivateHandoff: () -> Unit,
+    onTravelDayAction: (TravelDayAction) -> TravelDayActionResult,
     onPresentAttachment: (KitAttachment) -> Unit,
     onPrepareAttachment: (String, (Result<PreparedAttachment>) -> Unit) -> Unit,
     attachmentProtectionEnabled: Boolean,
@@ -68,6 +73,22 @@ internal fun ArrivalModeScreen(
     val screenTitle = stringResource(R.string.arrival_mode_header)
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val addressCopiedMessage = stringResource(R.string.arrival_mode_address_copied)
+    val mapUnavailableMessage = stringResource(R.string.arrival_mode_map_unavailable)
+    val callingUnavailableMessage = stringResource(R.string.arrival_mode_call_unavailable)
+    val messagingUnavailableMessage = stringResource(R.string.arrival_mode_message_unavailable)
+    val performTravelDayAction: (TravelDayAction) -> Unit = { action ->
+        val feedback = when (onTravelDayAction(action)) {
+            TravelDayActionResult.Started -> null
+            TravelDayActionResult.AddressCopied -> addressCopiedMessage
+            TravelDayActionResult.MapUnavailable -> mapUnavailableMessage
+            TravelDayActionResult.CallingUnavailable -> callingUnavailableMessage
+            TravelDayActionResult.MessagingUnavailable -> messagingUnavailableMessage
+        }
+        feedback?.let { message ->
+            scope.launch { snackbarHostState.showSnackbar(message) }
+        }
+    }
     val openAttachment = rememberProtectedAttachmentOpener(
         attachments = attachments,
         protectionEnabled = attachmentProtectionEnabled,
@@ -154,6 +175,44 @@ internal fun ArrivalModeScreen(
                                 )
                             }
                         }
+                        Spacer(Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                        ) {
+                            TravelDayActionControl(
+                                modifier = Modifier.weight(1f),
+                                icon = R.drawable.ic_open_map,
+                                label = stringResource(R.string.arrival_mode_open_map),
+                                description = stringResource(
+                                    R.string.arrival_mode_open_map_description,
+                                ),
+                                containerColor = Color.White.copy(alpha = 0.12f),
+                                contentColor = Color.White,
+                                borderColor = Color.White.copy(alpha = 0.18f),
+                                onClick = {
+                                    performTravelDayAction(
+                                        TravelDayAction.OpenMap(content.mapQuery),
+                                    )
+                                },
+                            )
+                            TravelDayActionControl(
+                                modifier = Modifier.weight(1f),
+                                icon = R.drawable.ic_copy_address,
+                                label = stringResource(R.string.arrival_mode_copy_address),
+                                description = stringResource(
+                                    R.string.arrival_mode_copy_address_description,
+                                ),
+                                containerColor = Color.White.copy(alpha = 0.12f),
+                                contentColor = Color.White,
+                                borderColor = Color.White.copy(alpha = 0.18f),
+                                onClick = {
+                                    performTravelDayAction(
+                                        TravelDayAction.CopyAddress(content.copyableAddress),
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -206,7 +265,10 @@ internal fun ArrivalModeScreen(
             }
             content.ifDelayed?.let { delayed ->
                 item(key = "arrival_mode_if_delayed") {
-                    ArrivalModeIfDelayedCard(content = delayed)
+                    ArrivalModeIfDelayedCard(
+                        content = delayed,
+                        onTravelDayAction = performTravelDayAction,
+                    )
                 }
             }
             content.primaryAttachment?.let { attachment ->
@@ -384,6 +446,7 @@ private fun ArrivalEvidenceAction(
 @Composable
 private fun ArrivalModeIfDelayedCard(
     content: IfDelayedContent,
+    onTravelDayAction: (TravelDayAction) -> Unit,
 ) {
     ArrivalModeInfoCard(
         label = stringResource(R.string.arrival_mode_if_delayed),
@@ -414,9 +477,11 @@ private fun ArrivalModeIfDelayedCard(
             )
         }
         content.accommodationContact?.let {
-            IfDelayedRow(
+            IfDelayedContactRow(
                 label = stringResource(R.string.plan_b_accommodation_contact_label),
                 value = it,
+                onCall = { onTravelDayAction(TravelDayAction.CallStay(it)) },
+                onMessage = { onTravelDayAction(TravelDayAction.MessageStay(it)) },
             )
         }
         content.expectedCostNote?.let {
@@ -431,6 +496,97 @@ private fun ArrivalModeIfDelayedCard(
                 value = it,
             )
         }
+    }
+}
+
+@Composable
+private fun IfDelayedContactRow(
+    label: String,
+    value: String,
+    onCall: () -> Unit,
+    onMessage: () -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(3.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(10.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            TravelDayActionControl(
+                modifier = Modifier.weight(1f),
+                icon = R.drawable.ic_call_stay,
+                label = stringResource(R.string.arrival_mode_call_stay),
+                description = stringResource(R.string.arrival_mode_call_stay_description),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                borderColor = MaterialTheme.colorScheme.outlineVariant,
+                onClick = onCall,
+            )
+            TravelDayActionControl(
+                modifier = Modifier.weight(1f),
+                icon = R.drawable.ic_message_stay,
+                label = stringResource(R.string.arrival_mode_message_stay),
+                description = stringResource(R.string.arrival_mode_message_stay_description),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                borderColor = MaterialTheme.colorScheme.outlineVariant,
+                onClick = onMessage,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TravelDayActionControl(
+    modifier: Modifier = Modifier,
+    icon: Int,
+    label: String,
+    description: String,
+    containerColor: Color,
+    contentColor: Color,
+    borderColor: Color,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics(mergeDescendants = true) { contentDescription = description },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Surface(
+            modifier = Modifier.size(56.dp),
+            shape = CircleShape,
+            color = containerColor,
+            contentColor = contentColor,
+            border = BorderStroke(1.dp, borderColor),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = contentColor,
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = contentColor,
+            maxLines = 2,
+        )
     }
 }
 
