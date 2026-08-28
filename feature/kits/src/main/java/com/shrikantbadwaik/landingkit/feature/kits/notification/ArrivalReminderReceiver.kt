@@ -21,10 +21,7 @@ class ArrivalReminderReceiver : BroadcastReceiver() {
         when (intent.action) {
             ArrivalReminderScheduler.ACTION_SHOW_ARRIVAL_REMINDER -> {
                 val tripId = intent.getStringExtra(ArrivalReminderIntent.EXTRA_TRIP_ID) ?: return
-                val destination = intent.getStringExtra(
-                    ArrivalReminderScheduler.DESTINATION_EXTRA,
-                ) ?: return
-                scheduler.show(tripId = tripId, destination = destination)
+                scheduler.show(tripId = tripId)
             }
 
             Intent.ACTION_BOOT_COMPLETED,

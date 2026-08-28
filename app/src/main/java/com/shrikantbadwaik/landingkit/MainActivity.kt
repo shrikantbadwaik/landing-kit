@@ -50,8 +50,13 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun receiveArrivalModeShortcut(incomingIntent: Intent?) {
-        val tripId = ArrivalReminderIntent.tripId(incomingIntent) ?: return
-        viewModel.acceptArrivalModeShortcut(tripId)
+        val tripId = ArrivalReminderIntent.tripId(incomingIntent)
+        when {
+            tripId != null -> viewModel.acceptArrivalModeShortcut(tripId)
+            ArrivalReminderIntent.opensNextArrivalMode(incomingIntent) ->
+                viewModel.acceptNextArrivalModeShortcut()
+            else -> return
+        }
 
         // Prevent task restoration from reopening Arrival Mode after the shortcut is consumed.
         setIntent(Intent(this, MainActivity::class.java).setAction(Intent.ACTION_MAIN))

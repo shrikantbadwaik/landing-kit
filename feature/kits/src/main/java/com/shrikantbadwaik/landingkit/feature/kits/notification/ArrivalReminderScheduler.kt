@@ -49,7 +49,6 @@ class ArrivalReminderScheduler @Inject constructor(
             .setAction(ACTION_SHOW_ARRIVAL_REMINDER)
             .setData(reminderUri(trip.id))
             .putExtra(ArrivalReminderIntent.EXTRA_TRIP_ID, trip.id)
-            .putExtra(DESTINATION_EXTRA, trip.destination)
         alarmManager.setAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             triggerAt.toEpochMilli(),
@@ -76,7 +75,7 @@ class ArrivalReminderScheduler @Inject constructor(
     }
 
     @SuppressLint("MissingPermission")
-    internal fun show(tripId: String, destination: String) {
+    internal fun show(tripId: String) {
         if (!canPostNotifications()) return
         createChannel()
 
@@ -97,9 +96,7 @@ class ArrivalReminderScheduler @Inject constructor(
             .setSmallIcon(R.drawable.ic_notification_arrival)
             .setColor(Color.rgb(20, 82, 76))
             .setContentTitle(context.getString(R.string.arrival_reminder_notification_title))
-            .setContentText(
-                context.getString(R.string.arrival_reminder_notification_body, destination),
-            )
+            .setContentText(context.getString(R.string.arrival_reminder_notification_body))
             .setContentIntent(contentIntent)
             .setAutoCancel(true)
             .setOnlyAlertOnce(true)
@@ -141,7 +138,6 @@ class ArrivalReminderScheduler @Inject constructor(
 
     internal companion object {
         const val CHANNEL_ID = "arrival_day_shortcuts"
-        const val DESTINATION_EXTRA = "arrival_reminder_destination"
         const val ACTION_SHOW_ARRIVAL_REMINDER =
             "com.shrikantbadwaik.landingkit.action.SHOW_ARRIVAL_REMINDER"
     }

@@ -17,7 +17,9 @@
     <application
         android:name="com.shrikantbadwaik.landingkit.LandingKitApplication"
         android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
         android:label="Landing Kit"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.LandingKit">
         <meta-data
@@ -61,5 +63,16 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/attachment_file_paths" />
         </provider>
+        <receiver
+            android:name="com.shrikantbadwaik.landingkit.ArrivalModeWidget"
+            android:exported="false"
+            android:label="@string/arrival_widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/arrival_mode_widget_info" />
+        </receiver>
     </application>
 </manifest>

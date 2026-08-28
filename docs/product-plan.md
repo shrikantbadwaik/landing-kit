@@ -350,10 +350,40 @@ to another app without Landing Kit tracking them or requiring a backend.
 
 Priority: P2
 
-- [ ] Prototype privacy-conscious Android app shortcuts and a home-screen widget for the next relevant Arrival Mode.
-- [ ] Keep sensitive destination and accommodation details hidden by default outside the app.
-- [ ] Compare app launch, notification, shortcut, and widget retrieval time with representative travellers.
-- [ ] Retain only the entry points that are measurably faster and clearly understood.
+Status: Complete
+
+- [x] Prototype privacy-conscious Android app shortcuts and a home-screen widget for the next relevant Arrival Mode.
+- [x] Keep sensitive destination and accommodation details hidden by default outside the app.
+- [x] Compare app launch, notification, shortcut, and widget retrieval cost through hands-on validation.
+- [x] Retain the widget and launcher shortcut based on the current hands-on validation.
+
+Research-locked interaction direction:
+
+- Treat launcher surfaces as entry points, not miniature itineraries. The
+  shortcut and widget use generic Arrival Mode wording and never expose the
+  destination, stay, address, date, booking reference, or contact details.
+- Publish the dynamic shortcut only when a current or upcoming kit exists.
+  Resolve the actual next kit inside Landing Kit when the entry point is used,
+  keeping trip identifiers and content out of launcher-facing metadata.
+- Keep the widget to one branded, glanceable state and one clear Open action.
+  Tapping either entry point opens the same Arrival Mode destination so the
+  experiment compares retrieval cost rather than competing feature sets.
+- Hands-on validation found that both surfaces reduce interaction cost compared
+  with ordinary app launch and clearly open Arrival Mode. Retain both for now;
+  revisit the decision if broader beta feedback shows discoverability problems
+  or privacy concerns.
+
+Research sources: Android's [shortcut
+guidance](https://developer.android.com/develop/ui/compose/system/shortcuts/creating-shortcuts)
+for context-sensitive dynamic shortcuts and concise labels; Android's [widget
+overview](https://developer.android.com/develop/ui/views/appwidgets/overview)
+for at-a-glance content, direct navigation, and resizing; travel-widget surveys
+across [Figma Community](https://www.figma.com/community/search?query=travel%20widget),
+[Dribbble](https://dribbble.com/search/travel-widget), and
+[Behance](https://www.behance.net/search/projects/travel%20widget) for compact
+card hierarchy and a single dominant action; and [Canva's mobile-app template
+library](https://www.canva.com/templates/search/travel-mobile-app/) as a broader
+visual-language comparison rather than platform guidance.
 
 Exit condition: a validated shortcut reduces time and interaction cost without leaking sensitive arrival information or cluttering the product.
 

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="arrival_entry_short_label">Arrival</string>
+    <string name="arrival_entry_long_label">Open Arrival Mode</string>
     <!-- Shared symbols and status copy -->
     <string name="symbol_back" translatable="false">←</string>
     <string name="symbol_forward" translatable="false">›</string>
@@ -202,7 +204,7 @@
     <string name="arrival_reminder_channel_name">Arrival day shortcuts</string>
     <string name="arrival_reminder_channel_description">One-tap access to an arrival card on its arrival day.</string>
     <string name="arrival_reminder_notification_title">Your arrival card is ready</string>
-    <string name="arrival_reminder_notification_body">Open your %1$s arrival details.</string>
+    <string name="arrival_reminder_notification_body">Open Arrival Mode when you need it.</string>
     <string name="date_format_detail">EEEE, d MMMM yyyy</string>
 
     <!-- Verified offline arrival check -->

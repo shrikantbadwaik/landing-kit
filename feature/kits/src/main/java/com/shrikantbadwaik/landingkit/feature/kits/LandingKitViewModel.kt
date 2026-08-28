@@ -20,6 +20,7 @@ import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.core.data.preferences.UserPreferences
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.KitForm
 import com.shrikantbadwaik.landingkit.feature.kits.notification.ArrivalReminderScheduler
+import com.shrikantbadwaik.landingkit.feature.kits.entry.ArrivalEntryPointPublisher
 import com.shrikantbadwaik.landingkit.feature.kits.sample.SampleTripContent
 import com.shrikantbadwaik.landingkit.feature.kits.sample.sampleTrip
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,12 +30,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import java.time.LocalDate
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -45,6 +49,7 @@ class LandingKitViewModel @Inject constructor(
     private val attachmentRepository: AttachmentRepository,
     private val userPreferences: UserPreferences,
     private val arrivalReminderScheduler: ArrivalReminderScheduler,
+    private val arrivalEntryPointPublisher: ArrivalEntryPointPublisher,
 ) : ViewModel() {
     private val _pendingSharedAttachments = MutableStateFlow<PendingSharedAttachments?>(null)
     private val _pendingArrivalModeTripId = MutableStateFlow<String?>(null)
@@ -62,6 +67,15 @@ class LandingKitViewModel @Inject constructor(
     private val _planBCheckState =
         MutableStateFlow<PlanBCheckUiState>(PlanBCheckUiState.Idle)
     private var attachmentRelockJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            repository.observeTrips().collectLatest { trips ->
+                arrivalEntryPointPublisher.sync(trips)
+            }
+        }
+    }
+
     val pendingSharedAttachments: StateFlow<PendingSharedAttachments?> =
         _pendingSharedAttachments.asStateFlow()
     internal val pendingArrivalModeTripId: StateFlow<String?> =
@@ -224,6 +238,17 @@ class LandingKitViewModel @Inject constructor(
 
     fun acceptArrivalModeShortcut(tripId: String) {
         _pendingArrivalModeTripId.value = tripId
+    }
+
+    fun acceptNextArrivalModeShortcut() {
+        viewModelScope.launch {
+            _pendingArrivalModeTripId.value = repository.observeTrips()
+                .first()
+                .asSequence()
+                .filter { !it.arrivalDate.isBefore(LocalDate.now()) }
+                .minByOrNull(Trip::arrivalDate)
+                ?.id
+        }
     }
 
     internal fun consumeArrivalModeShortcut(tripId: String) {
