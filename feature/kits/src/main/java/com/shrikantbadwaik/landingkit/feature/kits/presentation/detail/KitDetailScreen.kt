@@ -84,6 +84,8 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPhase
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.arrivalPhase
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.shouldOfferAttachmentCleanup
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.print.PrintableSummaryEntryCard
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.share.ShareSummaryEntryCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.rememberProtectedAttachmentOpener
 import com.shrikantbadwaik.landingkit.feature.kits.toUserMessage
 import kotlinx.coroutines.delay
@@ -97,6 +99,8 @@ internal fun KitDetailScreen(
     onBack: () -> Unit,
     onArrivalMode: () -> Unit,
     onOfflineCheck: () -> Unit,
+    onPrintableSummary: () -> Unit,
+    onShareSummary: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onCheck: (ArrivalItem, Boolean) -> Unit,
@@ -430,6 +434,16 @@ internal fun KitDetailScreen(
                             status = offlineCheckStatus,
                             onClick = onOfflineCheck,
                         )
+                    }
+                }
+                item(key = "detail_printable_summary") {
+                    PanelItem {
+                        PrintableSummaryEntryCard(onClick = onPrintableSummary)
+                    }
+                }
+                item(key = "detail_share_summary") {
+                    PanelItem {
+                        ShareSummaryEntryCard(onClick = onShareSummary)
                     }
                 }
                 item(key = "detail_attachments") {

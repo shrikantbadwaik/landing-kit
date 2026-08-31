@@ -5,6 +5,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shrikantbadwaik.landingkit.core.data.ChecklistTemplateRepository
+import com.shrikantbadwaik.landingkit.core.data.BackupExportResult
+import com.shrikantbadwaik.landingkit.core.data.BackupPreview
+import com.shrikantbadwaik.landingkit.core.data.BackupRepository
+import com.shrikantbadwaik.landingkit.core.data.BackupRestoreResult
 import com.shrikantbadwaik.landingkit.core.data.AttachmentRepository
 import com.shrikantbadwaik.landingkit.core.data.AttachmentTooLargeException
 import com.shrikantbadwaik.landingkit.core.data.PreparedAttachment
@@ -50,6 +54,7 @@ class LandingKitViewModel @Inject constructor(
     private val userPreferences: UserPreferences,
     private val arrivalReminderScheduler: ArrivalReminderScheduler,
     private val arrivalEntryPointPublisher: ArrivalEntryPointPublisher,
+    private val backupRepository: BackupRepository,
 ) : ViewModel() {
     private val _pendingSharedAttachments = MutableStateFlow<PendingSharedAttachments?>(null)
     private val _pendingArrivalModeTripId = MutableStateFlow<String?>(null)
@@ -415,6 +420,62 @@ class LandingKitViewModel @Inject constructor(
             }
             onDeleted(result)
         }
+    }
+
+    internal fun exportBackup(
+        destination: Uri,
+        password: CharArray,
+        onComplete: (Result<BackupExportResult>) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val result = runBackupOperation(password) {
+                backupRepository.exportBackup(destination, password)
+            }
+            onComplete(result)
+        }
+    }
+
+    internal fun inspectBackup(
+        source: Uri,
+        password: CharArray,
+        onComplete: (Result<BackupPreview>) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val result = runBackupOperation(password) {
+                backupRepository.inspectBackup(source, password)
+            }
+            onComplete(result)
+        }
+    }
+
+    internal fun restoreBackup(
+        source: Uri,
+        password: CharArray,
+        onComplete: (Result<BackupRestoreResult>) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val result = runBackupOperation(password) {
+                backupRepository.restoreBackup(source, password).also { restored ->
+                    restored.restoredTripIds.forEach { tripId ->
+                        repository.getTrip(tripId)?.let { arrivalReminderScheduler.sync(it) }
+                    }
+                }
+            }
+            onComplete(result)
+        }
+    }
+
+    private suspend fun <T> runBackupOperation(
+        password: CharArray,
+        operation: suspend () -> T,
+    ): Result<T> = try {
+        Result.success(operation())
+    } catch (cancellation: CancellationException) {
+        throw cancellation
+    } catch (error: Throwable) {
+        Result.failure(error)
+    } finally {
+        password.fill('\u0000')
     }
 }
 

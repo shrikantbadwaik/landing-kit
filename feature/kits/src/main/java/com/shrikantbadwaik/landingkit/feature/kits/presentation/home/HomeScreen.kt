@@ -32,6 +32,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.N
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.PrivacyNote
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPhase
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.toHomeTripSections
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.backup.BackupEntryCard
 import java.time.LocalDate
 import kotlinx.coroutines.delay
 
@@ -45,6 +46,7 @@ internal fun HomeScreen(
     onCreate: () -> Unit,
     onSample: () -> Unit,
     onOpen: (String) -> Unit,
+    onBackup: () -> Unit,
 ) {
     val today = remember { LocalDate.now() }
     val sections = remember(trips, today) { trips.toHomeTripSections(today) }
@@ -175,6 +177,9 @@ internal fun HomeScreen(
                     )
                 }
             }
+        }
+        item(key = "home_backup") {
+            BackupEntryCard(onClick = onBackup)
         }
         item(key = "home_privacy_footer") {
             MotionReveal(index = 5, animate = animateEntrance) {

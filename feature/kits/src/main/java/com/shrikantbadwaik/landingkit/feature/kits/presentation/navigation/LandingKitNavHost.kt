@@ -55,11 +55,14 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.Loadin
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.MissingKitScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.arrivalmode.ArrivalModeScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.arrivalmode.AndroidTravelDayActionHandler
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.backup.BackupScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.KitDetailScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.editor.KitEditorScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.HomeScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.handoff.HandoffScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.offlinecheck.OfflineCheckScreen
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.print.PrintableSummaryScreen
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.share.ShareSummaryScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.ticket.TicketPresentationScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.curatedChecklistTemplates
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.defaultChecklistContent
@@ -170,6 +173,16 @@ internal fun LandingKitNavHost(
                         }
                     },
                     onOpen = { tripId -> navController.navigate(KitRoute.Detail(tripId)) },
+                    onBackup = { navController.navigate(KitRoute.Backup) },
+                )
+            }
+
+            composable<KitRoute.Backup> {
+                BackupScreen(
+                    onBack = { navController.popBackStack() },
+                    onExport = viewModel::exportBackup,
+                    onInspect = viewModel::inspectBackup,
+                    onRestore = viewModel::restoreBackup,
                 )
             }
 
@@ -231,6 +244,12 @@ internal fun LandingKitNavHost(
                         onOfflineCheck = {
                             navController.navigate(KitRoute.OfflineCheck(trip.id))
                         },
+                        onPrintableSummary = {
+                            navController.navigate(KitRoute.PrintableSummary(trip.id))
+                        },
+                        onShareSummary = {
+                            navController.navigate(KitRoute.ShareSummary(trip.id))
+                        },
                         onEdit = { navController.navigate(KitRoute.Edit(trip.id)) },
                         onDelete = {
                             viewModel.deleteKit(trip.id) {
@@ -284,6 +303,56 @@ internal fun LandingKitNavHost(
                             viewModel::finishAttachmentAuthentication,
                         onUnlockAttachmentAccess = viewModel::unlockAttachmentAccess,
                         onLockAttachmentAccess = viewModel::lockAttachmentAccess,
+                    )
+                }
+            }
+
+            composable<KitRoute.PrintableSummary> { backStackEntry ->
+                val route = backStackEntry.toRoute<KitRoute.PrintableSummary>()
+                val trip = trips.firstOrNull { it.id == route.tripId }
+                var missingRouteConfirmed by remember(route.tripId) { mutableStateOf(false) }
+
+                LaunchedEffect(route.tripId, trip) {
+                    if (trip == null) {
+                        delay(MISSING_ROUTE_GRACE_MILLIS)
+                        missingRouteConfirmed = true
+                    } else {
+                        missingRouteConfirmed = false
+                    }
+                }
+
+                if (trip == null) {
+                    if (missingRouteConfirmed) MissingKitScreen(onHome = returnHome)
+                    else LoadingScreen()
+                } else {
+                    PrintableSummaryScreen(
+                        trip = trip,
+                        onBack = { navController.popBackStack() },
+                    )
+                }
+            }
+
+            composable<KitRoute.ShareSummary> { backStackEntry ->
+                val route = backStackEntry.toRoute<KitRoute.ShareSummary>()
+                val trip = trips.firstOrNull { it.id == route.tripId }
+                var missingRouteConfirmed by remember(route.tripId) { mutableStateOf(false) }
+
+                LaunchedEffect(route.tripId, trip) {
+                    if (trip == null) {
+                        delay(MISSING_ROUTE_GRACE_MILLIS)
+                        missingRouteConfirmed = true
+                    } else {
+                        missingRouteConfirmed = false
+                    }
+                }
+
+                if (trip == null) {
+                    if (missingRouteConfirmed) MissingKitScreen(onHome = returnHome)
+                    else LoadingScreen()
+                } else {
+                    ShareSummaryScreen(
+                        trip = trip,
+                        onBack = { navController.popBackStack() },
                     )
                 }
             }

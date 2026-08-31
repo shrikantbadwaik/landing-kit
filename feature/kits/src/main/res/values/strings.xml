@@ -36,6 +36,8 @@
     <string name="home_create_first_kit">Create my first kit</string>
     <string name="home_explore_sample">Explore a Kyoto sample  →</string>
     <string name="home_privacy_footer">NO ACCOUNT  •  NO ADS  •  STAYS ON THIS DEVICE</string>
+    <string name="backup_entry_title">Backup &amp; restore</string>
+    <string name="backup_entry_description">Keep an encrypted copy you control.</string>
     <string name="home_kept_for_reference">HERE IF YOU NEED IT</string>
     <string name="home_past_arrivals">Past arrivals</string>
     <string name="home_no_upcoming_title">Nothing upcoming — and nothing lost.</string>
@@ -196,6 +198,9 @@
     <string name="detail_past_notice_title">This arrival has passed.</string>
     <string name="detail_past_notice_description">Everything remains available offline. Edit the date to reuse this kit, or delete it when you no longer need it.</string>
     <string name="detail_privacy_footer">AVAILABLE WITHOUT SIGNAL  •  STORED ON THIS DEVICE</string>
+    <string name="print_summary_entry_title">Paper backup</string>
+    <string name="print_summary_entry_description">A concise copy of the details you may need after landing.</string>
+    <string name="print_summary_entry_action">Preview</string>
     <string name="arrival_reminder_title">Keep this handy</string>
     <string name="arrival_reminder_description_off">Remind me about this travel on %1$s.</string>
     <string name="arrival_reminder_description_on">Reminder is set for this travel around 8:00 AM on %1$s.</string>
@@ -206,6 +211,94 @@
     <string name="arrival_reminder_notification_title">Your arrival card is ready</string>
     <string name="arrival_reminder_notification_body">Open Arrival Mode when you need it.</string>
     <string name="date_format_detail">EEEE, d MMMM yyyy</string>
+
+    <!-- Printable arrival summary -->
+    <string name="print_summary_header">PAPER BACKUP</string>
+    <string name="print_summary_badge">Preview</string>
+    <string name="print_summary_intro">Only arrival essentials are included. Review them before creating a copy.</string>
+    <string name="print_summary_document_label">ARRIVAL SUMMARY</string>
+    <string name="print_summary_stay_section">Stay and arrival</string>
+    <string name="print_summary_address">Address</string>
+    <string name="print_summary_local_address">Local-language address</string>
+    <string name="print_summary_useful_section">Useful on arrival</string>
+    <string name="print_summary_plan_b_section">If plans change</string>
+    <string name="print_summary_checklist_section">Before landing</string>
+    <string name="print_summary_checklist_note">Up to six checklist items are included, with unfinished ones first.</string>
+    <string name="print_summary_action">Print or save PDF</string>
+    <string name="print_summary_privacy_title">This creates a copy outside Landing Kit</string>
+    <string name="print_summary_privacy_description">It contains private travel details. Anyone with access to the printer, saved PDF, or receiving app may be able to read them.</string>
+    <string name="print_summary_privacy_cancel">Not now</string>
+    <string name="print_summary_privacy_continue">Continue</string>
+    <string name="print_summary_private_footer">PRIVATE TRAVEL DETAILS  •  KEEP THIS COPY SAFE</string>
+    <string name="print_summary_empty_value">Not added</string>
+    <string name="print_summary_completed_description">Completed</string>
+    <string name="print_summary_not_completed_description">Not completed</string>
+
+    <!-- User-selected arrival summary share -->
+    <string name="share_summary_entry_title">Share travel details</string>
+    <string name="share_summary_entry_description">Pick only what needs to be shared with someone.</string>
+    <string name="share_summary_entry_action">Choose</string>
+    <string name="share_summary_header">SHARE TRAVEL DETAILS</string>
+    <string name="share_summary_badge">No app needed</string>
+    <string name="share_summary_intro">Start with travel essentials, then add only what someone needs. Booking references and attachments are never included.</string>
+    <string name="share_summary_action">Choose an app</string>
+    <string name="share_summary_footer">THE RECEIVING APP AND PERSON MAY KEEP A COPY</string>
+    <string name="share_summary_warning_title">Before you share these details</string>
+    <string name="share_summary_warning_description">This summary may contain sensitive travel information. Only continue if you trust the app and person you choose.</string>
+    <string name="share_summary_warning_cancel">Not now</string>
+    <string name="share_summary_warning_continue">Choose app</string>
+    <string name="share_summary_chooser_title">Travel Details</string>
+
+    <!-- Encrypted local backup -->
+    <string name="backup_header">BACKUP &amp; RESTORE</string>
+    <string name="backup_badge">Encrypted</string>
+    <string name="backup_title">A copy only you can open</string>
+    <string name="backup_intro">Save your arrivals, templates and attachments in one password-protected file.</string>
+    <string name="backup_export_label">CREATE A BACKUP</string>
+    <string name="backup_export_title">Keep a recoverable copy</string>
+    <string name="backup_export_description">Choose a password, then choose where the encrypted file should live.</string>
+    <string name="backup_password_label">Backup password</string>
+    <string name="backup_password_confirm_label">Confirm password</string>
+    <string name="backup_password_support">Use at least 12 characters. Landing Kit cannot recover this password.</string>
+    <string name="backup_password_too_short">Use at least 12 characters.</string>
+    <string name="backup_password_mismatch">Passwords don’t match.</string>
+    <string name="backup_password_show_content_description">Show password</string>
+    <string name="backup_password_hide_content_description">Hide password</string>
+    <string name="backup_export_action">Choose where to save</string>
+    <string name="backup_warning_title">Before this copy leaves Landing Kit</string>
+    <string name="backup_warning_description">This backup may contain sensitive travel information. Keep the file and its password in safe, separate places.</string>
+    <string name="backup_warning_cancel">Not now</string>
+    <string name="backup_warning_continue">Choose location</string>
+    <string name="backup_exporting">Creating encrypted backup…</string>
+    <plurals name="backup_export_complete">
+        <item quantity="one">Encrypted backup saved with %1$d arrival and %2$d attachment.</item>
+        <item quantity="other">Encrypted backup saved with %1$d arrivals and %2$d attachments.</item>
+    </plurals>
+    <string name="backup_export_failed">The backup couldn’t be saved. Try another location.</string>
+    <string name="backup_restore_label">RESTORE A BACKUP</string>
+    <string name="backup_restore_title">Bring a copy onto this phone</string>
+    <string name="backup_restore_description">Existing arrivals stay unchanged. Landing Kit only adds items that aren’t already here.</string>
+    <string name="backup_choose_file">Choose backup file</string>
+    <string name="backup_file_selected">Backup selected</string>
+    <string name="backup_file_change">Choose another</string>
+    <string name="backup_restore_password_label">Password for this backup</string>
+    <string name="backup_review_action">Review backup</string>
+    <string name="backup_reviewing">Checking backup…</string>
+    <string name="backup_unlock_failed">That password is wrong, or the backup file is damaged.</string>
+    <string name="backup_unsupported">This isn’t a supported Landing Kit backup.</string>
+    <string name="backup_review_failed">This backup couldn’t be checked.</string>
+    <string name="backup_preview_label">READY TO RESTORE</string>
+    <string name="backup_preview_title">Here’s what can be added</string>
+    <string name="backup_preview_arrivals">%1$d new arrivals</string>
+    <string name="backup_preview_templates">%1$d new templates</string>
+    <string name="backup_preview_attachments">%1$d attachments</string>
+    <string name="backup_preview_existing">%1$d arrivals and %2$d templates are already here and won’t be changed.</string>
+    <string name="backup_preview_nothing_new">Everything in this backup is already on this phone.</string>
+    <string name="backup_restore_action">Restore new items</string>
+    <string name="backup_restoring">Restoring…</string>
+    <string name="backup_restore_complete">Backup restored: %1$d arrivals, %2$d templates and %3$d attachments added.</string>
+    <string name="backup_restore_failed">The backup couldn’t be restored. Nothing new was kept.</string>
+    <string name="backup_private_footer">PASSWORD-PROTECTED  •  YOU CHOOSE WHERE IT LIVES</string>
 
     <!-- Verified offline arrival check -->
     <string name="offline_check_header">OFFLINE ARRIVAL CHECK</string>

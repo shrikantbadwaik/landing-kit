@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AttachmentDao {
+    @Query("SELECT * FROM attachments ORDER BY created_at ASC")
+    suspend fun getAllAttachments(): List<AttachmentEntity>
+
     @Query("SELECT * FROM attachments WHERE trip_id = :tripId ORDER BY created_at DESC")
     fun observeAttachments(tripId: String): Flow<List<AttachmentEntity>>
 

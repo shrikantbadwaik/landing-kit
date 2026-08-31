@@ -3,6 +3,7 @@ package com.shrikantbadwaik.landingkit.core.data.di
 import android.content.Context
 import androidx.room.Room
 import com.shrikantbadwaik.landingkit.core.data.ChecklistTemplateRepository
+import com.shrikantbadwaik.landingkit.core.data.BackupRepository
 import com.shrikantbadwaik.landingkit.core.data.AttachmentRepository
 import com.shrikantbadwaik.landingkit.core.data.TripRepository
 import com.shrikantbadwaik.landingkit.core.data.local.dao.ChecklistTemplateDao
@@ -17,6 +18,7 @@ import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_5_6
 import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_6_7
 import com.shrikantbadwaik.landingkit.core.data.local.database.LandingKitDatabase
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalChecklistTemplateRepository
+import com.shrikantbadwaik.landingkit.core.data.local.backup.LocalBackupRepository
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalAttachmentRepository
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalTripRepository
 import com.shrikantbadwaik.landingkit.core.data.preferences.UserPreferences
@@ -84,6 +86,24 @@ object DataModule {
         dao: AttachmentDao,
         store: EncryptedAttachmentStore,
     ): AttachmentRepository = LocalAttachmentRepository(context.contentResolver, dao, store)
+
+    @Provides
+    @Singleton
+    fun provideBackupRepository(
+        @ApplicationContext context: Context,
+        tripRepository: TripRepository,
+        templateRepository: ChecklistTemplateRepository,
+        attachmentDao: AttachmentDao,
+        attachmentStore: EncryptedAttachmentStore,
+        userPreferences: UserPreferences,
+    ): BackupRepository = LocalBackupRepository(
+        context = context,
+        tripRepository = tripRepository,
+        templateRepository = templateRepository,
+        attachmentDao = attachmentDao,
+        attachmentStore = attachmentStore,
+        userPreferences = userPreferences,
+    )
 
     @Provides
     @Singleton

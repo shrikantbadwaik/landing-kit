@@ -7,10 +7,19 @@ internal sealed interface KitRoute {
     data object Home : KitRoute
 
     @Serializable
+    data object Backup : KitRoute
+
+    @Serializable
     data object Create : KitRoute
 
     @Serializable
     data class Detail(val tripId: String) : KitRoute
+
+    @Serializable
+    data class PrintableSummary(val tripId: String) : KitRoute
+
+    @Serializable
+    data class ShareSummary(val tripId: String) : KitRoute
 
     @Serializable
     data class ArrivalMode(val tripId: String) : KitRoute

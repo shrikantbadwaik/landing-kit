@@ -42,6 +42,30 @@ class EncryptedAttachmentStore(context: Context) {
         )
     }
 
+    fun encryptFromBackup(
+        tripId: String,
+        attachmentId: String,
+        source: InputStream,
+        expectedBytes: Long,
+    ): Long {
+        require(expectedBytes in 0..MAX_ATTACHMENT_BYTES)
+        return encryptFile(
+            destination = attachmentFile(tripId, attachmentId),
+            source = source,
+            maximumBytes = expectedBytes,
+        ).also { actual -> require(actual == expectedBytes) }
+    }
+
+    fun decryptForBackup(
+        tripId: String,
+        attachmentId: String,
+        output: OutputStream,
+    ): Long = decryptFile(
+        source = attachmentFile(tripId, attachmentId),
+        output = output,
+        maximumBytes = MAX_ATTACHMENT_BYTES,
+    )
+
     fun readThumbnail(tripId: String, attachmentId: String): ByteArray? {
         val source = thumbnailFile(tripId, attachmentId)
         if (!source.exists()) return null
@@ -160,7 +184,7 @@ class EncryptedAttachmentStore(context: Context) {
     private fun thumbnailFile(tripId: String, attachmentId: String): File =
         safeChild(safeChild(attachmentRoot, tripId), "$attachmentId.lkt")
 
-    private fun decryptFile(source: File, output: java.io.OutputStream, maximumBytes: Long) {
+    private fun decryptFile(source: File, output: java.io.OutputStream, maximumBytes: Long): Long {
         DataInputStream(BufferedInputStream(source.inputStream())).use { input ->
             val magic = ByteArray(MAGIC.size)
             input.readFully(magic)
@@ -186,6 +210,7 @@ class EncryptedAttachmentStore(context: Context) {
             plaintextBytes += finalBytes.size
             require(plaintextBytes <= maximumBytes) { "Attachment exceeds size limit" }
             output.write(finalBytes)
+            return plaintextBytes
         }
     }
 

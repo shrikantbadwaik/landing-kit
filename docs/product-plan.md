@@ -400,11 +400,36 @@ Success condition: before departure, a traveller can rehearse the arrival flow a
 
 Goal: address device loss without introducing a mandatory backend
 
-- Generate a concise printable arrival summary.
-- Export and import an encrypted local backup.
-- Share a user-selected summary through Android's system Sharesheet.
-- Allow users to create a trusted-person copy without maintaining a Landing Kit account.
-- Clearly warn when an export contains sensitive information.
+- [x] Generate a concise printable arrival summary.
+- [x] Export and import an encrypted local backup.
+- [x] Share a user-selected summary through Android's system Sharesheet.
+- [x] Allow users to create a trusted-person copy without maintaining a Landing Kit account.
+- [x] Clearly warn when a printable summary or encrypted backup may contain sensitive travel information.
+
+The printable-summary design follows [Android's custom-document printing
+guidance](https://developer.android.com/training/printing/custom-docs), with the
+system print sheet owning printer, paper-size, page-range, cancellation, and PDF
+destination choices. Travel-itinerary references from [Figma
+Community](https://www.figma.com/community/search?query=travel%20itinerary%20printable),
+[Dribbble](https://dribbble.com/search/travel-itinerary),
+[Behance](https://www.behance.net/search/projects/travel%20itinerary%20app), and
+[Canva](https://www.canva.com/templates/search/travel-itinerary/) informed the
+destination hierarchy and modular paper layout; Landing Kit deliberately keeps
+the result operational and concise rather than reproducing a decorative full
+itinerary.
+
+The selected-summary handoff follows [Android's Sharesheet
+guidance](https://developer.android.com/training/sharing/send): Landing Kit uses
+`ACTION_SEND` with `Intent.createChooser()` and leaves destination ranking and
+recipient choice to the system. The app never supplies its own recipient list;
+the traveller reviews and removes groups of details before the system picker is
+shown.
+
+The single share-arrival-plan path fulfils the trusted-person copy requirement:
+it opens with only the stay/arrival and Plan B groups selected, and its
+recipient-ready plain-text copy states that no Landing Kit account or
+installation is needed. The traveller can still add or remove groups before
+choosing an app.
 
 Success condition: users can create a recoverable or trusted-person copy while remaining in control of its destination.
 
