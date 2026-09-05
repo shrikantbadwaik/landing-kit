@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
@@ -24,12 +24,13 @@ import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.MotionReveal
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.journalDoodles
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalWelcome
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.ArrivalTicketCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.BrandHeader
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.CoralButton
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.EmptyKitCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.NoUpcomingArrivalsCard
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component.PrivacyNote
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPhase
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.toHomeTripSections
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.backup.BackupEntryCard
@@ -58,12 +59,16 @@ internal fun HomeScreen(
         }
     }
 
+    val listState = rememberLazyListState()
     LazyColumn(
+        state = listState,
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding(),
-        contentPadding = PaddingValues(start = 22.dp, top = 22.dp, end = 22.dp, bottom = 42.dp),
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .journalDoodles("home", listState, count = if (trips.size > 1) 3 else 2),
+        contentPadding = PaddingValues(start = 22.dp, top = 22.dp, end = 22.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         item(key = "home_brand") {
@@ -71,26 +76,14 @@ internal fun HomeScreen(
         }
         item(key = "home_intro") {
             MotionReveal(index = 1, animate = animateEntrance) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.home_headline),
-                        style = MaterialTheme.typography.displayLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    Text(
-                        text = stringResource(R.string.home_intro),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                JournalWelcome(
+                    title = stringResource(R.string.home_headline),
+                    description = stringResource(R.string.home_intro),
+                )
             }
         }
-        item(key = "home_privacy") {
-            MotionReveal(index = 2, animate = animateEntrance) { PrivacyNote() }
-        }
         item(key = "home_arrivals_header") {
-            MotionReveal(index = 3, animate = animateEntrance) {
+            MotionReveal(index = 2, animate = animateEntrance) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -134,7 +127,7 @@ internal fun HomeScreen(
             itemsIndexed(sections.active, key = { _, trip -> trip.id }) { index, trip ->
                 val animateTrip = animateEntrance || trip.id !in animatedTripIds
                 MotionReveal(
-                    index = if (animateEntrance) 4 + index.coerceAtMost(3) else 0,
+                    index = if (animateEntrance) 3 + index.coerceAtMost(3) else 0,
                     animate = animateTrip,
                     onFinished = { onTripAnimated(trip.id) },
                 ) {
@@ -166,7 +159,7 @@ internal fun HomeScreen(
             itemsIndexed(sections.past, key = { _, trip -> trip.id }) { index, trip ->
                 val animateTrip = animateEntrance || trip.id !in animatedTripIds
                 MotionReveal(
-                    index = if (animateEntrance) 5 + index.coerceAtMost(2) else 0,
+                    index = if (animateEntrance) 4 + index.coerceAtMost(2) else 0,
                     animate = animateTrip,
                     onFinished = { onTripAnimated(trip.id) },
                 ) {
@@ -180,16 +173,6 @@ internal fun HomeScreen(
         }
         item(key = "home_backup") {
             BackupEntryCard(onClick = onBackup)
-        }
-        item(key = "home_privacy_footer") {
-            MotionReveal(index = 5, animate = animateEntrance) {
-                Text(
-                    text = stringResource(R.string.home_privacy_footer),
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
     }
 }

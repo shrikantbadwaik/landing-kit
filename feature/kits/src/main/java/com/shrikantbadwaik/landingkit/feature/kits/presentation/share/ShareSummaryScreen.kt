@@ -15,9 +15,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -26,11 +26,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -42,6 +42,8 @@ import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.print.PrintableSummaryLabels
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.journalDoodles
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalBackground
 import com.shrikantbadwaik.landingkit.feature.kits.share.ShareSummarySection
 import com.shrikantbadwaik.landingkit.feature.kits.share.asTrustedPersonCopy
 import com.shrikantbadwaik.landingkit.feature.kits.share.toShareableArrivalSummary
@@ -79,6 +81,7 @@ internal fun ShareSummaryScreen(
             },
             confirmButton = {
                 Button(
+                    shape = MaterialTheme.shapes.medium,
                     onClick = {
                         showPrivacyWarning = false
                         val intent = Intent(Intent.ACTION_SEND)
@@ -110,10 +113,11 @@ internal fun ShareSummaryScreen(
         bottomBar = {
             Surface(
                 modifier = Modifier.navigationBarsPadding(),
-                shadowElevation = 8.dp,
+                shadowElevation = 2.dp,
                 color = MaterialTheme.colorScheme.background,
             ) {
                 Button(
+                    shape = MaterialTheme.shapes.medium,
                     onClick = { showPrivacyWarning = true },
                     enabled = selected.isNotEmpty(),
                     modifier = Modifier
@@ -132,43 +136,47 @@ internal fun ShareSummaryScreen(
             }
         },
     ) { padding ->
-        LazyColumn(
+        val listState = rememberLazyListState()
+        JournalBackground(
+            seed = "share:${trip.id}",
+            listState = listState,
+            count = 0,
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = 22.dp, end = 22.dp, top = 10.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item {
-                ScreenHeader(
-                    onBack = onBack,
-                    label = stringResource(R.string.share_summary_header),
-                    badge = stringResource(R.string.share_summary_badge),
-                )
-                Spacer(Modifier.height(18.dp))
-                Text(
-                    text = stringResource(R.string.share_summary_intro),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(12.dp))
-            }
-            items(summary.sections.size, key = { summary.sections[it].type.name }) { index ->
-                val section = summary.sections[index]
-                ShareOptionCard(
-                    title = section.title,
-                    detail = section.lines.joinToString("\n"),
-                    selected = section.type in selected,
-                    onSelectedChange = { isSelected ->
-                        selected = if (isSelected) selected + section.type else selected - section.type
-                    },
-                )
-            }
-            item {
-                Text(
-                    text = stringResource(R.string.share_summary_footer),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 6.dp),
-                )
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 22.dp, end = 22.dp, top = 10.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                item {
+                    ScreenHeader(
+                        onBack = onBack,
+                        label = stringResource(R.string.share_summary_header),
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    Text(
+                        text = stringResource(R.string.share_summary_intro),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                }
+                items(summary.sections.size, key = { summary.sections[it].type.name }) { index ->
+                    val section = summary.sections[index]
+                    ShareOptionCard(
+                        doodleSeed = if (index == 0 || index == summary.sections.lastIndex ||
+                            (summary.sections.size > 4 && index == summary.sections.size / 2)) {
+                            "share:${trip.id}:${section.type}"
+                        } else null,
+                        title = section.title,
+                        detail = section.lines.joinToString("\n"),
+                        selected = section.type in selected,
+                        onSelectedChange = { isSelected ->
+                            selected = if (isSelected) selected + section.type else selected - section.type
+                        },
+                    )
+                }
             }
         }
     }
@@ -179,7 +187,7 @@ internal fun ShareSummaryEntryCard(onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
@@ -220,6 +228,7 @@ private val TRUSTED_COPY_DEFAULTS = setOf(ShareSummarySection.STAY, ShareSummary
 
 @Composable
 private fun ShareOptionCard(
+    doodleSeed: String?,
     title: String,
     detail: String,
     selected: Boolean,
@@ -228,12 +237,14 @@ private fun ShareOptionCard(
     Surface(
         onClick = { onSelectedChange(!selected) },
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .journalDoodles(doodleSeed.orEmpty(), count = if (doodleSeed != null) 1 else 0)
+                .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.Top,
         ) {

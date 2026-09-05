@@ -9,7 +9,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,8 +18,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -30,29 +31,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEvent
-import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.node.ModifierNodeElement
-import androidx.compose.ui.node.PointerInputModifierNode
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.shrikantbadwaik.landingkit.core.data.PreparedAttachment
@@ -67,7 +64,9 @@ import com.shrikantbadwaik.landingkit.feature.kits.PendingAttachmentAuthenticati
 import com.shrikantbadwaik.landingkit.feature.kits.ProtectedAttachmentAction
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.TicketIllustration
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.journalDoodles
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalArtwork
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalScene
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.AnimatedChecklistItem
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.ArrivalModeAction
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.ArrivalReminderCard
@@ -81,11 +80,10 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.KitDangerZone
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.OfflineCheckStatusCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.PastArrivalNotice
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.detail.component.TravelToolsCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.ArrivalPhase
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.arrivalPhase
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.shouldOfferAttachmentCleanup
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.print.PrintableSummaryEntryCard
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.share.ShareSummaryEntryCard
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.rememberProtectedAttachmentOpener
 import com.shrikantbadwaik.landingkit.feature.kits.toUserMessage
 import kotlinx.coroutines.delay
@@ -257,20 +255,23 @@ internal fun KitDetailScreen(
     }
 
     val density = LocalDensity.current
-    var heroHeightDp by remember { mutableStateOf(0.dp) }
     var heroHeightPx by remember { mutableStateOf(0f) }
+    var backdropHeightPx by remember { mutableStateOf(0f) }
+    var viewportHeightPx by remember { mutableStateOf(0f) }
     val listState = rememberLazyListState()
 
-    val scrollProgress by remember {
+    val scrollOffsetPx by remember {
         derivedStateOf {
             if (listState.firstVisibleItemIndex == 0) {
-                (listState.firstVisibleItemScrollOffset / heroHeightPx.coerceAtLeast(1f)).coerceIn(
-                    0f,
-                    1f,
-                )
+                listState.firstVisibleItemScrollOffset.toFloat()
             } else {
-                1f
+                backdropHeightPx
             }
+        }
+    }
+    val scrollProgress by remember {
+        derivedStateOf {
+            (scrollOffsetPx / heroHeightPx.coerceAtLeast(1f)).coerceIn(0f, 1f)
         }
     }
     val heroScale by animateFloatAsState(
@@ -283,108 +284,105 @@ internal fun KitDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding)
+                .clipToBounds()
+                .onSizeChanged { viewportHeightPx = it.height.toFloat() },
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 22.dp),
-            ) {
-                ScreenHeader(
-                    onBack = onBack,
-                    label = stringResource(R.string.arrival_card_label),
-                    badge = stringResource(
-                        when (phase) {
-                            ArrivalPhase.UPCOMING -> R.string.detail_badge_offline
-                            ArrivalPhase.TODAY -> R.string.detail_badge_today
-                            ArrivalPhase.PAST -> R.string.detail_badge_past
-                        },
-                    ),
-                )
-                Spacer(Modifier.height(16.dp))
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onGloballyPositioned { coordinates ->
-                            with(density) {
-                                heroHeightDp = coordinates.size.height.toDp()
-                            }
-                            heroHeightPx = coordinates.size.height.toFloat()
-                        }
-                        .graphicsLayer {
-                            scaleX = heroScale
-                            scaleY = heroScale
-                        },
-                    colors = CardDefaults.cardColors(containerColor = LandingKitColors.Forest),
-                    shape = RoundedCornerShape(30.dp),
-                ) {
-                    Box {
-                        TicketIllustration(
-                            Modifier
-                                .align(Alignment.TopEnd)
-                                .offset(x = 42.dp, y = (-40).dp),
-                        )
-                        Column(
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                        ) {
-                            Text(
-                                stringResource(
-                                    when (phase) {
-                                        ArrivalPhase.UPCOMING -> R.string.detail_arriving_in
-                                        ArrivalPhase.TODAY -> R.string.detail_arriving_today
-                                        ArrivalPhase.PAST -> R.string.detail_arrived_in
-                                    },
-                                ),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = LandingKitColors.Seafoam,
-                            )
-                            Spacer(Modifier.height(24.dp))
-                            Text(
-                                trip.destination,
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = Color.White,
-                            )
-                            Spacer(Modifier.height(10.dp))
-                            Text(
-                                trip.arrivalDate.format(dateFormatter),
-                                color = Color.White.copy(alpha = .78f),
-                            )
-                            Spacer(Modifier.height(22.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                ArrivalModeAction(
-                                    onClick = onArrivalMode,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                EditKitAction(onClick = onEdit)
-                            }
-                        }
-                    }
-                }
-            }
-
-            val headerOffset = 56.dp + 16.dp
-            val panelTopPadding = headerOffset + heroHeightDp + 16.dp
-
+            val backdropOverflowPx = (backdropHeightPx - viewportHeightPx).coerceAtLeast(0f)
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .sharePointerInputWithSiblings()
-                    .align(Alignment.TopStart),
-                contentPadding = PaddingValues(
-                    top = panelTopPadding,
-                    bottom = 22.dp,
-                ),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 22.dp),
             ) {
+                item(key = "detail_hero") {
+                    Column {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .graphicsLayer {
+                                    // Cancel the hero item's scroll translation so the panel
+                                    // rises over it. Short viewports first reveal hero overflow.
+                                    translationY = scrollOffsetPx - scrollOffsetPx.coerceAtMost(
+                                        (backdropHeightPx - viewportHeightPx).coerceAtLeast(0f),
+                                    )
+                                }
+                                .wrapContentHeight(align = Alignment.Top, unbounded = true)
+                                .onGloballyPositioned {
+                                    backdropHeightPx = it.size.height.toFloat()
+                                }
+                                .padding(horizontal = 22.dp),
+                        ) {
+                            ScreenHeader(
+                                onBack = onBack,
+                                label = stringResource(R.string.arrival_card_label),
+                            )
+                            Spacer(Modifier.height(20.dp))
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 340.dp)
+                                    .onGloballyPositioned { coordinates ->
+                                        heroHeightPx = coordinates.size.height.toFloat()
+                                    }
+                                    .graphicsLayer {
+                                        scaleX = heroScale
+                                        scaleY = heroScale
+                                    },
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                shape = MaterialTheme.shapes.large,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                            ) {
+                                Box {
+                                    Column(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(24.dp),
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                stringResource(
+                                                    when (phase) {
+                                                        ArrivalPhase.UPCOMING -> R.string.detail_arriving_in
+                                                        ArrivalPhase.TODAY -> R.string.detail_arriving_today
+                                                        ArrivalPhase.PAST -> R.string.detail_arrived_in
+                                                    },
+                                                ),
+                                                modifier = Modifier.weight(1f),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.secondary,
+                                            )
+                                            EditKitAction(onClick = onEdit)
+                                        }
+                                        JournalArtwork(
+                                            scene = JournalScene.Mountains,
+                                            modifier = Modifier.fillMaxWidth().height(96.dp).padding(vertical = 12.dp),
+                                        )
+                                        Text(
+                                            trip.destination,
+                                            style = MaterialTheme.typography.headlineLarge,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                        Spacer(Modifier.height(10.dp))
+                                        Text(
+                                            trip.arrivalDate.format(dateFormatter),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        Spacer(Modifier.height(24.dp))
+                                        ArrivalModeAction(
+                                            onClick = onArrivalMode,
+                                            modifier = Modifier.fillMaxWidth(),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(with(density) { backdropOverflowPx.toDp() } + 22.dp))
+                    }
+                }
                 item(key = "detail_panel_handle") {
                     Surface(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().blockBackdropTaps(),
                         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
                         color = MaterialTheme.colorScheme.background,
                         shadowElevation = 4.dp,
@@ -438,12 +436,10 @@ internal fun KitDetailScreen(
                 }
                 item(key = "detail_printable_summary") {
                     PanelItem {
-                        PrintableSummaryEntryCard(onClick = onPrintableSummary)
-                    }
-                }
-                item(key = "detail_share_summary") {
-                    PanelItem {
-                        ShareSummaryEntryCard(onClick = onShareSummary)
+                        TravelToolsCard(
+                            onPrintableSummary = onPrintableSummary,
+                            onShareSummary = onShareSummary,
+                        )
                     }
                 }
                 item(key = "detail_attachments") {
@@ -510,6 +506,7 @@ internal fun KitDetailScreen(
                                 trip.arrivalCard.address,
                             ),
                             LandingKitColors.Seafoam,
+                            doodleSeed = "detail-stay:${trip.id}",
                         )
                     }
                 }
@@ -569,7 +566,7 @@ internal fun KitDetailScreen(
                     }
                 }
                 item(key = "detail_checklist_header") {
-                    PanelItem {
+                    PanelItem(doodleSeed = "detail-checklist_header:${trip.id}") {
                         Text(
                             stringResource(
                                 if (phase == ArrivalPhase.PAST) {
@@ -599,55 +596,33 @@ internal fun KitDetailScreen(
                         KitDangerZone(onDelete = { showDeleteConfirmation = true })
                     }
                 }
-                item(key = "detail_privacy_footer") {
-                    PanelItem {
-                        Text(
-                            stringResource(R.string.detail_privacy_footer),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
             }
         }
     }
 }
 
 @Composable
-private fun PanelItem(content: @Composable () -> Unit) {
+private fun PanelItem(doodleSeed: String? = null, content: @Composable () -> Unit) {
+    val decoration = if (doodleSeed != null) Modifier.journalDoodles(doodleSeed, count = 1) else Modifier
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
+            .blockBackdropTaps()
+            .then(decoration)
             .padding(horizontal = 22.dp, vertical = 8.dp),
     ) {
         content()
     }
 }
 
-private fun Modifier.sharePointerInputWithSiblings(): Modifier =
-    this then SharePointerInputElement
-
-private data object SharePointerInputElement : ModifierNodeElement<SharePointerInputNode>() {
-    override fun create() = SharePointerInputNode()
-
-    override fun update(node: SharePointerInputNode) = Unit
-
-    override fun InspectorInfo.inspectableProperties() {
-        name = "sharePointerInputWithSiblings"
-    }
-}
-
-private class SharePointerInputNode : Modifier.Node(), PointerInputModifierNode {
-    override fun onPointerEvent(
-        pointerEvent: PointerEvent,
-        pass: PointerEventPass,
-        bounds: IntSize,
-    ) = Unit
-
-    override fun onCancelPointerInput() = Unit
-
-    override fun sharePointerInputWithSiblings() = true
+/**
+ * Opaque panel items must win hit testing over the translated hero behind them,
+ * including their non-interactive content and padding. Child controls keep their
+ * clicks; drags cancel this detector and remain available to the scrolling list.
+ */
+private fun Modifier.blockBackdropTaps(): Modifier = pointerInput(Unit) {
+    detectTapGestures(onTap = {})
 }
 
 private const val PDF_MIME_TYPE = "application/pdf"

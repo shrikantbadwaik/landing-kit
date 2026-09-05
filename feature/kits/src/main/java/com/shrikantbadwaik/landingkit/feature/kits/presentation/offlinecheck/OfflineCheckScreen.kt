@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,13 +26,14 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -58,6 +60,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.PendingAttachmentAuthenticati
 import com.shrikantbadwaik.landingkit.feature.kits.ProtectedAttachmentAction
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalBackground
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.rememberProtectedAttachmentOpener
 import com.shrikantbadwaik.landingkit.feature.kits.requiresAttachmentAuthentication
 import java.text.DateFormat
@@ -184,147 +187,134 @@ internal fun OfflineCheckScreen(
         modifier = Modifier.semantics { paneTitle = title },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        LazyColumn(
+        val listState = rememberLazyListState()
+        JournalBackground(
+            seed = "offline:${trip.id}",
+            listState = listState,
+            count = if (hasPlanBData) 3 else 2,
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(22.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item(key = "offline_check_header") {
-                ScreenHeader(
-                    onBack = onBack,
-                    label = title,
-                    badge = stringResource(R.string.offline_check_badge),
-                )
-            }
-            feedback?.let { message ->
-                item(key = "offline_check_feedback") {
-                    Text(
-                        text = message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(22.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                item(key = "offline_check_header") {
+                    ScreenHeader(
+                        onBack = onBack,
+                        label = title,
                     )
                 }
-            }
-            item(key = "offline_check_group") {
-                Column {
-                    OfflineCheckStatusPanel(
-                        status = status,
-                        state = effectiveState,
-                        tripId = trip.id,
-                        checkedAtMillis = trip.offlineCheckedAtMillis,
-                        shape = JoinedStatusShape,
-                    )
-                    EditableChecklistCard(
-                        editDescription = stringResource(
-                            R.string.offline_check_edit_arrival_details_description,
-                        ),
-                        onEdit = onEdit,
-                        checkLabel = if (status != OfflineArrivalCheckStatus.ReadyOnThisPhone) {
-                            stringResource(R.string.offline_check_run_again_action)
-                        } else {
-                            null
-                        },
-                        checkEnabled = state !is OfflineArrivalCheckUiState.Checking,
-                        onCheck = checkAction,
-                        shape = JoinedChecklistShape,
-                    ) {
-                        RuleRow(
-                            stringResource(R.string.offline_check_rule_stay),
-                            trip.arrivalCard.accommodationName.isNotBlank(),
-                        )
-                        RuleRow(
-                            stringResource(R.string.offline_check_rule_address),
-                            trip.arrivalCard.localAddress.isNotBlank() ||
-                                trip.arrivalCard.address.isNotBlank(),
-                        )
-                        RuleRow(
-                            stringResource(R.string.offline_check_rule_evidence),
-                            supportedEvidence,
-                            actionDescription = stringResource(
-                                R.string.offline_check_fix_evidence,
-                            ),
-                            onClick = onManageEvidence,
-                        )
-                        RuleRow(
-                            stringResource(R.string.offline_check_rule_readable),
-                            status == OfflineArrivalCheckStatus.ReadyOnThisPhone &&
-                                OfflineArrivalCheckIssue.UnreadableEvidence !in issues,
+                feedback?.let { message ->
+                    item(key = "offline_check_feedback") {
+                        Text(
+                            text = message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
                         )
                     }
                 }
-            }
-            if (hasPlanBData) {
-                item(key = "offline_check_plan_b_group") {
+                item(key = "offline_check_group") {
                     Column {
-                        PlanBCheckStatusPanel(
-                            status = planBStatus,
-                            state = effectivePlanBState,
+                        OfflineCheckStatusPanel(
+                            status = status,
+                            state = effectiveState,
                             tripId = trip.id,
-                            checkedAtMillis = trip.planBCheckedAtMillis,
-                            stale = planBStale,
+                            checkedAtMillis = trip.offlineCheckedAtMillis,
                             shape = JoinedStatusShape,
                         )
                         EditableChecklistCard(
                             editDescription = stringResource(
-                                R.string.offline_check_edit_plan_b_description,
+                                R.string.offline_check_edit_arrival_details_description,
                             ),
                             onEdit = onEdit,
-                            checkLabel = if (
-                                planBStatus != OfflineArrivalCheckStatus.ReadyOnThisPhone
-                            ) {
+                            checkLabel = if (status != OfflineArrivalCheckStatus.ReadyOnThisPhone) {
                                 stringResource(R.string.offline_check_run_again_action)
                             } else {
                                 null
                             },
-                            checkEnabled = planBState !is PlanBCheckUiState.Checking,
-                            onCheck = onRunPlanBCheck,
+                            checkEnabled = state !is OfflineArrivalCheckUiState.Checking,
+                            onCheck = checkAction,
                             shape = JoinedChecklistShape,
                         ) {
                             RuleRow(
-                                stringResource(R.string.plan_b_check_rule_fallback),
-                                trip.arrivalCard.fallbackTransport.isNotBlank(),
+                                stringResource(R.string.offline_check_rule_stay),
+                                trip.arrivalCard.accommodationName.isNotBlank(),
                             )
                             RuleRow(
-                                stringResource(R.string.plan_b_check_rule_contact),
-                                trip.arrivalCard.accommodationContact.isNotBlank(),
+                                stringResource(R.string.offline_check_rule_address),
+                                trip.arrivalCard.localAddress.isNotBlank() ||
+                                    trip.arrivalCard.address.isNotBlank(),
                             )
                             RuleRow(
-                                stringResource(R.string.plan_b_check_rule_recovery),
-                                hasCheckInRecovery,
+                                stringResource(R.string.offline_check_rule_evidence),
+                                supportedEvidence,
+                                actionDescription = stringResource(
+                                    R.string.offline_check_fix_evidence,
+                                ),
+                                onClick = onManageEvidence,
+                            )
+                            RuleRow(
+                                stringResource(R.string.offline_check_rule_readable),
+                                status == OfflineArrivalCheckStatus.ReadyOnThisPhone &&
+                                    OfflineArrivalCheckIssue.UnreadableEvidence !in issues,
                             )
                         }
                     }
                 }
-            }
-            if (status == OfflineArrivalCheckStatus.ReadyOnThisPhone) {
-                item(key = "offline_check_rehearse") {
-                    Button(
-                        onClick = onOpenArrivalMode,
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(18.dp),
-                    ) {
-                        Text(stringResource(R.string.offline_check_rehearse_action))
+                if (hasPlanBData) {
+                    item(key = "offline_check_plan_b_group") {
+                        Column(Modifier.testTag("plan_b_checks")) {
+                            PlanBCheckStatusPanel(
+                                status = planBStatus,
+                                state = effectivePlanBState,
+                                tripId = trip.id,
+                                checkedAtMillis = trip.planBCheckedAtMillis,
+                                stale = planBStale,
+                                shape = JoinedStatusShape,
+                            )
+                            EditableChecklistCard(
+                                editDescription = stringResource(
+                                    R.string.offline_check_edit_plan_b_description,
+                                ),
+                                onEdit = onEdit,
+                                checkLabel = if (
+                                    planBStatus != OfflineArrivalCheckStatus.ReadyOnThisPhone
+                                ) {
+                                    stringResource(R.string.offline_check_run_again_action)
+                                } else {
+                                    null
+                                },
+                                checkEnabled = planBState !is PlanBCheckUiState.Checking,
+                                onCheck = onRunPlanBCheck,
+                                shape = JoinedChecklistShape,
+                            ) {
+                                RuleRow(
+                                    stringResource(R.string.plan_b_check_rule_fallback),
+                                    trip.arrivalCard.fallbackTransport.isNotBlank(),
+                                )
+                                RuleRow(
+                                    stringResource(R.string.plan_b_check_rule_contact),
+                                    trip.arrivalCard.accommodationContact.isNotBlank(),
+                                )
+                                RuleRow(
+                                    stringResource(R.string.plan_b_check_rule_recovery),
+                                    hasCheckInRecovery,
+                                )
+                            }
+                        }
                     }
                 }
-            }
-            item(key = "offline_check_honesty") {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    color = LandingKitColors.Sun.copy(alpha = .18f),
-                ) {
-                    Column(Modifier.padding(18.dp)) {
-                        Text(
-                            text = stringResource(R.string.offline_check_honesty_title),
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.semantics { heading() },
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            text = stringResource(R.string.offline_check_honesty_copy),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                if (status == OfflineArrivalCheckStatus.ReadyOnThisPhone) {
+                    item(key = "offline_check_rehearse") {
+                        Button(
+                            onClick = onOpenArrivalMode,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                            shape = MaterialTheme.shapes.medium,
+                        ) {
+                            Text(stringResource(R.string.offline_check_rehearse_action))
+                        }
                     }
                 }
             }
@@ -365,7 +355,7 @@ private fun EditableChecklistCard(
                         modifier = Modifier
                             .align(Alignment.End)
                             .heightIn(min = 48.dp),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = MaterialTheme.shapes.medium,
                         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
                     ) {
                         Text(label)
@@ -376,7 +366,7 @@ private fun EditableChecklistCard(
                 Surface(
                     onClick = onEdit,
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(48.dp)
                         .semantics { contentDescription = editDescription },
                     shape = CircleShape,
                     color = LandingKitColors.Sun.copy(alpha = .22f),

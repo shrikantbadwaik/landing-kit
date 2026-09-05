@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -21,6 +21,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.feature.kits.R
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalArtwork
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalScene
 
 @Composable
 internal fun CoralButton(label: String, onClick: () -> Unit) {
@@ -28,8 +30,8 @@ internal fun CoralButton(label: String, onClick: () -> Unit) {
         modifier = Modifier.clickable(role = Role.Button, onClick = onClick),
         color = LandingKitColors.Coral,
         contentColor = LandingKitColors.Ink,
-        shape = RoundedCornerShape(50),
-        shadowElevation = 3.dp,
+        shape = MaterialTheme.shapes.small,
+        shadowElevation = 1.dp,
     ) {
         Text(
             text = label,
@@ -46,13 +48,13 @@ internal fun EmptyKitCard(onCreate: () -> Unit, onSample: () -> Unit) {
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ),
-        shape = RoundedCornerShape(30.dp),
+        shape = MaterialTheme.shapes.large,
     ) {
         Column(Modifier.padding(24.dp)) {
-            Text(
-                stringResource(R.string.symbol_sparkle),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.secondary,
+            JournalArtwork(
+                JournalScene.Travelers,
+                Modifier.fillMaxWidth().height(112.dp),
+                monochrome = true,
             )
             Spacer(Modifier.height(12.dp))
             Text(stringResource(R.string.home_empty_title), style = MaterialTheme.typography.titleLarge)
@@ -64,8 +66,8 @@ internal fun EmptyKitCard(onCreate: () -> Unit, onSample: () -> Unit) {
             Spacer(Modifier.height(22.dp))
             Button(
                 onClick = onCreate,
-                modifier = Modifier.fillMaxWidth().height(54.dp),
-                shape = RoundedCornerShape(17.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
+                shape = MaterialTheme.shapes.medium,
             ) { Text(stringResource(R.string.home_create_first_kit)) }
             Spacer(Modifier.height(8.dp))
             Surface(
@@ -86,24 +88,16 @@ internal fun EmptyKitCard(onCreate: () -> Unit, onSample: () -> Unit) {
 
 @Composable
 internal fun NoUpcomingArrivalsCard() {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = LandingKitColors.Seafoam.copy(alpha = .28f),
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ),
-        shape = RoundedCornerShape(24.dp),
-    ) {
-        Column(Modifier.padding(20.dp)) {
-            Text(
-                text = stringResource(R.string.home_no_upcoming_title),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Spacer(Modifier.height(5.dp))
-            Text(
-                text = stringResource(R.string.home_no_upcoming_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+    Column(Modifier.padding(horizontal = 4.dp, vertical = 4.dp)) {
+        Text(
+            text = stringResource(R.string.home_no_upcoming_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(5.dp))
+        Text(
+            text = stringResource(R.string.home_no_upcoming_description),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

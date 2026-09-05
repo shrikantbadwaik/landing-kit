@@ -7,6 +7,9 @@ import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -160,8 +163,9 @@ class OfflineCheckAccessibilityTest {
             .assertHasClickAction()
             .assertWidthIsAtLeast(48.dp)
             .assertHeightIsAtLeast(48.dp)
-        composeRule.onNodeWithText(
-            composeRule.activity.getString(R.string.offline_check_run_again_action),
+        composeRule.onNode(
+            hasText(composeRule.activity.getString(R.string.offline_check_run_again_action)) and
+                hasAnyAncestor(hasTestTag("plan_b_checks")),
         ).assertHasClickAction()
     }
 
@@ -214,8 +218,9 @@ class OfflineCheckAccessibilityTest {
         ).assertExists()
         assertEquals(
             0,
-            composeRule.onAllNodesWithText(
-                composeRule.activity.getString(R.string.offline_check_run_again_action),
+            composeRule.onAllNodes(
+                hasText(composeRule.activity.getString(R.string.offline_check_run_again_action)) and
+                    hasAnyAncestor(hasTestTag("plan_b_checks")),
             ).fetchSemanticsNodes().size,
         )
     }

@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,6 +27,7 @@ internal fun MissingKitScreen(onHome: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .journalDoodles("missing")
             .statusBarsPadding()
             .navigationBarsPadding()
             .padding(22.dp),
@@ -34,22 +35,21 @@ internal fun MissingKitScreen(onHome: () -> Unit) {
         ScreenHeader(
             onBack = onHome,
             label = stringResource(R.string.missing_kit_header),
-            badge = stringResource(R.string.missing_kit_badge),
         )
         Spacer(Modifier.height(34.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(28.dp),
+            shape = MaterialTheme.shapes.large,
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ),
         ) {
             Column(Modifier.padding(24.dp)) {
-                Text(
-                    text = stringResource(R.string.symbol_sparkle),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.secondary,
+                JournalArtwork(
+                    JournalScene.Travelers,
+                    Modifier.fillMaxWidth().height(112.dp),
+                    monochrome = true,
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
@@ -65,8 +65,8 @@ internal fun MissingKitScreen(onHome: () -> Unit) {
                 Spacer(Modifier.height(24.dp))
                 Button(
                     onClick = onHome,
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
-                    shape = RoundedCornerShape(17.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
+                    shape = MaterialTheme.shapes.medium,
                 ) {
                     Text(stringResource(R.string.missing_kit_home_action))
                 }

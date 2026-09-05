@@ -38,11 +38,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -206,7 +206,7 @@ private fun ChecklistTemplateCard(
 
     Card(
         modifier = Modifier.width(252.dp),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = accent.copy(alpha = .22f),
             contentColor = MaterialTheme.colorScheme.onSurface,
@@ -364,7 +364,7 @@ private fun SaveTemplateDialog(
                 Text(stringResource(R.string.template_cancel))
             }
         },
-        shape = RoundedCornerShape(26.dp),
+        shape = MaterialTheme.shapes.large,
         containerColor = MaterialTheme.colorScheme.surface,
     )
 }
@@ -402,7 +402,7 @@ private fun DeleteTemplateDialog(
                 Text(stringResource(R.string.template_keep_action))
             }
         },
-        shape = RoundedCornerShape(26.dp),
+        shape = MaterialTheme.shapes.large,
         containerColor = MaterialTheme.colorScheme.surface,
     )
 }

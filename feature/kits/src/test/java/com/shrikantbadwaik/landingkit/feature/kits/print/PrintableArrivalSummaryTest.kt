@@ -20,7 +20,7 @@ class PrintableArrivalSummaryTest {
 
         val summary = trip.toPrintableArrivalSummary("29 August 2026", labels)
 
-        assertEquals(listOf("Stay and arrival", "Before landing"), summary.sections.map { it.title })
+        assertEquals(listOf("Stay and arrival", "Before arrival"), summary.sections.map { it.title })
         val checklist = summary.sections.last().entries
         assertEquals(6, checklist.size)
         assertEquals("Task 3", checklist.first().label)
@@ -88,6 +88,6 @@ class PrintableArrivalSummaryTest {
         stayContact = "Stay contact",
         expectedCost = "Expected cost",
         alternateStay = "Another place to stay",
-        beforeLanding = "Before landing",
+        beforeLanding = "Before arrival",
     )
 }

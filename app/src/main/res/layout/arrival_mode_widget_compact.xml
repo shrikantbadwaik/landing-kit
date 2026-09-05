@@ -40,6 +40,6 @@
         android:gravity="center"
         android:maxLines="1"
         android:text="@string/arrival_widget_open"
-        android:textColor="#FF14524C"
+        android:textColor="#FF263329"
         android:textSize="12sp" />
 </LinearLayout>

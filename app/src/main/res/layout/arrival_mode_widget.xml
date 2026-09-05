@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:fontFamily="sans-serif-medium"
-            android:maxLines="1"
+            android:maxLines="2"
             android:text="@string/arrival_widget_title"
             android:textColor="#FFFFFFFF"
             android:textSize="15sp" />
@@ -58,6 +58,6 @@
         android:paddingStart="14dp"
         android:paddingEnd="14dp"
         android:text="@string/arrival_widget_open"
-        android:textColor="#FF14524C"
+        android:textColor="#FF263329"
         android:textSize="13sp" />
 </LinearLayout>

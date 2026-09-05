@@ -24,7 +24,7 @@ internal fun printArrivalSummary(
 ) {
     val printManager = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
     printManager.print(
-        "Landing Kit - ${summary.destination}",
+        "Travel with Thikana - ${summary.destination}",
         ArrivalSummaryPrintAdapter(context, summary),
         PrintAttributes.Builder()
             .setColorMode(PrintAttributes.COLOR_MODE_COLOR)
@@ -60,7 +60,7 @@ internal class ArrivalSummaryPrintAdapter(
             layoutDocument.close()
         }
         callback.onLayoutFinished(
-            PrintDocumentInfo.Builder("landing-kit-arrival-summary.pdf")
+            PrintDocumentInfo.Builder("travel-with-thikana-arrival-summary.pdf")
                 .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
                 .setPageCount(pageCount)
                 .build(),
@@ -143,7 +143,6 @@ internal class ArrivalSummaryRenderer(
         canvas.drawColor(Color.WHITE)
         drawPageHeader(canvas, pageIndex)
         pages[pageIndex].forEach { placed -> placed.block.draw(canvas, horizontalInset, placed.y) }
-        drawFooter(canvas, pageIndex)
     }
 
     private fun buildBlocks(): List<RenderBlock> = buildList {
@@ -177,7 +176,7 @@ internal class ArrivalSummaryRenderer(
         val labelPaint = paint(8.5f, Paint.Style.FILL, colors.muted, Typeface.BOLD).apply {
             letterSpacing = .12f
         }
-        canvas.drawText("LANDING KIT  /  ARRIVAL SUMMARY", horizontalInset, pt(12f), labelPaint)
+        canvas.drawText("TRAVEL WITH THIKANA  /  ARRIVAL SUMMARY", horizontalInset, pt(12f), labelPaint)
         if (pageIndex > 0) {
             val continued = "${summary.destination} - continued"
             canvas.drawText(continued, horizontalInset, pt(24f), paint(9f, color = colors.ink))
@@ -189,12 +188,6 @@ internal class ArrivalSummaryRenderer(
             pt(12f),
             paint(8.5f, color = colors.muted),
         )
-    }
-
-    private fun drawFooter(canvas: Canvas, pageIndex: Int) {
-        val y = pageHeight - pt(9f)
-        canvas.drawLine(horizontalInset, y - pt(10f), pageWidth - horizontalInset, y - pt(10f), paint(1f, color = colors.line))
-        canvas.drawText("PRIVATE TRAVEL DETAILS - KEEP THIS COPY SAFE", horizontalInset, y, paint(7.5f, color = colors.muted, typefaceStyle = Typeface.BOLD))
     }
 
     private inner class HeroBlock(destination: String, arrivalDate: String) : RenderBlock {
@@ -294,7 +287,7 @@ internal class ArrivalSummaryRenderer(
     private fun pt(value: Float) = value
     private val horizontalInset get() = pt(22f)
     private val contentTop get() = pt(34f)
-    private val contentBottom get() = pageHeight - pt(28f)
+    private val contentBottom get() = pageHeight - pt(12f)
 
     private interface RenderBlock {
         val height: Float
@@ -305,10 +298,10 @@ internal class ArrivalSummaryRenderer(
 }
 
 private data class PrintColors(
-    val ink: Int = Color.rgb(24, 51, 49),
-    val green: Int = Color.rgb(22, 74, 69),
-    val muted: Int = Color.rgb(96, 111, 107),
-    val line: Int = Color.rgb(220, 225, 221),
-    val sun: Int = Color.rgb(244, 201, 93),
-    val pale: Int = Color.rgb(218, 238, 232),
+    val ink: Int = Color.rgb(38, 51, 41),
+    val green: Int = Color.rgb(41, 63, 53),
+    val muted: Int = Color.rgb(95, 101, 88),
+    val line: Int = Color.rgb(212, 205, 187),
+    val sun: Int = Color.rgb(240, 187, 84),
+    val pale: Int = Color.rgb(208, 216, 186),
 )

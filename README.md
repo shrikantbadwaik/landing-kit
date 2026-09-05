@@ -1,21 +1,21 @@
-# Landing Kit
+# Travel with Thikana
 
-Landing Kit is an offline-first Android companion for the first 90 minutes after arriving somewhere new. It keeps the address to show a driver, booking details, transfer instructions, a currency note, emergency information, a dietary phrase, and a short readiness checklist in one device-local card.
+Travel with Thikana is an offline-first Android companion for the first 90 minutes after arriving somewhere new. It keeps the address to show a driver, booking details, transfer instructions, a currency note, emergency information, a dietary phrase, and a short readiness checklist in one device-local card.
 
 The durable product vision, research findings, roadmap, non-goals, and decision history live in [`docs/product-plan.md`](docs/product-plan.md).
 
 ## Current milestone
 
-- Create, edit, view, and delete arrival kits.
+- Create, edit, view, and delete trips.
 - Customise each readiness checklist by adding, renaming, completing, reordering, and removing tasks.
-- Apply curated checklist starters or save personal device-local templates for future kits.
-- Validate required arrival details explicitly, retain past kits for reference, and recover from stale local routes.
+- Apply curated checklist starters or save personal device-local templates for future trips.
+- Validate required arrival details explicitly, retain past trips for reference, and recover from stale local routes.
 - Import ticket images, QR screenshots, and PDFs through a compact evidence gallery or Android's Sharesheet, then preview, open, or delete them from the arrival card.
 - Encrypt attachment copies with an Android Keystore-backed AES-GCM key and keep their metadata in Room.
 - Optionally require biometrics or the device screen lock before decrypting attachments for viewing.
 - Keep evidence until explicit deletion and offer confirmed bulk cleanup on past arrivals; nothing expires silently.
 - Enter an address-first Arrival Mode for large local-language details, stay and booking information, transfer guidance, emergency help, and fast offline evidence access.
-- Explore a polished sample kit for Kyoto.
+- Explore a polished sample trip for Kyoto.
 - Persist trips and checklist progress in an app-private Room database.
 - Persist lightweight user preferences with AndroidX DataStore.
 - No account or ads. Firebase Analytics provides product telemetry when connectivity is available; every arrival feature remains usable offline.
@@ -61,13 +61,17 @@ Dependency coordinates, plugin versions, Compose BOM, and SDK/toolchain levels a
 
 ## Privacy posture
 
-The app includes Firebase Analytics and therefore declares `android.permission.INTERNET` and `android.permission.ACCESS_NETWORK_STATE`. Firebase may collect its default app, device, and session telemetry when connectivity is available. Advertising ID collection and ad-personalization signals are disabled, and advertising-related permissions contributed by the SDK are removed during manifest merging. Landing Kit does not send destinations, addresses, booking details, notes, checklist content, or attachments to Firebase, and no custom analytics events containing travel content are implemented. Every arrival feature remains usable without connectivity.
+The app includes Firebase Analytics and therefore declares `android.permission.INTERNET` and `android.permission.ACCESS_NETWORK_STATE`. Firebase may collect its default app, device, and session telemetry when connectivity is available. Advertising ID collection and ad-personalization signals are disabled, and advertising-related permissions contributed by the SDK are removed during manifest merging. Travel with Thikana does not send destinations, addresses, booking details, notes, checklist content, or attachments to Firebase, and no custom analytics events containing travel content are implemented. Every arrival feature remains usable without connectivity.
 
-Trip records are stored under the app sandbox, Android backup is disabled, and no kit content is exported automatically. Uninstalling the app removes its data. Broad storage permissions remain intentionally absent.
+Trip records are stored under the app sandbox, Android backup is disabled, and no trip content is exported automatically. Uninstalling the app removes its data. Broad storage permissions remain intentionally absent.
 
 User-selected ticket images and PDFs are copied into app-private storage and encrypted with AES-GCM using a non-exportable Android Keystore key. Image thumbnails are generated during import and encrypted separately, allowing the gallery to render without decrypting every full attachment. Opening an attachment creates a temporary decrypted cache file exposed through a narrowly scoped, read-only `FileProvider` grant; deleting the attachment also deletes its encrypted thumbnail and viewing preview. The original selected document is never modified. Imports are limited to 25 MB per file.
 
-Passport scans and other identity documents remain explicitly out of scope pending a dedicated security review. Android Sharesheet intake routes single or multiple PDF/image streams through the same encrypted import pipeline after the user chooses an arrival kit. Optional biometric/device-credential protection gates attachment viewing for five minutes or until the app leaves the foreground. This is an app-level re-authorization gate; it does not make the existing encryption key biometric-bound. Evidence never expires automatically; past arrivals provide explicit bulk cleanup that leaves source files unchanged. Encrypted backup/export is not implemented yet.
+Passport scans and other identity documents remain explicitly out of scope pending a dedicated security review. Android Sharesheet intake routes single or multiple PDF/image streams through the same encrypted import pipeline after the user chooses a trip. Optional biometric/device-credential protection gates attachment viewing for five minutes or until the app leaves the foreground. This is an app-level re-authorization gate; it does not make the existing encryption key biometric-bound. Evidence never expires automatically; past arrivals provide explicit bulk cleanup that leaves source files unchanged.
+
+## Naming and upgrade compatibility
+
+The product name is **Travel with Thikana**, and saved travel records are called **trips**. The application ID remains `com.shrikantbadwaik.travel.with.thikana`. Internal `landingkit` packages, the `:feature:kits` module, resource IDs, database and preference filenames, encryption key alias, Android component names, reminder identifiers and the `.lkb` backup format retain their existing names to preserve installed data, attachments, widgets, shortcuts and older backups. New backup and PDF filenames use `travel-with-thikana`.
 
 ## Build
 

@@ -14,12 +14,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,11 +27,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,6 +50,8 @@ import com.shrikantbadwaik.landingkit.feature.kits.print.PrintableSummaryLabels
 import com.shrikantbadwaik.landingkit.feature.kits.print.printArrivalSummary
 import com.shrikantbadwaik.landingkit.feature.kits.print.toPrintableArrivalSummary
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.journalDoodles
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalBackground
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -80,6 +82,7 @@ internal fun PrintableSummaryScreen(
             },
             confirmButton = {
                 Button(
+                    shape = MaterialTheme.shapes.medium,
                     onClick = {
                         showPrivacyWarning = false
                         printArrivalSummary(context, summary)
@@ -97,9 +100,10 @@ internal fun PrintableSummaryScreen(
             Surface(
                 modifier = Modifier.navigationBarsPadding(),
                 color = MaterialTheme.colorScheme.background,
-                shadowElevation = 8.dp,
+                shadowElevation = 2.dp,
             ) {
                 Button(
+                    shape = MaterialTheme.shapes.medium,
                     onClick = { showPrivacyWarning = true },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -118,32 +122,32 @@ internal fun PrintableSummaryScreen(
             }
         },
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(start = 22.dp, end = 22.dp, top = 10.dp, bottom = 24.dp),
+        val listState = rememberLazyListState()
+        JournalBackground(
+            seed = "print:${trip.id}",
+            listState = listState,
+            count = 0,
+            modifier = Modifier.fillMaxSize().padding(padding),
         ) {
-            item {
-                ScreenHeader(
-                    onBack = onBack,
-                    label = stringResource(R.string.print_summary_header),
-                    badge = stringResource(R.string.print_summary_badge),
-                )
-                Spacer(Modifier.height(18.dp))
-                Text(
-                    text = stringResource(R.string.print_summary_intro),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(18.dp))
-                PaperPreview(summary)
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    text = stringResource(R.string.print_summary_checklist_note),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 22.dp, end = 22.dp, top = 10.dp, bottom = 24.dp),
+            ) {
+                item {
+                    ScreenHeader(
+                        onBack = onBack,
+                        label = stringResource(R.string.print_summary_header),
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    Text(
+                        text = stringResource(R.string.print_summary_intro),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    PaperPreview(summary)
+                }
             }
         }
     }
@@ -154,7 +158,7 @@ internal fun PrintableSummaryEntryCard(onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
@@ -201,12 +205,15 @@ private fun PaperPreview(summary: PrintableArrivalSummary) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        color = Color.White,
+        color = LandingKitColors.Paper,
         contentColor = LandingKitColors.Ink,
         shadowElevation = 3.dp,
-        border = BorderStroke(1.dp, Color(0xFFE3DED5)),
+        border = BorderStroke(1.dp, Color(0xFFD4CDBB)),
     ) {
-        Column(Modifier.padding(20.dp)) {
+        Column(
+            Modifier.journalDoodles("print:${summary.destination}", count = 3, ink = LandingKitColors.Forest)
+                .padding(20.dp),
+        ) {
             Text(
                 text = stringResource(R.string.print_summary_document_label),
                 style = MaterialTheme.typography.labelSmall,
@@ -215,7 +222,7 @@ private fun PaperPreview(summary: PrintableArrivalSummary) {
             Spacer(Modifier.height(14.dp))
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = MaterialTheme.shapes.medium,
                 color = LandingKitColors.Forest,
                 contentColor = Color.White,
             ) {
@@ -247,18 +254,11 @@ private fun PaperPreview(summary: PrintableArrivalSummary) {
                 )
                 HorizontalDivider(
                     modifier = Modifier.padding(top = 7.dp, bottom = 4.dp),
-                    color = Color(0xFFE3DED5),
+                    color = Color(0xFFD4CDBB),
                 )
                 section.entries.forEach { entry -> PreviewEntry(entry) }
             }
-            Spacer(Modifier.height(18.dp))
-            HorizontalDivider(color = Color(0xFFE3DED5))
-            Spacer(Modifier.height(9.dp))
-            Text(
-                text = stringResource(R.string.print_summary_private_footer),
-                style = MaterialTheme.typography.labelSmall,
-                color = LandingKitColors.Moss,
-            )
+
         }
     }
 }

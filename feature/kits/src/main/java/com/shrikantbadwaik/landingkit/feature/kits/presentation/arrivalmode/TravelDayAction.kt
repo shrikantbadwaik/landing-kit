@@ -77,7 +77,7 @@ internal fun sensitiveAddressClip(address: String): ClipData =
     }
 
 internal fun TravelDayAction.externalIntent(): Intent = when (this) {
-    is TravelDayAction.CopyAddress -> error("Copying stays inside Landing Kit")
+    is TravelDayAction.CopyAddress -> error("Copying stays inside Travel with Thikana")
     is TravelDayAction.OpenMap -> Intent(
         Intent.ACTION_VIEW,
         Uri.parse("geo:0,0?q=${Uri.encode(query)}"),

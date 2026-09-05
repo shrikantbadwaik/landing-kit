@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.PendingSharedAttachments
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.journalDoodles
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import java.time.format.DateTimeFormatter
 
@@ -111,10 +113,13 @@ internal fun SharedAttachmentSheet(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary,
                 )
+                val listState = rememberLazyListState()
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 380.dp),
+                        .heightIn(max = 380.dp)
+                        .journalDoodles("attachment-sheet", listState),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(trips, key = Trip::id) { trip ->
@@ -152,7 +157,7 @@ private fun TripDestination(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = enabled, onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.56f),
         contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
@@ -206,7 +211,7 @@ private fun EmptyKitState(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
+        shape = MaterialTheme.shapes.large,
         color = LandingKitColors.Seafoam.copy(alpha = 0.34f),
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {

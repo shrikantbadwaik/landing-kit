@@ -1,14 +1,14 @@
-# Landing Kit Product Plan
+# Travel with Thikana Product Plan
 
-Last updated: 21 August 2026
+Last updated: 3 November 2026
 
 ## Product vision
 
-Landing Kit is a private, offline-first Android companion for the first 90 minutes after arriving somewhere unfamiliar.
+Travel with Thikana is a private, offline-first Android companion for the first 90 minutes after arriving somewhere unfamiliar.
 
 It gives travellers one calm, dependable place for the information they need immediately after landing: where they are staying, what to show a driver, how to get there, their booking reference, essential local notes, and the tasks they need to complete.
 
-Landing Kit is not intended to become another full itinerary planner.
+Travel with Thikana is not intended to become another full itinerary planner.
 
 ## Positioning
 
@@ -49,7 +49,7 @@ Supporting jobs:
 ## Product principles
 
 1. **Offline is the default**, not a paid upgrade or degraded fallback.
-2. **Device-local travel data by design**: no account, product backend, ads, or automatic upload of kit content. Firebase Analytics is limited to product telemetry, with Advertising ID collection and ad-personalization signals disabled, and must never receive destinations, addresses, booking details, notes, checklist content, or attachments.
+2. **Device-local travel data by design**: no account, product backend, ads, or automatic upload of trip content. Firebase Analytics is limited to product telemetry, with Advertising ID collection and ad-personalization signals disabled, and must never receive destinations, addresses, booking details, notes, checklist content, or attachments.
 3. **Arrival-focused**: solve the first 90 minutes exceptionally well before expanding scope.
 4. **Calm under pressure**: important content should be readable, predictable, and quickly accessible.
 5. **Explicit user control**: importing, exporting, sharing, and deleting are always user-initiated.
@@ -98,14 +98,14 @@ Builder and app-promotion communities were treated as competition signals rather
 
 ### Completed
 
-- Create and view arrival kits.
-- Edit existing arrival kits while preserving checklist progress.
-- Delete arrival kits through an explicit destructive confirmation.
+- Create and view arrival trips.
+- Edit existing arrival trips while preserving checklist progress.
+- Delete arrival trips through an explicit destructive confirmation.
 - Add, rename, complete, reorder, and remove checklist items while preserving stable identity.
 - Apply curated checklist templates and save reusable personal templates on the device.
 - Guide incomplete forms with explicit inline validation and never fabricate missing arrival data.
 - Keep past arrivals available in a clearly separated reference section.
-- Recover gracefully when a saved navigation route points to a kit that is no longer on the device.
+- Recover gracefully when a saved navigation route points to a trip that is no longer on the device.
 - Store a destination and arrival date.
 - Store accommodation name and address.
 - Store an address in the local language.
@@ -113,13 +113,13 @@ Builder and app-promotion communities were treated as competition signals rather
 - Store currency, emergency, and dietary notes.
 - Provide an arrival-readiness checklist.
 - Persist trips and checklist state in an app-private Room database.
-- Include a polished Kyoto sample kit.
+- Include a polished Kyoto sample trip.
 - Provide Home, Create, and Detail experiences.
 - Use a custom offline design system and bundled fonts.
 - Follow the device light or dark appearance across every app and system surface without requiring a separate setting.
 - Use calm hybrid animations without replaying full choreography on every return.
-- Offer an opt-in arrival-day notification that opens the correct kit directly in Arrival Mode.
-- Keep every arrival feature functional without connectivity. Firebase Analytics may use the network for product telemetry, but kit content remains device-local and no travel data is included in custom analytics events.
+- Offer an opt-in arrival-day notification that opens the correct trip directly in Arrival Mode.
+- Keep every arrival feature functional without connectivity. Firebase Analytics may use the network for product telemetry, but trip content remains device-local and no travel data is included in custom analytics events.
 - Use a modular Android architecture with Hilt, Coroutines, Flow, Room, DataStore, Compose, and Material 3.
 - Centralise dependency versions and prohibit Grab/MyTeksi repositories and dependencies.
 
@@ -128,22 +128,22 @@ Builder and app-promotion communities were treated as competition signals rather
 - Data exists only on the device unless the user explicitly exports it.
 - Uninstalling the app removes its data.
 - Android backup is disabled.
-- Images and PDFs can be imported intentionally through Android's document picker or shared into an existing kit through Android's Sharesheet.
+- Images and PDFs can be imported intentionally through Android's document picker or shared into an existing trip through Android's Sharesheet.
 - There is no cross-device synchronisation or real-time safety check-in.
 
 ## Prioritised roadmap
 
-### Phase 1 — Complete the kit lifecycle
+### Phase 1 — Complete the trip lifecycle
 
-Goal: make existing kits maintainable before increasing the sensitivity of stored data.
+Goal: make existing trips maintainable before increasing the sensitivity of stored data.
 
-- [x] Edit an existing arrival kit.
-- [x] Delete a kit with explicit confirmation.
+- [x] Edit an existing arrival trip.
+- [x] Delete a trip with explicit confirmation.
 - [x] Add, edit, complete, reorder, and remove checklist items.
 - [x] Provide reusable checklist templates.
 - [x] Handle empty, invalid, and past-arrival states gracefully.
 
-Success condition: a user can maintain a kit throughout its useful lifecycle without recreating it.
+Success condition: a user can maintain a trip throughout its useful lifecycle without recreating it.
 
 ### Phase 2 — Arrival evidence attachments
 
@@ -151,7 +151,7 @@ Goal: eliminate searching through email, Files, and screenshots at the moment of
 
 - [x] Import screenshots, images, PDFs, tickets, and QR codes through the Storage Access Framework.
 - [x] Accept content through the Android Sharesheet.
-- [x] Attach evidence to a dedicated arrival-kit section.
+- [x] Attach evidence to a dedicated arrival-trip section.
 - [x] Encrypt imported files using Android Keystore-backed AES-GCM keys.
 - [x] Add biometric or device-credential protection where appropriate.
 - [x] Provide explicit per-attachment deletion and remove generated previews with the attachment.
@@ -184,10 +184,10 @@ This is a post-MVP enhancement phase and is not a prerequisite for the first bet
 
 Priority: P0
 
-- [x] Add a “Check my arrival kit” rehearsal that verifies essential arrival details are present.
+- [x] Add a “Check my arrival trip” rehearsal that verifies essential arrival details are present.
 - [x] Prove that the selected ticket or confirmation exists in app-owned storage, decrypts successfully, and can be rendered locally.
 - [x] Use concrete results such as “Ready on this phone”, “Needs attention”, and “Not checked” instead of a percentage or safety score.
-- [x] Record when the kit was last checked and invalidate that result after relevant details, attachments, or quick-access choices change.
+- [x] Record when the trip was last checked and invalidate that result after relevant details, attachments, or quick-access choices change.
 - [x] Clearly distinguish a static saved copy from a live pass and explain that rotating codes or changed travel details may still require the original provider.
 - [x] State honestly that readiness on this phone does not protect against a lost, broken, or discharged device.
 
@@ -205,7 +205,7 @@ Exit condition: in airplane mode, the traveller can open Arrival Mode, retrieve 
 Priority: P0
 
 - [x] Store another way to get there, user-recorded last-departure information, accommodation check-in cutoff, late-arrival instructions, and stay contact details.
-- [x] Allow an optional expected-cost or payment note and another-place-to-stay note without turning Landing Kit into a live transport or booking service.
+- [x] Allow an optional expected-cost or payment note and another-place-to-stay note without turning Travel with Thikana into a live transport or booking service.
 - [x] Record when volatile details were last checked in Offline Arrival Check and treat manually entered details as saved notes, never live status.
 - [x] Add a focused “If plans change” card to Arrival Mode.
 - [x] Extend the offline arrival test with independent Plan B readiness rules.
@@ -225,7 +225,7 @@ Exit condition: when the primary transfer or check-in plan fails, the traveller 
 Priority: P1
 
 - [x] Show only traveller-selected local-language content such as the stay name, address, phone number, or prepared phrase.
-- [x] Hide booking references, attachments, notes, and navigation paths that could expose the rest of the kit while the phone is handed to another person.
+- [x] Hide booking references, attachments, notes, and navigation paths that could expose the rest of the trip while the phone is handed to another person.
 - [x] Use large, high-contrast, scroll-safe text with screen-reader support.
 - [x] Return to protected app content when the handoff ends or times out.
 
@@ -260,7 +260,7 @@ Research-locked presentation direction:
 - Open on a dark, distraction-free stage with the complete image or PDF page
   fitted and uncropped. Let the traveller deliberately isolate a PDF page or
   pinch and pan an image, with a visible Fit reset.
-- Include every attachment from the active arrival kit. Open the pinned file
+- Include every attachment from the active arrival trip. Open the pinned file
   first when one exists, order the rest newest-first, and provide explicit
   previous/next navigation. Decrypt and render only the file currently shown.
 - Use only a short fade between Arrival Mode and the presenter. Avoid ticket
@@ -285,7 +285,7 @@ for platform rendering, zoom, pagination, and accessibility expectations.
 
 Verification completed 22 August 2026: the targeted presenter accessibility
 test, feature unit tests, and Android lint passed. On a Pixel 9 Pro Android 17
-emulator at 200% text, a six-file kit opened its older pinned ticket first,
+emulator at 200% text, a six-file trip opened its older pinned ticket first,
 then navigated newest-first through an opaque QR screenshot, portrait and
 landscape images, an eight-page mixed-orientation PDF, and an existing booking
 PDF. Complete-edge fitting, focused PDF pages and return to all pages, portrait
@@ -312,7 +312,7 @@ Research-locked interaction direction:
 - Keep actions beside the information they use: map and copy actions belong
   with the address; call and message actions belong with the saved stay
   contact. Avoid a generic overflow menu or a separate action dashboard.
-- Keep every action deliberate and reversible inside Landing Kit. Open the
+- Keep every action deliberate and reversible inside Travel with Thikana. Open the
   system dialler rather than placing a call, open the message composer without
   sending, and hand map queries to an installed map app. Check that a receiving
   app exists and explain when one is unavailable.
@@ -344,7 +344,7 @@ visible, destination-adjacent quick actions.
 Excluded from this sub-milestone: background location, automatic monitoring, missed-check-in escalation, and emergency-response claims.
 
 Exit condition: the traveller can contact the accommodation or hand an address
-to another app without Landing Kit tracking them or requiring a backend.
+to another app without Travel with Thikana tracking them or requiring a backend.
 
 #### 3.5.6 — Faster Entry Experiment
 
@@ -362,8 +362,8 @@ Research-locked interaction direction:
 - Treat launcher surfaces as entry points, not miniature itineraries. The
   shortcut and widget use generic Arrival Mode wording and never expose the
   destination, stay, address, date, booking reference, or contact details.
-- Publish the dynamic shortcut only when a current or upcoming kit exists.
-  Resolve the actual next kit inside Landing Kit when the entry point is used,
+- Publish the dynamic shortcut only when a current or upcoming trip exists.
+  Resolve the actual next trip inside Travel with Thikana when the entry point is used,
   keeping trip identifiers and content out of launcher-facing metadata.
 - Keep the widget to one branded, glanceable state and one clear Open action.
   Tapping either entry point opens the same Arrival Mode destination so the
@@ -394,7 +394,7 @@ Integration rules:
 - Phase 5 prepares reusable information and tasks that the Phase 3.5 rehearsal can verify.
 - Phase 6 validates the complete chain in airplane mode, with one-handed use, large text, TalkBack, and simulated arrival failures.
 
-Success condition: before departure, a traveller can rehearse the arrival flow and confirm that their primary details, fallback plan, human handoff, and selected ticket remain usable without Landing Kit connectivity or an account.
+Success condition: before departure, a traveller can rehearse the arrival flow and confirm that their primary details, fallback plan, human handoff, and selected ticket remain usable without Travel with Thikana connectivity or an account.
 
 ### Phase 4 — Controlled backup and handoff
 
@@ -403,7 +403,7 @@ Goal: address device loss without introducing a mandatory backend
 - [x] Generate a concise printable arrival summary.
 - [x] Export and import an encrypted local backup.
 - [x] Share a user-selected summary through Android's system Sharesheet.
-- [x] Allow users to create a trusted-person copy without maintaining a Landing Kit account.
+- [x] Allow users to create a trusted-person copy without maintaining a Travel with Thikana account.
 - [x] Clearly warn when a printable summary or encrypted backup may contain sensitive travel information.
 
 The printable-summary design follows [Android's custom-document printing
@@ -414,12 +414,12 @@ Community](https://www.figma.com/community/search?query=travel%20itinerary%20pri
 [Dribbble](https://dribbble.com/search/travel-itinerary),
 [Behance](https://www.behance.net/search/projects/travel%20itinerary%20app), and
 [Canva](https://www.canva.com/templates/search/travel-itinerary/) informed the
-destination hierarchy and modular paper layout; Landing Kit deliberately keeps
+destination hierarchy and modular paper layout; Travel with Thikana deliberately keeps
 the result operational and concise rather than reproducing a decorative full
 itinerary.
 
 The selected-summary handoff follows [Android's Sharesheet
-guidance](https://developer.android.com/training/sharing/send): Landing Kit uses
+guidance](https://developer.android.com/training/sharing/send): Travel with Thikana uses
 `ACTION_SEND` with `Intent.createChooser()` and leaves destination ranking and
 recipient choice to the system. The app never supplies its own recipient list;
 the traveller reviews and removes groups of details before the system picker is
@@ -427,7 +427,7 @@ shown.
 
 The single share-arrival-plan path fulfils the trusted-person copy requirement:
 it opens with only the stay/arrival and Plan B groups selected, and its
-recipient-ready plain-text copy states that no Landing Kit account or
+recipient-ready plain-text copy states that no Travel with Thikana account or
 installation is needed. The traveller can still add or remove groups before
 choosing an app.
 
@@ -443,7 +443,7 @@ Goal: reduce pre-travel cognitive load without requiring live services.
 - Surface incomplete high-priority tasks before the arrival date.
 - Keep recommendations curated and packaged locally initially.
 
-Success condition: users repeatedly reuse Landing Kit before travel rather than only opening it after landing.
+Success condition: users repeatedly reuse Travel with Thikana before travel rather than only opening it after landing.
 
 ### Phase 6 — Quality and product validation
 
@@ -475,20 +475,20 @@ This register was reconstructed on 21 August 2026 from the Phase 1–3 decision
 log, Codex session `019fd6c6-a757-7791-a003-f8ffb4e35b26`, and the subsequent
 Claude project handoff history.
 
-### Phase 1 — Kit lifecycle
+### Phase 1 — Trip lifecycle
 
 | Considered item | Status | Why it was parked | Revisit trigger or destination |
 |---|---|---|---|
-| Final product name and the possible “Thikana” rebrand | Deferred decision | Extensive naming exploration reached diminishing returns, so Landing Kit remained the working product name even though the Android package later adopted `travel.with.thikana`. | Resolve before store listing, trademark work, public privacy copy, and permanent application ID decisions. |
+| Product name: “Travel with Thikana” | Confirmed on 3 November 2026 | The app now uses Travel with Thikana across launcher branding, screens, widgets, shared text and exports. Saved travel records are called trips. | Use this name in store listings and public product copy. The existing application ID and storage identifiers are retained for compatibility. |
 | Arrival date and time | Superseded | The product deliberately stores an arrival date only. A required time added form friction and implied precision the core arrival flow did not need. | Reconsider only if traveller testing demonstrates a task that cannot be handled by arrival date, check-in cutoff, or saved last-departure information. |
-| Creating kits for historical arrival dates | Rejected for creation | New and edited kits allow today or a future date, while existing past arrivals remain readable and maintainable as references. | Reconsider only if importing or reconstructing past trips becomes a validated job. |
+| Creating trips for historical arrival dates | Rejected for creation | New and edited trips allow today or a future date, while existing past arrivals remain readable and maintainable as references. | Reconsider only if importing or reconstructing past trips becomes a validated job. |
 
 ### Phase 2 — Arrival evidence
 
 | Considered item | Status | Why it was parked | Revisit trigger or destination |
 |---|---|---|---|
-| Passport scans and similarly high-risk identity documents | Future candidate | The first attachment release was designed for tickets, confirmations, images, PDFs, and QR codes. Identity documents materially increase disclosure impact and recovery requirements. | Require a dedicated threat model, security review, recovery policy, and direct evidence that travellers want Landing Kit to store them. |
-| Dedicated Privacy & Security settings | Future candidate | Attachment protection was retained as an optional inline control so Phase 2 could ship, but it is too prominent and repetitive as a per-kit surface. | Add when settings architecture or another privacy control is introduced; move the existing protection preference without weakening discoverability. |
+| Passport scans and similarly high-risk identity documents | Future candidate | The first attachment release was designed for tickets, confirmations, images, PDFs, and QR codes. Identity documents materially increase disclosure impact and recovery requirements. | Require a dedicated threat model, security review, recovery policy, and direct evidence that travellers want Travel with Thikana to store them. |
+| Dedicated Privacy & Security settings | Future candidate | Attachment protection was retained as an optional inline control so Phase 2 could ship, but it is too prominent and repetitive as a per-trip surface. | Add when settings architecture or another privacy control is introduced; move the existing protection preference without weakening discoverability. |
 | Biometric- or credential-bound encryption keys | Future security candidate | The shipped design encrypts files at rest and uses authentication as an app-level viewing gate. Binding decryption keys to authentication would change recovery, invalidation, and device-credential behaviour. | Reconsider alongside identity-document support or a higher-assurance security tier, with migration and credential-removal recovery designed first. |
 | Silent attachment expiry or scheduled deletion | Rejected | Tickets and receipts may remain useful after arrival. Silent deletion conflicts with an offline reliability product, so evidence remains until explicit per-file or confirmed bulk cleanup. | Do not revive without strong retention research and a user-controlled, recoverable policy. |
 
@@ -513,7 +513,7 @@ kept outside the Phase 3.5 commitments shown above.
 | Connectivity preparation pack | Future candidate | Roaming, eSIM, offline-map, offline-translation, Wi-Fi, and manual-network notes may help, but can easily become generic travel preparation scope. | Validate repeated arrival failures and fit it into Phase 5 preparation plus the independent readiness engine. |
 | Bag recovery pack | Future candidate | Luggage photos, baggage tags, airline contacts, and missing-bag references are adjacent to arrival resilience but form a distinct recovery workflow. | Promote only after research shows it is frequent and urgent enough to remain inside the first-90-minutes boundary. |
 | User-initiated “I arrived” message | Future candidate | A prefilled system share avoids tracking, but traveller demand is mixed and formal check-ins can create unwanted safety expectations. | Validate demand during 3.5.5; keep it explicit, user-initiated, and free of background monitoring. |
-| Duplicate an arrival kit | Future candidate | Reuse may help frequent travellers, but curated and personal checklist templates already cover part of the need. | Validate whether users need whole-kit duplication before adding it to Phase 5. |
+| Duplicate an arrival trip | Future candidate | Reuse may help frequent travellers, but curated and personal checklist templates already cover part of the need. | Validate whether users need whole-trip duplication before adding it to Phase 5. |
 
 ### Explicit boundaries, not future enhancements
 
@@ -543,20 +543,20 @@ The following are intentionally outside the near-term product:
 - AI itinerary generation.
 - Passport and identity-document vault functionality before a dedicated security review.
 
-These areas are crowded, frequently require connectivity or backend infrastructure, and dilute Landing Kit's arrival-focused value.
+These areas are crowded, frequently require connectivity or backend infrastructure, and dilute Travel with Thikana's arrival-focused value.
 
 ## Backend posture
 
 The planned product remains achievable without a proprietary backend:
 
-- Room stores structured kit data.
+- Room stores structured trip data.
 - App-private encrypted storage holds attachments.
 - Android Keystore protects encryption keys.
 - DataStore holds lightweight preferences.
 - WorkManager or alarm APIs provide local reminders.
 - Android Sharesheet and Storage Access Framework handle user-controlled exchange.
 
-Firebase Analytics is used only for product telemetry and is not a storage, synchronisation, account, or delivery backend for arrival kits. The app's travel features must not depend on Firebase availability, and kit content must never be added to analytics parameters or user properties.
+Firebase Analytics is used only for product telemetry and is not a storage, synchronisation, account, or delivery backend for arrival trips. The app's travel features must not depend on Firebase availability, and trip content must never be added to analytics parameters or user properties.
 
 A backend should only be reconsidered if validated demand emerges for real-time cross-device sync, collaborative editing, or automated safety check-ins. Those capabilities require a separate privacy, security, cost, and operational decision.
 
@@ -564,7 +564,7 @@ A backend should only be reconsidered if validated demand emerges for real-time 
 
 Early validation should focus on behaviour rather than download volume:
 
-- A user creates a real kit for an upcoming trip.
+- A user creates a real trip for an upcoming trip.
 - A user returns to update or complete preparation tasks.
 - Critical information can be retrieved offline within two taps.
 - A traveller uses the local-language address or booking evidence during arrival.
@@ -576,18 +576,18 @@ Early validation should focus on behaviour rather than download volume:
 
 ### 7 August 2026
 
-- Confirmed that Landing Kit remains arrival-focused rather than expanding into a general travel planner.
+- Confirmed that Travel with Thikana remains arrival-focused rather than expanding into a general travel planner.
 - Changed arrival information from date and time to arrival date only.
 - Reordered the roadmap so edit, delete, and custom checklist functionality precede sensitive attachments.
 - Chose encrypted ticket, PDF, screenshot, and QR attachments as the next major product capability after lifecycle essentials.
 - Deferred passport and identity-document storage pending a dedicated threat model and security review.
 - Kept the no-backend, no-account, and no-network-permission posture.
 - Added this document as the durable product source of truth.
-- Completed the first lifecycle slice: existing kits can be edited and deleted without losing checklist identity or completion state.
+- Completed the first lifecycle slice: existing trips can be edited and deleted without losing checklist identity or completion state.
 - Completed custom checklist management with inline editing, completion, ordering, addition, removal, and transactional local persistence.
 - Added additive curated templates plus device-local personal templates with explicit deletion and a non-destructive Room 1-to-2 migration.
-- Completed the kit lifecycle with explicit required-field validation, honest missing-kit recovery, calm empty states, and retained past-arrival references ordered behind upcoming travel.
-- Limited arrival-date selection to today or later; existing kits naturally become past references over time and remain editable without allowing accidental historical dates.
+- Completed the trip lifecycle with explicit required-field validation, honest missing-trip recovery, calm empty states, and retained past-arrival references ordered behind upcoming travel.
+- Limited arrival-date selection to today or later; existing trips naturally become past references over time and remain editable without allowing accidental historical dates.
 - Began Phase 2 with a verified attachment vertical slice: SAF image/PDF intake, Room metadata migration `2 → 3`, 25 MB limits, Android Keystore-backed AES-GCM storage, two-tap offline viewing through a narrow `FileProvider`, and explicit deletion that leaves the source document unchanged.
 - Kept Android Sharesheet intake, biometric/device-credential gating, and a long-term retention policy as open Phase 2 work rather than weakening the first secure slice.
 - Replaced the small attachment action with a tappable evidence tray and compact preview gallery; image thumbnails remain encrypted at rest, PDF entries use an honest document treatment, and deletion stays available directly on each preview.
@@ -595,34 +595,34 @@ Early validation should focus on behaviour rather than download volume:
 ### 10 August 2026
 
 - Completed Android Sharesheet intake for single and multiple PDF/image streams, including cold-start and already-open app delivery.
-- Added an arrival-kit chooser before import, then routed shared content through the existing size validation and Android Keystore-backed encrypted attachment pipeline.
-- Kept attachment intake honest when no kit exists: users are asked to create a kit first rather than silently creating incomplete trip data.
+- Added an arrival-trip chooser before import, then routed shared content through the existing size validation and Android Keystore-backed encrypted attachment pipeline.
+- Kept attachment intake honest when no trip exists: users are asked to create a trip first rather than silently creating incomplete trip data.
 - Preserved the no-backend, no-account, and no-network-permission posture; biometric/device-credential policy and long-term retention remained the next Phase 2 decisions.
-- Added optional biometric or device-credential confirmation before decrypting an attachment for viewing. A successful confirmation unlocks evidence for five minutes while Landing Kit remains foregrounded; leaving the app locks it immediately.
+- Added optional biometric or device-credential confirmation before decrypting an attachment for viewing. A successful confirmation unlocks evidence for five minutes while Travel with Thikana remains foregrounded; leaving the app locks it immediately.
 - Required confirmation when enabling protection and when disabling it from a locked session, preventing the preference control from becoming a bypass.
 - Kept the security claim precise: attachment files remain encrypted at rest, while authentication is an app-level viewing gate rather than a biometric-bound encryption-key migration.
 - Completed Phase 2 with a conservative retention policy: evidence never expires silently, remains until explicit deletion, and past arrivals offer a confirmed bulk-cleanup action.
 - Bulk cleanup removes app-private encrypted files, thumbnails, previews, and Room metadata while leaving every original source document unchanged.
 - Chose user-controlled cleanup over scheduled auto-deletion because travel receipts and booking evidence may remain useful after arrival, and silent deletion would undermine an offline reliability product.
-- Began Phase 3 with a dedicated Arrival Mode route entered from kit detail. The first verified slice prioritises the local-language address, stay, booking reference, transfer guidance, and emergency contact in a one-handed scrollable layout.
+- Began Phase 3 with a dedicated Arrival Mode route entered from trip detail. The first verified slice prioritises the local-language address, stay, booking reference, transfer guidance, and emergency contact in a one-handed scrollable layout.
 - Reused the protected attachment-opening coordinator in Detail and Arrival Mode, preserving encryption and biometric/device-credential behaviour while providing fast access to the newest saved evidence.
 - Kept attachment priority explicit: newest-first is only an interim deterministic default until users can pin the file they consider most important.
-- Verified Arrival Mode on the emulator, including scrolling, encrypted attachment opening in an external viewer, returning to the mode, and system Back navigation to kit detail.
-- Replaced traveller-facing implementation language with plain travel language across Home, the editor, saved lists, tickets and confirmations, protection prompts, sharing, cleanup, and kit removal. Internal security and storage terminology remains available in engineering documentation where precision matters.
+- Verified Arrival Mode on the emulator, including scrolling, encrypted attachment opening in an external viewer, returning to the mode, and system Back navigation to trip detail.
+- Replaced traveller-facing implementation language with plain travel language across Home, the editor, saved lists, tickets and confirmations, protection prompts, sharing, cleanup, and trip removal. Internal security and storage terminology remains available in engineering documentation where precision matters.
 - Let travellers choose the ticket or confirmation that opens first in Arrival Mode. The choice is stored locally, can be cleared from the preview, and safely falls back to the newest saved file if no choice remains.
-- Added a non-destructive Room `3 → 4` migration for the per-arrival quick-access choice and verified the migration on the emulator without losing the existing Kyoto kit or its saved details.
-- Added an opt-in “Keep this handy” shortcut for upcoming arrivals. Android schedules it locally from 8:00 AM on the arrival date, requests notification permission only when enabled, and opens the correct kit directly in Arrival Mode from both warm and cold app states.
-- Stored the choice per kit with a non-destructive Room `4 → 5` migration. Edits reschedule it, disabling or deleting the kit cancels it, and reboot, app replacement, or timezone changes restore eligible reminders without a backend.
+- Added a non-destructive Room `3 → 4` migration for the per-arrival quick-access choice and verified the migration on the emulator without losing the existing Kyoto trip or its saved details.
+- Added an opt-in “Keep this handy” shortcut for upcoming arrivals. Android schedules it locally from 8:00 AM on the arrival date, requests notification permission only when enabled, and opens the correct trip directly in Arrival Mode from both warm and cold app states.
+- Stored the choice per trip with a non-destructive Room `4 → 5` migration. Edits reschedule it, disabling or deleting the trip cancels it, and reboot, app replacement, or timezone changes restore eligible reminders without a backend.
 - Kept notification content private on the lock screen and verified permission timing, Room migration, alarm scheduling/cancellation, persisted state, and direct Arrival Mode routing on the emulator.
 - Verified a real posted notification end to end: it displayed the intended destination-specific copy, opened the correct Arrival Mode when tapped, cleared itself afterward, and left no active alarm after the reminder was disabled.
-- Replaced the parent trip's destructive SQLite `REPLACE` write with Room `Upsert`; this prevents kit edits from cascading into deletion of saved attachment rows. Verified on the emulator by saving an existing kit and confirming its original booking PDF remained available.
+- Replaced the parent trip's destructive SQLite `REPLACE` write with Room `Upsert`; this prevents trip edits from cascading into deletion of saved attachment rows. Verified on the emulator by saving an existing trip and confirming its original booking PDF remained available.
 - Completed Phase 3 accessibility validation on the emulator at 200% text in both light and dark themes. The long Japanese address, transfer guidance, ticket action, emergency details, and footer remain readable without clipping or overlap.
 - Added an on-device Compose accessibility regression test for the Arrival Mode pane title, heading structure, labelled actions, lazy-list sections, and 48dp Back target. The test uncovered and fixed a Back-button semantic action that TalkBack could focus but could not activate.
 - Corrected theme-controlled Home headings and custom-card content colors so they remain legible when the system uses dark mode.
 - Completed app-wide dark mode using the device appearance. Added a deliberate semantic dark palette, dark launch and system-bar resources, theme-safe custom surfaces across Home, editor, detail, Arrival Mode, attachments, and sharing, plus an on-device contrast regression test for every Material text/container pair.
-- Added Phase 3.5 as a non-blocking, evidence-led arrival-resilience phase. It focuses on offline rehearsal, explicit fallback plans, privacy-safe human handoff, faster Android entry points, reliable ticket presentation, and user-initiated contact actions without broadening Landing Kit into a live itinerary or tracking service.
+- Added Phase 3.5 as a non-blocking, evidence-led arrival-resilience phase. It focuses on offline rehearsal, explicit fallback plans, privacy-safe human handoff, faster Android entry points, reliable ticket presentation, and user-initiated contact actions without broadening Travel with Thikana into a live itinerary or tracking service.
 - Structured Phase 3.5 into six independently shippable sub-milestones: verified offline arrival, operational Plan B, private handoff, honest ticket presentation, travel-day actions, and a measured faster-entry experiment. Connected their readiness rules and validation explicitly to Phases 4, 5, and 6.
-- Connected the Android app to Firebase using the Google Services plugin `4.5.0`, Firebase BoM `34.17.0`, and the main Firebase Analytics module through the central version catalog. This intentionally replaces the earlier no-analytics/no-network posture while keeping all kit content device-local and every arrival feature independent of Firebase availability. Disabled Advertising ID collection and ad-personalization signals and removed advertising-related SDK permissions.
+- Connected the Android app to Firebase using the Google Services plugin `4.5.0`, Firebase BoM `34.17.0`, and the main Firebase Analytics module through the central version catalog. This intentionally replaces the earlier no-analytics/no-network posture while keeping all trip content device-local and every arrival feature independent of Firebase availability. Disabled Advertising ID collection and ad-personalization signals and removed advertising-related SDK permissions.
 
 ### 21 August 2026
 

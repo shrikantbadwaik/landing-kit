@@ -6,12 +6,15 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertWidthIsAtLeast
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitTheme
@@ -59,9 +62,7 @@ class HandoffAccessibilityTest {
 
         composeRule.onNodeWithText(addressOption).performScrollTo().performClick()
         composeRule.onNodeWithText(contactOption).performScrollTo().performClick()
-        composeRule.onNodeWithText(
-            composeRule.activity.getString(R.string.handoff_start_action),
-        ).performScrollTo().performClick()
+        startPresentation()
 
         composeRule.onNodeWithText(LOCAL_ADDRESS).assertExists()
         composeRule.onNodeWithText(ADDRESS).assertExists()
@@ -95,9 +96,7 @@ class HandoffAccessibilityTest {
             }
         }
 
-        composeRule.onNodeWithText(
-            composeRule.activity.getString(R.string.handoff_start_action),
-        ).performScrollTo().performClick()
+        startPresentation()
 
         composeRule.onNodeWithText(ADDRESS).assertExists()
         assertEquals(0, composeRule.onAllNodesWithText(LOCAL_ADDRESS).fetchSemanticsNodes().size)
@@ -118,11 +117,15 @@ class HandoffAccessibilityTest {
             }
         }
 
-        composeRule.onNodeWithText(
-            composeRule.activity.getString(R.string.handoff_start_action),
-        ).performScrollTo().performClick()
+        startPresentation()
         composeRule.waitUntil(timeoutMillis = 2_000L) { ended.get() }
         assertTrue(ended.get())
+    }
+
+    private fun startPresentation() {
+        val action = composeRule.activity.getString(R.string.handoff_start_action)
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText(action))
+        composeRule.onNodeWithText(action).assertHasClickAction().performClick()
     }
 
     private companion object {

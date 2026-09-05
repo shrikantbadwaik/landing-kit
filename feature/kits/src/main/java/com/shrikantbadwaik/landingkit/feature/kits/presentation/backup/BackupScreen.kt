@@ -16,14 +16,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.animation.Crossfade
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,11 +33,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,6 +55,7 @@ import com.shrikantbadwaik.landingkit.core.data.UnsupportedBackupException
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalBackground
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -118,6 +118,7 @@ internal fun BackupScreen(
             },
             confirmButton = {
                 Button(
+                    shape = MaterialTheme.shapes.medium,
                     onClick = {
                         showExportWarning = false
                         exportLauncher.launch(defaultBackupName())
@@ -130,203 +131,205 @@ internal fun BackupScreen(
     }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(22.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+        val listState = rememberLazyListState()
+        JournalBackground(
+            seed = "backup",
+            listState = listState,
+            count = 3,
+            modifier = Modifier.fillMaxSize().padding(padding),
         ) {
-            item {
-                ScreenHeader(
-                    onBack = onBack,
-                    label = stringResource(R.string.backup_header),
-                    badge = stringResource(R.string.backup_badge),
-                )
-            }
-            item {
-                Column {
-                    Text(
-                        stringResource(R.string.backup_title),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
-                    Spacer(Modifier.height(7.dp))
-                    Text(
-                        stringResource(R.string.backup_intro),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(22.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                item {
+                    ScreenHeader(
+                        onBack = onBack,
+                        label = stringResource(R.string.backup_header),
                     )
                 }
-            }
-            item {
-                BackupPanel(
-                    label = stringResource(R.string.backup_export_label),
-                    title = stringResource(R.string.backup_export_title),
-                    description = stringResource(R.string.backup_export_description),
-                    accent = LandingKitColors.Seafoam,
-                ) {
-                    PasswordField(
-                        value = exportPassword,
-                        onValueChange = {
-                            exportPassword = it
-                            feedback = null
-                        },
-                        label = stringResource(R.string.backup_password_label),
-                        visible = exportPasswordVisible,
-                        onVisibilityChange = { exportPasswordVisible = !exportPasswordVisible },
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    PasswordField(
-                        value = exportConfirmation,
-                        onValueChange = {
-                            exportConfirmation = it
-                            feedback = null
-                        },
-                        label = stringResource(R.string.backup_password_confirm_label),
-                        visible = exportConfirmationVisible,
-                        onVisibilityChange = { exportConfirmationVisible = !exportConfirmationVisible },
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    PasswordGuidance(exportPassword, exportConfirmation)
-                    Spacer(Modifier.height(14.dp))
-                    Button(
-                        onClick = { showExportWarning = true },
-                        enabled = operation == BackupOperation.Idle &&
-                            exportPassword.length >= MIN_PASSWORD_LENGTH &&
-                            exportPassword == exportConfirmation,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        OperationButtonContent(
-                            working = operation == BackupOperation.Exporting,
-                            label = stringResource(
-                                if (operation == BackupOperation.Exporting) {
-                                    R.string.backup_exporting
-                                } else {
-                                    R.string.backup_export_action
-                                },
-                            ),
+                item {
+                    Column {
+                        Text(
+                            stringResource(R.string.backup_title),
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                        Spacer(Modifier.height(7.dp))
+                        Text(
+                            stringResource(R.string.backup_intro),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    ExportFeedback(feedback)
                 }
-            }
-            item {
-                BackupPanel(
-                    label = stringResource(R.string.backup_restore_label),
-                    title = stringResource(R.string.backup_restore_title),
-                    description = stringResource(R.string.backup_restore_description),
-                    accent = LandingKitColors.Sun,
-                ) {
-                    if (selectedBackup == null) {
-                        OutlinedButton(
-                            onClick = { importLauncher.launch(arrayOf(BACKUP_MIME_TYPE, BINARY_MIME_TYPE)) },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(stringResource(R.string.backup_choose_file))
-                        }
-                    } else {
-                        SelectedBackupRow(
-                            onChange = {
-                                importLauncher.launch(arrayOf(BACKUP_MIME_TYPE, BINARY_MIME_TYPE))
-                            },
-                        )
-                        Spacer(Modifier.height(12.dp))
+                item {
+                    BackupPanel(
+                        label = stringResource(R.string.backup_export_label),
+                        title = stringResource(R.string.backup_export_title),
+                        description = stringResource(R.string.backup_export_description),
+                        accent = LandingKitColors.Seafoam,
+                    ) {
                         PasswordField(
-                            value = restorePassword,
+                            value = exportPassword,
                             onValueChange = {
-                                restorePassword = it
-                                preview = null
+                                exportPassword = it
                                 feedback = null
                             },
-                            label = stringResource(R.string.backup_restore_password_label),
-                            visible = restorePasswordVisible,
-                            onVisibilityChange = { restorePasswordVisible = !restorePasswordVisible },
+                            label = stringResource(R.string.backup_password_label),
+                            visible = exportPasswordVisible,
+                            onVisibilityChange = { exportPasswordVisible = !exportPasswordVisible },
                         )
+                        Spacer(Modifier.height(10.dp))
+                        PasswordField(
+                            value = exportConfirmation,
+                            onValueChange = {
+                                exportConfirmation = it
+                                feedback = null
+                            },
+                            label = stringResource(R.string.backup_password_confirm_label),
+                            visible = exportConfirmationVisible,
+                            onVisibilityChange = { exportConfirmationVisible = !exportConfirmationVisible },
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        PasswordGuidance(exportPassword, exportConfirmation)
                         Spacer(Modifier.height(14.dp))
-                        if (preview == null) {
+                        Button(
+                            shape = MaterialTheme.shapes.medium,
+                            onClick = { showExportWarning = true },
+                            enabled = operation == BackupOperation.Idle &&
+                                exportPassword.length >= MIN_PASSWORD_LENGTH &&
+                                exportPassword == exportConfirmation,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            OperationButtonContent(
+                                working = operation == BackupOperation.Exporting,
+                                label = stringResource(
+                                    if (operation == BackupOperation.Exporting) {
+                                        R.string.backup_exporting
+                                    } else {
+                                        R.string.backup_export_action
+                                    },
+                                ),
+                            )
+                        }
+                        ExportFeedback(feedback)
+                    }
+                }
+                item {
+                    BackupPanel(
+                        label = stringResource(R.string.backup_restore_label),
+                        title = stringResource(R.string.backup_restore_title),
+                        description = stringResource(R.string.backup_restore_description),
+                        accent = LandingKitColors.Sun,
+                    ) {
+                        if (selectedBackup == null) {
                             OutlinedButton(
-                                onClick = {
-                                    operation = BackupOperation.Reviewing
-                                    feedback = null
-                                    onInspect(
-                                        checkNotNull(selectedBackup),
-                                        restorePassword.toCharArray(),
-                                    ) { result ->
-                                        operation = BackupOperation.Idle
-                                        preview = result.getOrNull()
-                                        feedback = result.exceptionOrNull()?.toReviewFeedback()
-                                    }
-                                },
-                                enabled = operation == BackupOperation.Idle &&
-                                    restorePassword.length >= MIN_PASSWORD_LENGTH,
+                                shape = MaterialTheme.shapes.medium,
+                                onClick = { importLauncher.launch(arrayOf(BACKUP_MIME_TYPE, BINARY_MIME_TYPE)) },
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
-                                OperationButtonContent(
-                                    working = operation == BackupOperation.Reviewing,
-                                    label = stringResource(
-                                        if (operation == BackupOperation.Reviewing) {
-                                            R.string.backup_reviewing
-                                        } else {
-                                            R.string.backup_review_action
-                                        },
-                                    ),
-                                )
+                                Text(stringResource(R.string.backup_choose_file))
                             }
-                        }
-                        ReviewFeedback(feedback)
-                        preview?.let { backupPreview ->
+                        } else {
+                            SelectedBackupRow(
+                                onChange = {
+                                    importLauncher.launch(arrayOf(BACKUP_MIME_TYPE, BINARY_MIME_TYPE))
+                                },
+                            )
                             Spacer(Modifier.height(12.dp))
-                            RestorePreview(backupPreview)
-                            if (backupPreview.hasNewContent) {
-                                Spacer(Modifier.height(14.dp))
-                                Button(
+                            PasswordField(
+                                value = restorePassword,
+                                onValueChange = {
+                                    restorePassword = it
+                                    preview = null
+                                    feedback = null
+                                },
+                                label = stringResource(R.string.backup_restore_password_label),
+                                visible = restorePasswordVisible,
+                                onVisibilityChange = { restorePasswordVisible = !restorePasswordVisible },
+                            )
+                            Spacer(Modifier.height(14.dp))
+                            if (preview == null) {
+                                OutlinedButton(
+                                    shape = MaterialTheme.shapes.medium,
                                     onClick = {
-                                        operation = BackupOperation.Restoring
+                                        operation = BackupOperation.Reviewing
                                         feedback = null
-                                        onRestore(
+                                        onInspect(
                                             checkNotNull(selectedBackup),
                                             restorePassword.toCharArray(),
                                         ) { result ->
                                             operation = BackupOperation.Idle
-                                            feedback = result.fold(
-                                                onSuccess = { BackupFeedback.Restored(it) },
-                                                onFailure = { BackupFeedback.RestoreFailed },
-                                            )
-                                            if (result.isSuccess) {
-                                                preview = null
-                                                selectedBackup = null
-                                                restorePassword = ""
-                                            }
+                                            preview = result.getOrNull()
+                                            feedback = result.exceptionOrNull()?.toReviewFeedback()
                                         }
                                     },
-                                    enabled = operation == BackupOperation.Idle,
+                                    enabled = operation == BackupOperation.Idle &&
+                                        restorePassword.length >= MIN_PASSWORD_LENGTH,
                                     modifier = Modifier.fillMaxWidth(),
                                 ) {
                                     OperationButtonContent(
-                                        working = operation == BackupOperation.Restoring,
+                                        working = operation == BackupOperation.Reviewing,
                                         label = stringResource(
-                                            if (operation == BackupOperation.Restoring) {
-                                                R.string.backup_restoring
+                                            if (operation == BackupOperation.Reviewing) {
+                                                R.string.backup_reviewing
                                             } else {
-                                                R.string.backup_restore_action
+                                                R.string.backup_review_action
                                             },
                                         ),
                                     )
                                 }
                             }
+                            ReviewFeedback(feedback)
+                            preview?.let { backupPreview ->
+                                Spacer(Modifier.height(12.dp))
+                                RestorePreview(backupPreview)
+                                if (backupPreview.hasNewContent) {
+                                    Spacer(Modifier.height(14.dp))
+                                    Button(
+                                        shape = MaterialTheme.shapes.medium,
+                                        onClick = {
+                                            operation = BackupOperation.Restoring
+                                            feedback = null
+                                            onRestore(
+                                                checkNotNull(selectedBackup),
+                                                restorePassword.toCharArray(),
+                                            ) { result ->
+                                                operation = BackupOperation.Idle
+                                                feedback = result.fold(
+                                                    onSuccess = { BackupFeedback.Restored(it) },
+                                                    onFailure = { BackupFeedback.RestoreFailed },
+                                                )
+                                                if (result.isSuccess) {
+                                                    preview = null
+                                                    selectedBackup = null
+                                                    restorePassword = ""
+                                                }
+                                            }
+                                        },
+                                        enabled = operation == BackupOperation.Idle,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        OperationButtonContent(
+                                            working = operation == BackupOperation.Restoring,
+                                            label = stringResource(
+                                                if (operation == BackupOperation.Restoring) {
+                                                    R.string.backup_restoring
+                                                } else {
+                                                    R.string.backup_restore_action
+                                                },
+                                            ),
+                                        )
+                                    }
+                                }
+                            }
+                            RestoreFeedback(feedback)
                         }
-                        RestoreFeedback(feedback)
                     }
                 }
-            }
-            item {
-                Text(
-                    stringResource(R.string.backup_private_footer),
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }
@@ -337,7 +340,7 @@ internal fun BackupEntryCard(onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
@@ -384,7 +387,7 @@ private fun BackupPanel(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
@@ -462,7 +465,7 @@ private fun SelectedBackupRow(onChange: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = LandingKitColors.Seafoam.copy(alpha = .25f),
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
     ) {
         Row(
             modifier = Modifier.padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
@@ -478,7 +481,7 @@ private fun SelectedBackupRow(onChange: () -> Unit) {
 private fun RestorePreview(preview: BackupPreview) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.medium,
         color = LandingKitColors.Seafoam.copy(alpha = .22f),
     ) {
         Column(Modifier.padding(16.dp)) {
@@ -587,7 +590,7 @@ private fun Throwable.toReviewFeedback(): BackupFeedback = when (this) {
 }
 
 private fun defaultBackupName(): String =
-    "landing-kit-backup-${LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)}.lkb"
+    "travel-with-thikana-backup-${LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)}.lkb"
 
 private enum class BackupOperation { Idle, Exporting, Reviewing, Restoring }
 
@@ -602,5 +605,6 @@ private sealed interface BackupFeedback {
 }
 
 private const val MIN_PASSWORD_LENGTH = 12
+// Keep the existing format identifier so backups created before the rebrand remain selectable.
 private const val BACKUP_MIME_TYPE = "application/vnd.landing-kit.backup"
 private const val BINARY_MIME_TYPE = "application/octet-stream"

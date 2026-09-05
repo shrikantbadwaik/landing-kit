@@ -14,9 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -46,6 +46,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.PendingAttachmentAuthenticati
 import com.shrikantbadwaik.landingkit.feature.kits.ProtectedAttachmentAction
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalBackground
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.IfDelayedContent
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.model.toArrivalModeContent
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.security.rememberProtectedAttachmentOpener
@@ -109,199 +110,199 @@ internal fun ArrivalModeScreen(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
-        LazyColumn(
+        val listState = rememberLazyListState()
+        JournalBackground(
+            seed = "arrival:${trip.id}",
+            listState = listState,
+            count = 3,
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item(key = "arrival_mode_header") {
-                ScreenHeader(
-                    onBack = onBack,
-                    label = stringResource(R.string.arrival_mode_header),
-                    badge = stringResource(R.string.arrival_mode_badge),
-                )
-            }
-            item(key = "arrival_mode_address") {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = LandingKitColors.Forest,
-                    contentColor = Color.White,
-                    shape = RoundedCornerShape(32.dp),
-                    shadowElevation = 8.dp,
-                ) {
-                    Column(Modifier.padding(horizontal = 24.dp, vertical = 28.dp)) {
-                        Text(
-                            text = stringResource(R.string.arrival_mode_show_address),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = LandingKitColors.Seafoam,
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            text = trip.destination,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White.copy(alpha = 0.76f),
-                        )
-                        Spacer(Modifier.height(20.dp))
-                        Text(
-                            text = content.address,
-                            modifier = Modifier.semantics { heading() },
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = Color.White,
-                        )
-                        content.supportingAddress?.let { supportingAddress ->
-                            Spacer(Modifier.height(18.dp))
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                item(key = "arrival_mode_header") {
+                    ScreenHeader(
+                        onBack = onBack,
+                        label = stringResource(R.string.arrival_mode_header),
+                    )
+                }
+                item(key = "arrival_mode_address") {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = LandingKitColors.Forest,
+                        contentColor = Color.White,
+                        shape = MaterialTheme.shapes.large,
+                        shadowElevation = 2.dp,
+                    ) {
+                        Column(Modifier.padding(horizontal = 24.dp, vertical = 28.dp)) {
                             Text(
-                                text = supportingAddress,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color.White.copy(alpha = 0.78f),
+                                text = stringResource(R.string.arrival_mode_show_address),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = LandingKitColors.Seafoam,
                             )
-                        }
-                        Spacer(Modifier.height(26.dp))
-                        Surface(
-                            color = Color.White.copy(alpha = 0.10f),
-                            contentColor = Color.White,
-                            shape = RoundedCornerShape(18.dp),
-                        ) {
-                            Column(Modifier.fillMaxWidth().padding(18.dp)) {
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                text = trip.destination,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.White.copy(alpha = 0.76f),
+                            )
+                            Spacer(Modifier.height(20.dp))
+                            Text(
+                                text = content.address,
+                                modifier = Modifier.semantics { heading() },
+                                style = MaterialTheme.typography.headlineLarge,
+                                color = Color.White,
+                            )
+                            content.supportingAddress?.let { supportingAddress ->
+                                Spacer(Modifier.height(18.dp))
                                 Text(
-                                    text = stringResource(R.string.arrival_mode_staying_at),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = LandingKitColors.Sun,
+                                    text = supportingAddress,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color.White.copy(alpha = 0.78f),
                                 )
-                                Spacer(Modifier.height(6.dp))
-                                Text(
-                                    text = trip.arrivalCard.accommodationName,
-                                    style = MaterialTheme.typography.titleMedium,
+                            }
+                            Spacer(Modifier.height(26.dp))
+                            Surface(
+                                color = Color.White.copy(alpha = 0.10f),
+                                contentColor = Color.White,
+                                shape = MaterialTheme.shapes.medium,
+                            ) {
+                                Column(Modifier.fillMaxWidth().padding(18.dp)) {
+                                    Text(
+                                        text = stringResource(R.string.arrival_mode_staying_at),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = LandingKitColors.Sun,
+                                    )
+                                    Spacer(Modifier.height(6.dp))
+                                    Text(
+                                        text = trip.arrivalCard.accommodationName,
+                                        style = MaterialTheme.typography.titleMedium,
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(12.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                            ) {
+                                TravelDayActionControl(
+                                    modifier = Modifier.weight(1f),
+                                    icon = R.drawable.ic_open_map,
+                                    label = stringResource(R.string.arrival_mode_open_map),
+                                    description = stringResource(
+                                        R.string.arrival_mode_open_map_description,
+                                    ),
+                                    containerColor = Color.White.copy(alpha = 0.12f),
+                                    contentColor = Color.White,
+                                    borderColor = Color.White.copy(alpha = 0.18f),
+                                    onClick = {
+                                        performTravelDayAction(
+                                            TravelDayAction.OpenMap(content.mapQuery),
+                                        )
+                                    },
+                                )
+                                TravelDayActionControl(
+                                    modifier = Modifier.weight(1f),
+                                    icon = R.drawable.ic_copy_address,
+                                    label = stringResource(R.string.arrival_mode_copy_address),
+                                    description = stringResource(
+                                        R.string.arrival_mode_copy_address_description,
+                                    ),
+                                    containerColor = Color.White.copy(alpha = 0.12f),
+                                    contentColor = Color.White,
+                                    borderColor = Color.White.copy(alpha = 0.18f),
+                                    onClick = {
+                                        performTravelDayAction(
+                                            TravelDayAction.CopyAddress(content.copyableAddress),
+                                        )
+                                    },
                                 )
                             }
                         }
-                        Spacer(Modifier.height(12.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                    }
+                }
+                item(key = "arrival_mode_handoff") {
+                    Surface(
+                        onClick = onPrivateHandoff,
+                        modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+                        shape = MaterialTheme.shapes.large,
+                        color = LandingKitColors.Seafoam.copy(alpha = 0.34f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            TravelDayActionControl(
-                                modifier = Modifier.weight(1f),
-                                icon = R.drawable.ic_open_map,
-                                label = stringResource(R.string.arrival_mode_open_map),
-                                description = stringResource(
-                                    R.string.arrival_mode_open_map_description,
-                                ),
-                                containerColor = Color.White.copy(alpha = 0.12f),
-                                contentColor = Color.White,
-                                borderColor = Color.White.copy(alpha = 0.18f),
-                                onClick = {
-                                    performTravelDayAction(
-                                        TravelDayAction.OpenMap(content.mapQuery),
-                                    )
-                                },
+                            Text(
+                                text = stringResource(R.string.handoff_entry_label),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.secondary,
                             )
-                            TravelDayActionControl(
-                                modifier = Modifier.weight(1f),
-                                icon = R.drawable.ic_copy_address,
-                                label = stringResource(R.string.arrival_mode_copy_address),
-                                description = stringResource(
-                                    R.string.arrival_mode_copy_address_description,
-                                ),
-                                containerColor = Color.White.copy(alpha = 0.12f),
-                                contentColor = Color.White,
-                                borderColor = Color.White.copy(alpha = 0.18f),
-                                onClick = {
-                                    performTravelDayAction(
-                                        TravelDayAction.CopyAddress(content.copyableAddress),
-                                    )
-                                },
+                            Text(
+                                text = stringResource(R.string.handoff_entry_title),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(
+                                text = stringResource(R.string.handoff_entry_description),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
                 }
-            }
-            item(key = "arrival_mode_handoff") {
-                Surface(
-                    onClick = onPrivateHandoff,
-                    modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
-                    shape = RoundedCornerShape(24.dp),
-                    color = LandingKitColors.Seafoam.copy(alpha = 0.34f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.handoff_entry_label),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.secondary,
-                        )
-                        Text(
-                            text = stringResource(R.string.handoff_entry_title),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                        Text(
-                            text = stringResource(R.string.handoff_entry_description),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                content.bookingReference?.let { bookingReference ->
+                    item(key = "arrival_mode_booking") {
+                        ArrivalModeInfoCard(
+                            label = stringResource(R.string.arrival_mode_booking),
+                            value = bookingReference,
+                            accent = LandingKitColors.Sky,
                         )
                     }
                 }
-            }
-            content.bookingReference?.let { bookingReference ->
-                item(key = "arrival_mode_booking") {
+                content.transferInstructions?.let { transferInstructions ->
+                    item(key = "arrival_mode_transfer") {
+                        ArrivalModeInfoCard(
+                            label = stringResource(R.string.arrival_mode_transfer),
+                            value = transferInstructions,
+                            accent = LandingKitColors.Sun,
+                        )
+                    }
+                }
+                content.ifDelayed?.let { delayed ->
+                    item(key = "arrival_mode_if_delayed") {
+                        ArrivalModeIfDelayedCard(
+                            content = delayed,
+                            onTravelDayAction = performTravelDayAction,
+                        )
+                    }
+                }
+                content.primaryAttachment?.let { attachment ->
+                    item(key = "arrival_mode_attachment") {
+                        ArrivalEvidenceAction(
+                            attachment = attachment,
+                            onOpen = { openAttachment(attachment) },
+                        )
+                    }
+                } ?: item(key = "arrival_mode_no_attachment") {
                     ArrivalModeInfoCard(
-                        label = stringResource(R.string.arrival_mode_booking),
-                        value = bookingReference,
-                        accent = LandingKitColors.Sky,
+                        label = stringResource(R.string.arrival_mode_evidence_label),
+                        value = stringResource(R.string.arrival_mode_no_evidence),
+                        accent = LandingKitColors.Seafoam,
                     )
                 }
-            }
-            content.transferInstructions?.let { transferInstructions ->
-                item(key = "arrival_mode_transfer") {
-                    ArrivalModeInfoCard(
-                        label = stringResource(R.string.arrival_mode_transfer),
-                        value = transferInstructions,
-                        accent = LandingKitColors.Sun,
-                    )
+                content.emergencyContact?.let { emergencyContact ->
+                    item(key = "arrival_mode_emergency") {
+                        ArrivalModeInfoCard(
+                            label = stringResource(R.string.arrival_mode_emergency),
+                            value = emergencyContact,
+                            accent = LandingKitColors.Coral,
+                            emphasized = true,
+                        )
+                    }
                 }
-            }
-            content.ifDelayed?.let { delayed ->
-                item(key = "arrival_mode_if_delayed") {
-                    ArrivalModeIfDelayedCard(
-                        content = delayed,
-                        onTravelDayAction = performTravelDayAction,
-                    )
-                }
-            }
-            content.primaryAttachment?.let { attachment ->
-                item(key = "arrival_mode_attachment") {
-                    ArrivalEvidenceAction(
-                        attachment = attachment,
-                        onOpen = { openAttachment(attachment) },
-                    )
-                }
-            } ?: item(key = "arrival_mode_no_attachment") {
-                ArrivalModeInfoCard(
-                    label = stringResource(R.string.arrival_mode_evidence_label),
-                    value = stringResource(R.string.arrival_mode_no_evidence),
-                    accent = LandingKitColors.Seafoam,
-                )
-            }
-            content.emergencyContact?.let { emergencyContact ->
-                item(key = "arrival_mode_emergency") {
-                    ArrivalModeInfoCard(
-                        label = stringResource(R.string.arrival_mode_emergency),
-                        value = emergencyContact,
-                        accent = LandingKitColors.Coral,
-                        emphasized = true,
-                    )
-                }
-            }
-            item(key = "arrival_mode_footer") {
-                Text(
-                    text = stringResource(R.string.arrival_mode_footer),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }
@@ -317,7 +318,7 @@ private fun ArrivalModeInfoCard(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         color = if (emphasized) {
             accent.copy(alpha = 0.12f)
         } else {
@@ -386,7 +387,7 @@ private fun ArrivalEvidenceAction(
                 heading()
                 contentDescription = openDescription
             },
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         color = LandingKitColors.Sun,
         contentColor = LandingKitColors.Ink,
         border = BorderStroke(1.dp, LandingKitColors.Ink.copy(alpha = 0.12f)),

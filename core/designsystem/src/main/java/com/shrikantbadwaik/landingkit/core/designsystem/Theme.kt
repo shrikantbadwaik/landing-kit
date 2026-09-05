@@ -16,18 +16,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/** Brand accents used for illustrated moments outside Material's semantic colors. */
+/** Field journal pigments. Fixed accents always pair with Ink; surfaces use semantic colors. */
 object LandingKitColors {
-    val Ink = Color(0xFF183331)
-    val Forest = Color(0xFF164A45)
-    val Cream = Color(0xFFFFF9F0)
-    val Paper = Color(0xFFFFFDF8)
-    val Coral = Color(0xFFF27D59)
-    val Sun = Color(0xFFF4C95D)
-    val Seafoam = Color(0xFFA9D7CA)
-    val Sky = Color(0xFFB8DDE2)
-    val Lavender = Color(0xFFD8CFE5)
-    val Moss = Color(0xFF78947C)
+    val Ink = Color(0xFF263329)
+    val Forest = Color(0xFF293F35)
+    val Cream = Color(0xFFF5EFDF)
+    val Paper = Color(0xFFFFF9ED)
+    val Coral = Color(0xFFEBA15B)
+    val Sun = Color(0xFFF0BB54)
+    val Seafoam = Color(0xFFD0D8BA)
+    val Sky = Color(0xFFE3DBBF)
+    val Lavender = Color(0xFFE3D3B8)
+    val Moss = Color(0xFF63735B)
 }
 
 private val Fraunces = FontFamily(
@@ -48,21 +48,21 @@ private val LandingKitTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = Fraunces,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 56.sp,
-        lineHeight = 54.sp,
-        letterSpacing = (-1.6).sp,
+        fontSize = 44.sp,
+        lineHeight = 46.sp,
+        letterSpacing = (-1.2).sp,
     ),
     headlineLarge = TextStyle(
         fontFamily = Fraunces,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 42.sp,
-        lineHeight = 42.sp,
-        letterSpacing = (-1).sp,
+        fontSize = 36.sp,
+        lineHeight = 40.sp,
+        letterSpacing = (-0.8).sp,
     ),
     headlineMedium = TextStyle(
         fontFamily = Fraunces,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 34.sp,
+        fontSize = 30.sp,
         lineHeight = 36.sp,
         letterSpacing = (-0.6).sp,
     ),
@@ -93,13 +93,13 @@ private val LandingKitTypography = Typography(
     ),
     bodyLarge = TextStyle(
         fontFamily = Manrope,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
         lineHeight = 25.sp,
     ),
     bodyMedium = TextStyle(
         fontFamily = Manrope,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
         lineHeight = 21.sp,
     ),
@@ -137,57 +137,80 @@ private val LightColors = lightColorScheme(
     onPrimary = Color.White,
     primaryContainer = LandingKitColors.Seafoam,
     onPrimaryContainer = LandingKitColors.Ink,
-    secondary = Color(0xFFA84E35),
+    secondary = Color(0xFF8B451E),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFFFDCCD),
-    onSecondaryContainer = Color(0xFF482016),
-    tertiary = Color(0xFF536E58),
-    tertiaryContainer = Color(0xFFD6E7D5),
+    secondaryContainer = Color(0xFFF7DFC0),
+    onSecondaryContainer = Color(0xFF49260D),
+    tertiary = Color(0xFF546447),
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFDFE7CD),
+    onTertiaryContainer = Color(0xFF26351D),
     background = LandingKitColors.Cream,
     onBackground = LandingKitColors.Ink,
     surface = LandingKitColors.Paper,
     onSurface = LandingKitColors.Ink,
-    surfaceVariant = Color(0xFFF1E9DE),
-    onSurfaceVariant = Color(0xFF64706D),
-    outline = Color(0xFFABB4B0),
-    outlineVariant = Color(0xFFE1D8CC),
+    surfaceVariant = Color(0xFFECE4D3),
+    onSurfaceVariant = Color(0xFF5F6558),
+    outline = Color(0xFF777C6C),
+    outlineVariant = Color(0xFFD4CDBB),
+    surfaceDim = Color(0xFFE6DFCE),
+    surfaceBright = LandingKitColors.Paper,
+    surfaceContainerLowest = Color(0xFFFFFCF5),
+    surfaceContainerLow = Color(0xFFF8F2E5),
+    surfaceContainer = Color(0xFFF1EADB),
+    surfaceContainerHigh = Color(0xFFECE4D3),
+    surfaceContainerHighest = Color(0xFFE6DFCE),
+    surfaceTint = LandingKitColors.Forest,
+    inverseSurface = LandingKitColors.Ink,
+    inverseOnSurface = LandingKitColors.Paper,
+    inversePrimary = LandingKitColors.Seafoam,
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFFA9D9CD),
-    onPrimary = Color(0xFF073733),
-    primaryContainer = Color(0xFF174B46),
-    onPrimaryContainer = Color(0xFFC5F2E7),
-    secondary = Color(0xFFFFB59E),
-    onSecondary = Color(0xFF5C1A0B),
-    secondaryContainer = Color(0xFF74341F),
-    onSecondaryContainer = Color(0xFFFFDBD0),
-    tertiary = Color(0xFFB7CFB7),
-    onTertiary = Color(0xFF233426),
-    tertiaryContainer = Color(0xFF394B3B),
-    onTertiaryContainer = Color(0xFFD3EBD2),
-    background = Color(0xFF101917),
-    onBackground = Color(0xFFE1EAE6),
-    surface = Color(0xFF17211F),
-    onSurface = Color(0xFFE1EAE6),
-    surfaceVariant = Color(0xFF25302E),
-    onSurfaceVariant = Color(0xFFBFC9C5),
-    outline = Color(0xFF89938F),
-    outlineVariant = Color(0xFF3F4946),
+    primary = Color(0xFFD0D8BA),
+    onPrimary = Color(0xFF24351F),
+    primaryContainer = Color(0xFF354C3D),
+    onPrimaryContainer = Color(0xFFE0EAD1),
+    secondary = Color(0xFFF1B978),
+    onSecondary = Color(0xFF472606),
+    secondaryContainer = Color(0xFF624020),
+    onSecondaryContainer = Color(0xFFFFDFC0),
+    tertiary = Color(0xFFC3CEAC),
+    onTertiary = Color(0xFF28351D),
+    tertiaryContainer = Color(0xFF3E4C31),
+    onTertiaryContainer = Color(0xFFDFE7CD),
+    background = Color(0xFF171E19),
+    onBackground = Color(0xFFF0E9D9),
+    surface = Color(0xFF202A23),
+    onSurface = Color(0xFFF0E9D9),
+    surfaceVariant = Color(0xFF343D32),
+    onSurfaceVariant = Color(0xFFCACDBE),
+    outline = Color(0xFF969C8A),
+    outlineVariant = Color(0xFF4A5143),
+    surfaceDim = Color(0xFF171E19),
+    surfaceBright = Color(0xFF394239),
+    surfaceContainerLowest = Color(0xFF111812),
+    surfaceContainerLow = Color(0xFF1C261F),
+    surfaceContainer = Color(0xFF202A23),
+    surfaceContainerHigh = Color(0xFF2A342C),
+    surfaceContainerHighest = Color(0xFF343D32),
+    surfaceTint = LandingKitColors.Seafoam,
     error = Color(0xFFFFB4AB),
     onError = Color(0xFF690005),
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
-    inverseSurface = Color(0xFFE1EAE6),
-    inverseOnSurface = Color(0xFF2E3734),
+    inverseSurface = LandingKitColors.Paper,
+    inverseOnSurface = LandingKitColors.Ink,
     inversePrimary = LandingKitColors.Forest,
     scrim = Color.Black,
 )
 
 private val LandingKitShapes = Shapes(
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(20.dp),
-    large = RoundedCornerShape(30.dp),
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(10.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(24.dp),
 )
 
 @Composable

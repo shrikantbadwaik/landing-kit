@@ -12,12 +12,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -26,13 +27,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,6 +53,8 @@ import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.ScreenHeader
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.journalDoodles
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalBackground
 import kotlinx.coroutines.delay
 
 @Composable
@@ -133,101 +136,109 @@ private fun HandoffSetup(
         modifier = Modifier.semantics { paneTitle = title },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        LazyColumn(
+        val listState = rememberLazyListState()
+        JournalBackground(
+            seed = "handoff:${trip.id}",
+            listState = listState,
+            count = 2,
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(22.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item {
-                ScreenHeader(
-                    onBack = onBack,
-                    label = title,
-                    badge = stringResource(R.string.handoff_setup_badge),
-                )
-            }
-            item {
-                Surface(
-                    shape = RoundedCornerShape(24.dp),
-                    color = LandingKitColors.Seafoam.copy(alpha = 0.22f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(22.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                item {
+                    ScreenHeader(
+                        onBack = onBack,
+                        label = title,
+                    )
+                }
+                item {
+                    Surface(
+                        shape = MaterialTheme.shapes.large,
+                        color = LandingKitColors.Seafoam.copy(alpha = 0.22f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     ) {
-                        Text(
-                            text = stringResource(R.string.handoff_setup_title),
-                            modifier = Modifier.semantics { heading() },
-                            style = MaterialTheme.typography.headlineSmall,
-                        )
-                        Text(
-                            text = stringResource(R.string.handoff_setup_description),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.handoff_setup_title),
+                                modifier = Modifier.semantics { heading() },
+                                style = MaterialTheme.typography.headlineSmall,
+                            )
+                            Text(
+                                text = stringResource(R.string.handoff_setup_description),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+                if (trip.arrivalCard.accommodationName.isNotBlank()) {
+                    item {
+                        HandoffOption(
+                            label = stringResource(R.string.handoff_option_stay_name),
+                            value = trip.arrivalCard.accommodationName,
+                            selected = showStayName,
+                            onSelectedChanged = onShowStayNameChanged,
                         )
                     }
                 }
-            }
-            if (trip.arrivalCard.accommodationName.isNotBlank()) {
+                if (trip.arrivalCard.address.isNotBlank()) {
+                    item {
+                        HandoffOption(
+                            label = stringResource(R.string.handoff_option_address),
+                            value = trip.arrivalCard.address,
+                            selected = showAddress,
+                            onSelectedChanged = onShowAddressChanged,
+                        )
+                    }
+                }
+                if (trip.arrivalCard.localAddress.isNotBlank()) {
+                    item {
+                        HandoffOption(
+                            label = stringResource(R.string.handoff_option_local_address),
+                            value = trip.arrivalCard.localAddress,
+                            selected = showLocalAddress,
+                            onSelectedChanged = onShowLocalAddressChanged,
+                        )
+                    }
+                }
+                if (trip.arrivalCard.accommodationContact.isNotBlank()) {
+                    item {
+                        HandoffOption(
+                            label = stringResource(R.string.handoff_option_stay_contact),
+                            value = trip.arrivalCard.accommodationContact,
+                            selected = showStayContact,
+                            onSelectedChanged = onShowStayContactChanged,
+                        )
+                    }
+                }
                 item {
-                    HandoffOption(
-                        label = stringResource(R.string.handoff_option_stay_name),
-                        value = trip.arrivalCard.accommodationName,
-                        selected = showStayName,
-                        onSelectedChanged = onShowStayNameChanged,
+                    OutlinedTextField(
+                        value = preparedPhrase,
+                        onValueChange = onPreparedPhraseChanged,
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.handoff_phrase_label)) },
+                        supportingText = { Text(stringResource(R.string.handoff_phrase_support)) },
+                        minLines = 3,
+                        maxLines = 6,
+                        shape = MaterialTheme.shapes.medium,
                     )
                 }
-            }
-            if (trip.arrivalCard.address.isNotBlank()) {
                 item {
-                    HandoffOption(
-                        label = stringResource(R.string.handoff_option_address),
-                        value = trip.arrivalCard.address,
-                        selected = showAddress,
-                        onSelectedChanged = onShowAddressChanged,
-                    )
-                }
-            }
-            if (trip.arrivalCard.localAddress.isNotBlank()) {
-                item {
-                    HandoffOption(
-                        label = stringResource(R.string.handoff_option_local_address),
-                        value = trip.arrivalCard.localAddress,
-                        selected = showLocalAddress,
-                        onSelectedChanged = onShowLocalAddressChanged,
-                    )
-                }
-            }
-            if (trip.arrivalCard.accommodationContact.isNotBlank()) {
-                item {
-                    HandoffOption(
-                        label = stringResource(R.string.handoff_option_stay_contact),
-                        value = trip.arrivalCard.accommodationContact,
-                        selected = showStayContact,
-                        onSelectedChanged = onShowStayContactChanged,
-                    )
-                }
-            }
-            item {
-                OutlinedTextField(
-                    value = preparedPhrase,
-                    onValueChange = onPreparedPhraseChanged,
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.handoff_phrase_label)) },
-                    supportingText = { Text(stringResource(R.string.handoff_phrase_support)) },
-                    minLines = 3,
-                    maxLines = 6,
-                    shape = RoundedCornerShape(18.dp),
-                )
-            }
-            item {
-                Button(
-                    onClick = onStart,
-                    enabled = hasSelectedContent,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(18.dp),
-                ) {
-                    Text(stringResource(R.string.handoff_start_action))
+                    Button(
+                        onClick = onStart,
+                        enabled = hasSelectedContent,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                        shape = MaterialTheme.shapes.medium,
+                    ) {
+                        Text(stringResource(R.string.handoff_start_action))
+                    }
                 }
             }
         }
@@ -249,7 +260,7 @@ private fun HandoffOption(
                 onValueChange = onSelectedChanged,
             )
             .semantics(mergeDescendants = true) {},
-        shape = RoundedCornerShape(22.dp),
+        shape = MaterialTheme.shapes.large,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         color = MaterialTheme.colorScheme.surface,
     ) {
@@ -351,8 +362,11 @@ private fun HandoffPresentation(
             }
         },
     ) { padding ->
+        val listState = rememberLazyListState()
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
+            state = listState,
+            modifier = Modifier.fillMaxSize().padding(padding)
+                .journalDoodles("handoff-active", listState, ink = LandingKitColors.Seafoam),
             contentPadding = PaddingValues(28.dp),
             verticalArrangement = Arrangement.spacedBy(26.dp),
         ) {
@@ -378,13 +392,6 @@ private fun HandoffPresentation(
             }
             preparedPhrase?.let { value ->
                 item { HandoffDisplayItem(R.string.handoff_display_message, value) }
-            }
-            item {
-                Text(
-                    text = stringResource(R.string.handoff_timeout_note),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.72f),
-                )
             }
         }
     }

@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">Landing Kit</string>
+    <string name="app_name">Travel with Thikana</string>
     <string name="arrival_widget_name">Arrival Mode</string>
-    <string name="arrival_widget_title">Landing Kit</string>
+    <string name="arrival_widget_title">Travel with Thikana</string>
     <string name="arrival_widget_subtitle">Arrival Mode</string>
     <string name="arrival_widget_compact_title">Arrival</string>
     <string name="arrival_widget_open">Open</string>
     <string name="arrival_widget_description">Open your next Arrival Mode quickly.</string>
-    <string name="arrival_widget_accessibility_label">Open Arrival Mode in Landing Kit</string>
+    <string name="arrival_widget_accessibility_label">Open Arrival Mode in Travel with Thikana</string>
 </resources>

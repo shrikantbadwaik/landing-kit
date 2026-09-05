@@ -22,7 +22,7 @@ class ShareableArrivalSummaryTest {
                 currencyNote = "Use yen",
                 fallbackTransport = "Taxi rank",
             ),
-            items = listOf(ArrivalItem(title = "Switch on eSIM", detail = "After landing")),
+            items = listOf(ArrivalItem(title = "Switch on eSIM", detail = "After arrival")),
         )
 
         val text = trip.toShareableArrivalSummary("Saturday, 29 August 2026", labels)
@@ -36,7 +36,7 @@ class ShareableArrivalSummaryTest {
     }
 
     @Test
-    fun `trusted copy explains that the recipient does not need Landing Kit`() {
+    fun `trusted copy explains that the recipient does not need Travel with Thikana`() {
         val trip = Trip(
             destination = "Kyoto, Japan",
             arrivalDate = LocalDate.of(2026, 8, 29),
@@ -51,7 +51,7 @@ class ShareableArrivalSummaryTest {
             .asTrustedPersonCopy(setOf(ShareSummarySection.STAY))
 
         assertTrue(text.startsWith("Arrival plan for Kyoto, Japan"))
-        assertTrue(text.contains("You do not need Landing Kit to use this copy."))
+        assertTrue(text.contains("You do not need Travel with Thikana to use this copy."))
     }
 
     private val labels = PrintableSummaryLabels(
@@ -73,6 +73,6 @@ class ShareableArrivalSummaryTest {
         stayContact = "Stay contact",
         expectedCost = "Expected cost",
         alternateStay = "Another place to stay",
-        beforeLanding = "Before landing",
+        beforeLanding = "Before arrival",
     )
 }

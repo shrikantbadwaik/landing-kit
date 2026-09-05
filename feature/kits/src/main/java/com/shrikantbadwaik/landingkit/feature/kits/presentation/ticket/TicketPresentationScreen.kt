@@ -33,23 +33,22 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -66,7 +65,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowInsetsControllerCompat
 import com.shrikantbadwaik.landingkit.core.data.PreparedAttachment
+import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.KitAttachment
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.journalDoodles
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import java.io.File
 import kotlinx.coroutines.Dispatchers
@@ -159,6 +160,7 @@ internal fun TicketPresentationScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(PresenterBackground)
+            .journalDoodles("ticket", ink = LandingKitColors.Seafoam)
             .navigationBarsPadding()
             .semantics { paneTitle = screenTitle },
     ) {
@@ -235,7 +237,7 @@ private fun PresenterHeader(
                 modifier = Modifier.size(48.dp).semantics {
                     contentDescription = closeDescription
                 },
-                shape = CircleShape,
+                shape = MaterialTheme.shapes.small,
                 color = Color.White.copy(alpha = 0.12f),
                 contentColor = Color.White,
             ) {
@@ -251,7 +253,7 @@ private fun PresenterHeader(
                 }
             }
             TextButton(onClick = onFit) {
-                Text(stringResource(R.string.ticket_presenter_fit), color = Color.White)
+                Text(stringResource(R.string.ticket_presenter_fit), color = LandingKitColors.Sun)
             }
         }
     }
@@ -467,7 +469,7 @@ private fun AttachmentArrowButton(
 @Composable
 private fun PresenterMessage(text: String) {
     Surface(
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         color = PresenterChrome,
         contentColor = Color.White,
     ) {
@@ -524,8 +526,8 @@ private class PdfDocument(file: File) : AutoCloseable {
 
 private const val PDF_MIME_TYPE = "application/pdf"
 private const val MAX_IMAGE_EDGE = 4096
-private val PresenterBackground = Color(0xFF0E1110)
-private val PresenterChrome = Color(0xFF1A201E)
+private val PresenterBackground = Color(0xFF171E19)
+private val PresenterChrome = LandingKitColors.Forest
 
 private fun Context.findActivity(): Activity? {
     var current: Context? = this

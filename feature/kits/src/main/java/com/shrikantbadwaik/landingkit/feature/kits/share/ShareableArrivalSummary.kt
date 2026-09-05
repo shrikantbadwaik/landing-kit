@@ -88,7 +88,7 @@ internal fun ShareableArrivalSummary.asPlainText(selected: Set<ShareSummarySecti
                 append(line)
             }
         }
-        append("\n\nShared from Landing Kit")
+        append("\n\nShared from Travel with Thikana")
     }
 
 internal fun ShareableArrivalSummary.asTrustedPersonCopy(selected: Set<ShareSummarySection>): String =
@@ -97,7 +97,7 @@ internal fun ShareableArrivalSummary.asTrustedPersonCopy(selected: Set<ShareSumm
         append(destination)
         append('\n')
         append(arrivalDate)
-        append("\n\nYou do not need Landing Kit to use this copy. Please keep it private.")
+        append("\n\nYou do not need Travel with Thikana to use this copy. Please keep it private.")
         sections.filter { it.type in selected }.forEach { section ->
             append("\n\n")
             append(section.title)

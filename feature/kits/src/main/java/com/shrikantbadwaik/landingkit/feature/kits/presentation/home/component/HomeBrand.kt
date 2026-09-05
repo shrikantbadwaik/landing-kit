@@ -1,8 +1,5 @@
 package com.shrikantbadwaik.landingkit.feature.kits.presentation.home.component
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,20 +7,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.feature.kits.R
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalArtwork
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.JournalScene
 
 @Composable
 internal fun BrandHeader() {
@@ -47,29 +43,7 @@ internal fun BrandHeader() {
 
 @Composable
 private fun BrandMark() {
-    Box(
-        modifier = Modifier
-            .size(42.dp)
-            .clip(CircleShape)
-            .background(LandingKitColors.Forest),
-        contentAlignment = Alignment.Center,
-    ) {
-        Canvas(Modifier.size(23.dp)) {
-            drawCircle(color = LandingKitColors.Sun, radius = size.minDimension * .18f, center = center)
-            drawLine(
-                color = Color.White,
-                start = Offset(center.x, 0f),
-                end = Offset(center.x, size.height),
-                strokeWidth = 2.dp.toPx(),
-            )
-            drawLine(
-                color = Color.White,
-                start = Offset(0f, center.y),
-                end = Offset(size.width, center.y),
-                strokeWidth = 2.dp.toPx(),
-            )
-        }
-    }
+    JournalArtwork(JournalScene.Mountains, Modifier.size(width = 64.dp, height = 42.dp))
 }
 
 @Composable
@@ -77,7 +51,7 @@ internal fun PrivacyNote() {
     Surface(
         color = LandingKitColors.Seafoam.copy(alpha = .42f),
         contentColor = MaterialTheme.colorScheme.onSurface,
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.medium,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 15.dp, vertical = 13.dp),

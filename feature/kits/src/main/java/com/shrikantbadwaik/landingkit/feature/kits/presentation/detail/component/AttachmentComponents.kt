@@ -42,8 +42,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.KitAttachment
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.journalDoodles
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import kotlinx.coroutines.CancellationException
 
@@ -89,10 +90,11 @@ internal fun AttachmentSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
     ) {
         Column(
             modifier = Modifier
+                .journalDoodles("detail-attachments", count = 1)
                 .padding(18.dp)
                 .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -163,7 +165,7 @@ internal fun AttachmentSection(
 private fun AttachmentRetentionCleanup(onClearAttachments: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.medium,
         color = LandingKitColors.Coral.copy(alpha = .09f),
         contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(1.dp, LandingKitColors.Coral.copy(alpha = .24f)),
@@ -212,7 +214,7 @@ private fun AttachmentProtectionControl(
     }
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.medium,
         color = if (protectionEnabled) {
             LandingKitColors.Seafoam.copy(alpha = .3f)
         } else {
@@ -330,7 +332,7 @@ private fun AttachmentPickerTile(
     isImporting: Boolean,
     onImport: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(20.dp)
+    val shape = MaterialTheme.shapes.large
     val outlineColor = if (isImporting) {
         MaterialTheme.colorScheme.secondary
     } else {
@@ -440,7 +442,7 @@ private fun AttachmentPreview(
                 .clip(RoundedCornerShape(20.dp))
                 .semantics { contentDescription = openDescription }
                 .clickable { onOpen(attachment) },
-            shape = RoundedCornerShape(20.dp),
+            shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .38f),
             border = BorderStroke(
                 width = if (attachment.isQuickAccess) 2.dp else 1.dp,
@@ -624,7 +626,7 @@ internal fun DeleteAttachmentDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.attachment_keep_action)) }
         },
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
     )
 }
 
@@ -662,7 +664,7 @@ internal fun ClearAttachmentsDialog(
                 Text(stringResource(R.string.attachment_cleanup_keep))
             }
         },
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
     )
 }
 

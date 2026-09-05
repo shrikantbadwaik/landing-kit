@@ -22,7 +22,7 @@ class PrintableSummaryPdfTest {
             .setResolution(PrintAttributes.Resolution("qa", "QA", 300, 300))
             .setColorMode(PrintAttributes.COLOR_MODE_COLOR)
             .build()
-        val output = File(context.getExternalFilesDir(null), "landing-kit-arrival-summary.pdf")
+        val output = File(context.getExternalFilesDir(null), "travel-with-thikana-arrival-summary.pdf")
         val summary = PrintableArrivalSummary(
             destination = "Kyoto, Japan",
             arrivalDate = "Saturday, 29 August 2026",
@@ -33,7 +33,7 @@ class PrintableSummaryPdfTest {
                         PrintableSummaryEntry("Stay", "Machiya Stay Gion"),
                         PrintableSummaryEntry("Address", "2F, 570-123 Gionmachi Minamigawa, Higashiyama-ku, Kyoto"),
                         PrintableSummaryEntry("Local-language address", "京都市東山区祇園町南側 570-123 2F"),
-                        PrintableSummaryEntry("Booking reference", "LK-4821"),
+                        PrintableSummaryEntry("Booking reference", "TH-4821"),
                         PrintableSummaryEntry("Getting there", "Take the JR Haruka to Kyoto Station, then taxi to Gion. Show the local-language address."),
                     ),
                 ),
@@ -42,7 +42,7 @@ class PrintableSummaryPdfTest {
                     listOf(PrintableSummaryEntry("Stay contact", "+81 75 555 1234")),
                 ),
                 PrintableSummarySection(
-                    "Before landing",
+                    "Before arrival",
                     listOf(
                         PrintableSummaryEntry("Download tickets and booking", "", true),
                         PrintableSummaryEntry("Save the stay address offline", "", true),

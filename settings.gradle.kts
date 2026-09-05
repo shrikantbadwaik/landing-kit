@@ -13,7 +13,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "LandingKit"
+rootProject.name = "TravelWithThikana"
 include(":app")
 include(":core:model")
 include(":core:data")

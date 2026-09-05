@@ -33,6 +33,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.journalDoodles
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import java.time.LocalDate
@@ -44,7 +45,7 @@ internal fun FormValidationSummary(errorCount: Int) {
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.errorContainer.copy(alpha = .55f),
         contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         border = BorderStroke(
             width = 1.dp,
             color = MaterialTheme.colorScheme.error.copy(alpha = .25f),
@@ -80,11 +81,16 @@ internal fun FormSection(
     val collapsible = expanded != null && onToggle != null
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
+        Column(
+            modifier = Modifier.journalDoodles(
+                seed = "editor-section:$number:$title",
+                count = if (number.toIntOrNull() in 1..3) 1 else 0,
+            ).padding(18.dp),
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -162,14 +168,14 @@ internal fun LandingTextField(
             minLines = if (multiline) 2 else 1,
             maxLines = if (multiline) 4 else 1,
             isError = error != null,
-            shape = RoundedCornerShape(16.dp),
+            shape = MaterialTheme.shapes.medium,
             textStyle = MaterialTheme.typography.bodyLarge,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .58f),
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .58f),
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.outlineVariant,
                 disabledIndicatorColor = Color.Transparent,
             ),
         )
@@ -218,7 +224,7 @@ internal fun ArrivalDateField(
             } else {
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .58f)
             },
-            shape = RoundedCornerShape(16.dp),
+            shape = MaterialTheme.shapes.medium,
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 17.dp, vertical = 18.dp),
