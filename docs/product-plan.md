@@ -6,7 +6,9 @@ Last updated: 3 November 2026
 
 Travel with Thikana is a private, offline-first Android companion for the first 90 minutes after arriving somewhere unfamiliar.
 
-It gives travellers one calm, dependable place for the information they need immediately after landing: where they are staying, what to show a driver, how to get there, their booking reference, essential local notes, and the tasks they need to complete.
+It gives travellers one calm, dependable place for the information they need immediately after reaching a new place: where they are staying, what to show a driver, how to get there, their booking reference, essential local notes, and the tasks they need to complete.
+
+A journey can contain several of these arrival moments, including a hotel change within the same city. The planned extension groups related arrivals under one trip while keeping each arrival's information focused and reachable offline. The first-90-minutes purpose applies at every stop; the trip overview exists to help the traveller open the correct arrival.
 
 Travel with Thikana is not intended to become another full itinerary planner.
 
@@ -45,6 +47,7 @@ Supporting jobs:
 - Know what remains unfinished before landing.
 - Present a ticket, PDF, screenshot, or QR code without searching through email.
 - Create a safe backup without giving a travel service permanent access to my data.
+- Keep the current stay and next arrival distinct throughout a journey with several places or hotels.
 
 ## Product principles
 
@@ -125,6 +128,7 @@ Builder and app-promotion communities were treated as competition signals rather
 
 ### Current constraints
 
+- The shipped model represents one destination, one arrival date, and one accommodation per trip. Multiple arrivals within a journey are planned in Phase 7 and are not implemented.
 - Data exists only on the device unless the user explicitly exports it.
 - Uninstalling the app removes its data.
 - Android backup is disabled.
@@ -454,6 +458,327 @@ Success condition: users repeatedly reuse Travel with Thikana before travel rath
 - Test whether the first-90-minutes framing is immediately understandable.
 - Measure whether users can find critical information faster than with their existing workaround.
 
+### Phase 7 — Offline arrivals throughout a journey
+
+Status: planned on 3 November 2026; implementation has not started.
+
+Goal: support one journey with several destinations or accommodation changes while preserving the original calm, offline arrival experience.
+
+This is the next proposed product implementation sequence. Phase numbers preserve the existing roadmap history; unfinished preparation experiments in Phase 5 are not prerequisites. Phase 6 quality and traveller validation apply to every milestone below. No release date or effort estimate is committed.
+
+#### Product boundary and first delivery
+
+The product promise remains essential arrival information ready offline, at every stop. A compact overview groups arrivals and helps choose the correct one. It does not require a daily activity schedule, complete transport bookings, exact arrival times, or a country hierarchy.
+
+The first working demonstration is one trip with two accommodation stays in the same place: prepare the first arrival, move to the second accommodation, open the correct saved confirmation, and retain the first stay for reference. A single-place, single-stay trip must remain as simple to create and use as the current experience.
+
+Trip-owned place visits, accommodation stays, and transfers are the recommended domain structure. Visits and stays are independent collections with explicit associations, not an exclusive `Trip → Stop → Stay` hierarchy. Their separation supports reliable ownership and navigation; it does not imply four mandatory forms or screens. Advanced transport timing, reusable country context, and border-entry preparation are later extensions with their own validation gates.
+
+#### Reference journeys
+
+These scenarios describe journey structures that the product must support. They are independent of destination names, specific routes, and domestic or international travel.
+
+| Scenario | Representation | Required experience |
+|---|---|---|
+| One place, one accommodation stay | One trip, one stop, one stay | Familiar focused detail and Arrival Mode without unnecessary overview steps. |
+| One place, multiple accommodation stays | One trip, one stop, several stays | Current accommodation and next arrival remain distinct. |
+| Multiple places, one accommodation stay | One trip, ordered visits associated with one base stay | The base accommodation remains available throughout; visiting another place does not create another booking or check-in. |
+| Multiple places, multiple accommodation stays | One trip, ordered visits associated with the relevant stays | Open the correct arrival without browsing unrelated bookings; a stay may remain the base for several visits. |
+| Several areas within a region | One trip, distinct visits and relevant stay associations | Traveller chooses the grouping; accommodation location remains separate from each visited place. |
+| Return to a previously visited place | A second visit with its own identity | Earlier accommodation details and completion state do not overwrite the return visit. |
+| Several countries, potentially open-ended | Stops across countries, potentially without an end date | Unbooked sections, country revisits, and route changes remain possible. |
+
+The four place/stay combinations above are acceptance scenarios, not separate creation modes. The traveller adds visits and stays as needed. Zero booked stays are also valid for drafts, transit, and visits without accommodation. “Single stay” means one accommodation period, not one unique property name: leaving and later returning under a separate booking creates another stay even at the same property.
+
+Domestic/international context and route complexity are independent. The same model supports both; a domestic journey can have several stays, and an international journey can have just one.
+
+#### Domain and ownership contract
+
+| Concept | Responsibility | Rules |
+|---|---|---|
+| Trip | The overall journey: title, optional date range, ordered route, lifecycle; owns visits, stays, and transfers | One Home card per journey. An unknown end date is supported. |
+| Stop / place visit | A particular visit to a place, with optional stay associations | May be a city, region, island, neighbourhood, or traveller-defined label. Repeated visits have different IDs. |
+| Stay | A trip-owned accommodation period, its actual location, and optional check-in/check-out dates | A visit may reference zero, one, or several stays. One stay can serve several visits. Separate accommodation periods/bookings at the same property retain separate IDs. |
+| Visit–stay association | Explains how a stay relates to a particular visit | Distinguishes accommodation in the visited place from a base elsewhere; does not relocate, duplicate, or restart the stay. |
+| Transfer | Saved movement instructions and evidence between locations | Optional; can cover the initial approach, an intercity journey, a hotel change, or return travel. Exact times are not required. |
+| Arrival context | The selected visit/stay combined with relevant incoming travel, notes, and evidence | Arrival Mode is a focused view of this context. Stable target identity must survive reordering and edits. |
+
+Engineering should choose concrete entities and navigation types during 7.0. A separate persisted arrival-event table is not assumed. A stop without a stay can still expose saved destination or transfer information and honestly show what is missing.
+
+The domain must support a journey with one uninterrupted accommodation stay and several place visits without cloning the booking. Each stay retains its actual location/address; a base association never implies that accommodation is located in every visited place. Association rules must preserve trip ownership and referential integrity. Changes to a shared stay invalidate dependent views/checks where relevant, without duplicating its readiness history or check-in reminder.
+
+Information ownership:
+
+- Trip: reusable overall preparation tasks and shared journey information.
+- Stop: local destination notes.
+- Stay: accommodation name, regular/local-language address, contact, booking reference, check-in guidance, and accommodation Plan B.
+- Transfer: incoming travel instructions, ticket, transport fallback, and optional endpoint timing.
+- Country-entry event, if validated in 7.3: preparation for that particular crossing, including a repeated entry.
+- Evidence: one encrypted file with explicit associations to the relevant contexts. A document may support more than one stay or transfer.
+
+Checklists reuse descriptions through templates, not completed state. Each genuinely new arrival starts with its own incomplete tasks unless the traveller explicitly changes them. Referencing the same ongoing base stay from another visit does not recreate its accommodation checklist, readiness history, or check-in. Trip preparation, visit/transfer tasks, and stay readiness are separate.
+
+#### Interaction and design requirements
+
+- Start with trip name or destination, first place, optional dates, and optional stay. Save an incomplete draft without inventing a hotel, address, or booking.
+- Reveal “Add another stay here”, “Add another place”, and optional travel details only when needed.
+- When adding a visit, allow linking an existing base stay, choosing a different stay, or leaving accommodation unspecified. Do not force a place/stay combination selector.
+- Keep one Home card for the overall journey, with a clear current/next arrival indication where known.
+- Use a compact ordered arrival overview for longer journeys. Collapse unnecessary hierarchy for a single stay.
+- Retain the existing visual theme, background illustration behaviour, elevated detail panel, handle, and scroll treatment on focused arrival detail.
+- Keep Arrival Mode address-first, readable with large text, and usable one-handed.
+- Show current stay and next arrival independently, particularly on a hotel-change day.
+- Keep the current base stay accessible while another place is selected. Clearly distinguish the selected place's arrival details from the base accommodation's location and return information.
+- Manual selection overrides suggestions. Ambiguous or undated arrivals use an explicit chooser rather than a guessed target.
+- Share, show-someone, and printable-summary flows default to the selected arrival. Whole-trip export, if offered, requires an explicit scope choice and preview.
+- Do not add accounts, automatic email scanning, location tracking, live route optimisation, sightseeing discovery, or daily activity planning as dependencies.
+
+#### Dates, lifecycle, and target selection
+
+- Trip lifecycle, booking status, and offline readiness answer different questions and must remain separate.
+- A journey does not become past merely because its first arrival date has passed. Completion must account for known duration and explicit user control.
+- Unknown end dates remain unknown; do not complete an open-ended journey from its last currently planned stay.
+- Stay dates are local dates. Count nights using inclusive check-in and exclusive check-out dates without implying a midnight physical departure.
+- Reject check-out before check-in when both dates are known. Gaps are valid; overlaps need a review warning rather than automatic rejection. Same-day stays need an explicit, supported interpretation.
+- Permit adding a stay that has already begun within an ongoing journey. Reconstructing arbitrary historical trips is not a prerequisite.
+- Reordering changes route order without silently shifting booking dates, moving evidence, or merging repeated place names.
+- Visiting another place while retaining a base does not imply check-out or another check-in. A return to the same ongoing stay is distinct from a new stay at the same property.
+- Refresh date-derived state at local midnight, on resume, and after relevant clock/timezone changes.
+- Do not switch current accommodation at midnight solely because another booking starts that day. Suggestions must remain distinct from actual arrival/check-out confirmation.
+- Reminder and notification targets use stable arrival identities. A tapped reminder opens its intended arrival, not whichever record is currently earliest.
+- Preserve opt-in, battery-friendly inexact reminders; exact-minute alarms are not introduced.
+- Country and IANA timezone metadata can be optional foundations from the first schema design. A missing timezone remains unknown rather than inferred from nationality, phone locale, or a free-text place name.
+- When destination-local reminders or optional transfer times are introduced, use the relevant location/event timezone, not the phone's current timezone. Departure and arrival endpoints can have different local dates and zones.
+- Define and show the date-only reminder fallback in 7.0 before implementing it. Do not claim destination-local scheduling where no destination timezone is known.
+
+#### Evidence, readiness, and deletion
+
+- Scope quick access to the selected stay or transfer; unrelated documents must not become its implicit default.
+- Store shared evidence once and retain stable storage identity separately from route order or display names.
+- Use explicit associations with referential integrity. Removing one association must preserve a file that another arrival still uses.
+- Removing a visit or its base-stay association does not delete the trip-owned stay, shorten its dates, or remove its documents. Explicit stay deletion reviews affected visits and preserves independent visit/transfer information.
+- Define explicit unlink versus delete-everywhere behaviour with clear impact confirmation. Delete an orphaned encrypted file only after its associations are safely removed; preserve original source documents.
+- Scope offline and Plan B checks to their arrival dependencies. An overall count may summarise checked arrivals but must not imply that one check verifies the whole journey.
+- Invalidate affected results after relevant address, instruction, document, or quick-access changes; unaffected arrivals retain their results.
+- Support a deliberate “not applicable” evidence requirement for arrivals that genuinely have no booking document. Missing required evidence must not be hidden by that mechanism.
+- Draft completeness, task completion, and readiness on this phone remain different states. Readiness does not guarantee live booking validity, border eligibility, personal safety, or recovery from phone loss.
+
+#### 7.0 — Product and migration preparation
+
+Goal: settle a reviewable first slice and data-preservation strategy before app implementation.
+
+- [ ] Specify all four place/stay combinations, including a shared base across several visits, draft creation, current/next selection, and incomplete dates. Preserve the same-place accommodation-change flow as the first implementation slice.
+- [ ] Define status transitions, ambiguous-date selection, cancellation behaviour, evidence requirements, and the reminder timezone fallback.
+- [ ] Map existing fields to trip, stop, stay, transfer, and readiness ownership without dropping saved content.
+- [ ] Define trip-owned visits/stays, their associations, accommodation-location versus base semantics, and separate bookings at a repeated property. Include unlink, cancellation, deletion, and shared-dependency behaviour.
+- [ ] Specify stable IDs, navigation compatibility, scoped attachment associations, and deletion semantics.
+- [ ] Design non-destructive Room migration and independently versioned backup conversion with representative fixtures.
+- [ ] Review layout sketches against the existing design and the two-tap offline retrieval goal.
+
+Exit condition: product behaviour, domain contracts, migration mapping, and acceptance fixtures are concrete enough to implement without guessing about data ownership or legacy handling. The model supports all four combinations even though delivery is staged; several visits can share one uninterrupted stay without duplicated bookings, check-in reminders, or accommodation completion state.
+
+#### 7.1 — One journey, multiple stays
+
+Goal: support accommodation changes within one place while preserving a simple single-stay experience.
+
+- [ ] Introduce the journey container with independently owned visits and stays, explicit associations, optional duration, and draft support. The schema must permit shared base stays even before the multi-place UI ships.
+- [ ] Add several stays within one place and the compact arrival overview.
+- [ ] Keep the journey active beyond its first arrival and expose current stay plus next arrival.
+- [ ] Route detail, Arrival Mode, notification, widget, and shortcut entry to the correct arrival.
+- [ ] Scope checklist completion, evidence, quick access, readiness, Plan B, and handoff to the selected arrival.
+- [ ] Complete upgrade, old-backup import, new-backup round trip, and encrypted-file preservation.
+- [ ] Preserve the current theme and scroll treatment; verify long content, large text, TalkBack, and airplane-mode retrieval.
+
+Exit condition: in airplane mode, a traveller can move between two accommodation stays within one place, retrieve the correct address and confirmation within two taps from the relevant arrival entry, and keep the first stay's content and completion history intact. A single-stay trip requires no extra organisational work.
+
+Shared evidence, correct entry targets, and migration are part of this working slice, not follow-up reliability work.
+
+#### 7.2 — Several places and saved transfers
+
+Goal: support journeys through several places and return visits without turning the route into an activity itinerary.
+
+- [ ] Add, edit, cancel, and reorder distinct visits to places.
+- [ ] Support multiple visits using one base stay, several stays associated with a visit, and visits without booked accommodation.
+- [ ] Let the traveller associate an existing stay with another visit without copying its booking, documents, readiness state, or check-in reminder.
+- [ ] Keep base accommodation location and return details distinct from the selected visit's destination address.
+- [ ] Add optional incoming travel instructions and linked transfer evidence, including same-city hotel movement and initial approach.
+- [ ] Preserve booking dates, document associations, readiness, and stable targets when stops move.
+- [ ] Represent gaps and overnight transit without fake accommodation.
+- [ ] Keep earlier and return visits to the same place separate.
+- [ ] Distinguish returning to an uninterrupted base stay from returning to the same property for a new accommodation period.
+
+Exit condition: all four place/stay combinations work without configuration modes. The traveller can navigate several places and a repeated place, with the correct incoming travel and stay information available offline for every selected arrival. A shared base remains accessible without false relocation, duplicate check-in, or lost booking information.
+
+#### 7.3 — Cross-country context and open-ended journeys
+
+Goal: support flexible multi-country arrivals without adding live travel advice or mandatory precision.
+
+Open-ended trip storage and lifecycle are foundational in 7.1. This milestone validates longer routes and introduces only advanced context justified by arrival needs.
+
+- [ ] Validate reusable country notes, country revisits, and border-entry preparation with travellers before exposing additional forms.
+- [ ] Support explicit reuse of country notes with visible local overrides; do not silently copy stale information.
+- [ ] Keep each entry event distinct, even when returning to a previously visited country.
+- [ ] Introduce optional endpoint times and IANA timezones only where needed for reminders or understanding a transfer.
+- [ ] Preserve date-only creation and show unknown timing honestly.
+- [ ] Support open-ended route changes, cancellations, and unbooked future sections without premature completion.
+- [ ] Keep saved official links and user-checked information distinct from current entry rules or eligibility guarantees.
+
+Exit condition: an open-ended, multi-country journey can change route and revisit a country while each selected arrival remains understandable and useful offline. Advanced fields remain optional and show a demonstrated arrival benefit.
+
+#### Compatibility and migration release gate
+
+Baseline reviewed on 3 November 2026: Room schema version 7; manual encrypted backup format version 1; encrypted attachment paths include the existing trip ID. Confirm the baseline again before implementation.
+
+- Wrap each legacy record in one journey with one visit and one trip-owned stay, linked through an explicit association and compatible arrival context.
+- Preserve legacy IDs or an explicit compatibility mapping for attachment paths, reminders, navigation, widgets, and shortcuts. Internal names need not change for the new product model.
+- Preserve checklist identity/completion, booking details, notes, reminder preferences, quick-access choices, and readable encrypted attachments.
+- Leave check-out, country, timezone, and other absent fields unknown. Do not derive facts from free-text destination names.
+- Preserve historical archived presentation through an explicit legacy mapping; let the traveller expand/reactivate a record. Do not reactivate all old arrivals because they lack end dates.
+- Retain readiness history, but keep a result valid only where its dependency semantics remain equivalent. Changed semantics require a fresh check.
+- Read version 1 backups through an explicit conversion path. Version the new backup independently from Room, preserve shared visit–stay associations in new-format backups, validate relationships, and roll back partial restore failures.
+- Test duplicate restore and shared-file deletion. Unsupported future backup versions fail clearly without changing existing records.
+- Test every supported database migration path and representative backup fixtures with actual encrypted evidence. Do not use destructive migration fallback.
+
+#### Acceptance matrix
+
+| Scenario | Required result | Owning milestone |
+|---|---|---|
+| One place, one stay | Focused creation/detail; no mandatory multi-stop setup | 7.1 |
+| One place, multiple stays | One active journey; separate stay details and completion | 7.1 |
+| Multiple places, one stay | One base booking and accommodation period; accessible across visits without duplicate documents, checklists, readiness history, or check-in reminders | 7.0/7.1 model; 7.2 flow |
+| Multiple places, multiple stays | Correct visit/stay associations and incoming travel; no forced one-to-one mapping | 7.0/7.1 model; 7.2 flow |
+| Hotel-change day | Current and next accommodation accessible together; no silent midnight swap | 7.1 |
+| Stay already underway | Earlier check-in allowed within an ongoing journey | 7.1 |
+| Missing dates or overlapping bookings | Explicit choice/review; no guessed arrival target | 7.1 |
+| Independent readiness | Checking or editing one arrival does not mark another ready | 7.1 |
+| Shared confirmation PDF | Unlinking one stay leaves the other association readable | 7.1 |
+| Scoped handoff | Address sharing exposes only the selected arrival's reviewed details | 7.1 |
+| Notification after route edit | Opens its stable intended arrival or shows honest cancellation/missing-target recovery | 7.1 |
+| Midnight while app remains open | Date-derived state refreshes without false physical-arrival assumptions | 7.1 |
+| Existing database and version 1 backup | Saved content and encrypted files remain usable; no invented dates | 7.1 |
+| Airplane mode, large text, TalkBack | Selected address and evidence remain reachable and readable | Every milestone |
+| Return to a previously visited place | Separate visit identity; reuse an uninterrupted base or create a distinct stay for a new accommodation period as appropriate | 7.2 |
+| Base outside the selected place | Clearly labelled actual accommodation location; selected destination address is not replaced by the base address | 7.2 |
+| Remove a visit using a base | Stay, dates, documents, and other visit associations remain intact | 7.2 |
+| Shared base backup round trip | One stay with all visit associations restored; evidence remains readable without duplicated bookings | 7.1 persistence; 7.2 end-to-end |
+| Overnight bus / unbooked stop | Gap is allowed; no fabricated hotel | 7.2 |
+| Reordered route | Booking dates and document ownership stay unchanged | 7.2 |
+| Open-ended journey | Remains open until explicitly completed or an agreed known-end rule applies | 7.1; extended in 7.3 |
+| Phone timezone change | Known destination-local reminder intent is preserved; unknown-zone fallback is explicit | 7.1 contract; advanced timing in 7.3 |
+| Re-entry to a country | New entry context; old completed entry tasks do not silently carry over | 7.3 |
+
+Validate that travellers can identify the intended arrival and retrieve its address/evidence without increased friction in the single-stay flow. Organisation alone is not the success measure; correct offline retrieval remains the primary outcome.
+
+#### Research informing this direction
+
+The sources below informed the 3 November 2026 proposal. Vendor capabilities establish comparison patterns, not proof of traveller demand or a requirement to copy their scope.
+
+| Source | Relevant evidence | Limit |
+|---|---|---|
+| [TripIt: How it works](https://www.tripit.com/web/free/how-it-works) | One trip can group several kinds of reservations. | Email forwarding and cloud services are not adopted here. |
+| [Wanderlog](https://wanderlog.com/) | Places, accommodation reservations, and travel between stops have different roles. | Its daily planning, discovery, collaboration, and budgeting scope is not adopted. |
+| [Schema.org: Trip](https://schema.org/Trip) | A journey may visit several places in an ordered itinerary. | Conceptual support, not a prescribed database schema. |
+| [Schema.org: LodgingReservation](https://schema.org/LodgingReservation) | A stay has its own reservation identity and check-in/check-out information. | Optional dates and drafts remain necessary in this product. |
+| [Matador: Banana Pancake Trail](https://matadornetwork.com/read/undiscovered-banana-pancake-trail/) | The term describes a flexible route rather than one fixed itinerary. | Published in 2018; used for the term's meaning, not current travel advice or entry rules. |
+| [RFC 5545](https://www.rfc-editor.org/rfc/rfc5545.html) | Distinguishes dates, date-times, timezone context, and non-inclusive event ends. | Calendar semantics inform interval handling; they do not dictate physical hotel check-out time. |
+| [IANA Time Zone Database](https://www.iana.org/time-zones) | Location-based timezone rules support event-local timing. | No timezone is guessed when the place or event lacks enough information. |
+| [Android Room migrations](https://developer.android.com/training/data-storage/room/migrating-db-versions) | Supports explicit migrations and migration testing; destructive fallback can lose data. | Database tests alone do not verify encrypted files or manual backup conversion. |
+
+### Phase 8 — Import an existing itinerary
+
+Status: planned on 3 November 2026; implementation has not started. Candidate fast follow to Phase 7.2, not a prerequisite for Phase 7 delivery. Advanced country context in 7.3 is not a dependency.
+
+Goal: reduce manual entry by converting traveller-supplied itinerary text or a selected PDF into a reviewable trip draft using the Phase 7 model.
+
+This is an input shortcut for information the traveller already has. It does not generate a holiday, recommend destinations, book travel, scan an inbox, or require a full activity calendar. “Translate into our trip format” means structural conversion; language translation is a separate, uncommitted capability.
+
+#### Import flow and scope
+
+1. The traveller explicitly pastes text or chooses an itinerary PDF.
+2. The app extracts candidate journey details into a temporary draft.
+3. A review shows proposed visits, stays, associations, transfer information, missing fields, and unresolved ambiguities alongside relevant source excerpts.
+4. The traveller corrects, excludes, or confirms the proposed information.
+5. A deliberate save creates the journey. Imported arrivals remain “Not checked” until their normal offline readiness checks run.
+
+Supported inputs are pasted textual itineraries and PDFs with extractable text. Arbitrary layouts, unsupported languages, password-protected files, and scanned/image-only PDFs need explicit detection or honest failure handling; recognition of every document is not promised. OCR is a later candidate if traveller evidence and processing evaluation justify it.
+
+The first release creates a new trip. Importing into an existing trip, merging bookings, and updating an earlier import are deferred until identity and conflict handling are defined. Text import can ship before PDF import if that produces a reliable smaller slice.
+
+#### Mapping and review contract
+
+- Extract only arrival-relevant content: trip title, place visits/order, accommodation periods, addresses, booking references, incoming travel instructions, and relevant notes where present.
+- Support all four place/stay combinations, including one uninterrupted base stay referenced by several visits. Do not create a new hotel booking for every destination mentioned.
+- Preserve distinct return visits and separate accommodation periods at the same property. A repeated name alone is insufficient to merge records.
+- Keep a stay's actual accommodation location distinct from the places visited from that base.
+- Preserve date-only information. Missing years, ambiguous numeric dates, relative dates, overnight transfers, and timezones require review; suggestions remain visibly tentative until confirmed.
+- Never fabricate a hotel, address, check-out date, country, timezone, booking reference, or confirmation of booking validity.
+- Distinguish booked accommodation from alternatives, cancelled reservations, and recommendations. Unresolved alternatives remain review items rather than active stays.
+- Identify proposed fields as source-derived or needing confirmation. Keep the source excerpt/page reference available during review; do not use an unexplained confidence percentage as a correctness guarantee.
+- Preserve provided address wording and local-language text. Any future language translation must remain visibly separate from the original, especially for driver handoff.
+- Activities, restaurant suggestions, marketing copy, and other information outside the arrival model do not create new product features. Show an excluded/unmapped-content summary; offer explicit source retention rather than silently claiming the entire itinerary was imported.
+- Treat document content as data, not instructions to the app or processing engine. It cannot authorise uploads, external actions, changes to existing trips, or bypassing review.
+- Keep draft saving available when nonessential information is missing. Unresolved conflicts must not be presented as confirmed facts.
+
+#### Privacy, evidence, and failure handling
+
+- Prefer device-local processing. Select the extraction approach only after evaluating supported formats, accuracy, device cost, and offline behaviour in 8.0; neither AI nor a particular provider is assumed.
+- No automatic clipboard reading, background import, or upload of text/PDF content. Paste and file selection are explicit user actions.
+- If local processing cannot meet the agreed scope, any proposed remote processing needs a separate product/privacy decision before implementation: transmitted fields, provider handling/retention, cost, consent, and network failure behaviour. Existing offline arrival features must remain independent of it.
+- Keep travel content out of telemetry, crash reports, and diagnostic logs. Limit temporary copies and define their cleanup and draft-retention behaviour.
+- Reuse existing file limits and safe document intake controls. Source PDF retention is explicit and uses the protected attachment pipeline, not an unprotected parallel store.
+- Parsing a PDF does not attach it to every arrival. The traveller reviews evidence associations; one retained source may support several contexts without duplication.
+- A parsed reference or attached PDF does not establish offline readiness. Evidence must pass the existing scoped readability checks.
+- Cancellation or extraction failure leaves saved trips unchanged. Commit the confirmed structure and associations consistently; roll back partial creation and clean up only import-owned temporary data.
+- Flag likely repeated imports for review, without silently merging records or blocking intentional copies.
+
+#### 8.0 — Extraction and review feasibility
+
+- [ ] Define representative, non-sensitive fixtures for all four place/stay combinations, repeated places, unbooked sections, alternatives, and ambiguous dates.
+- [ ] Evaluate text extraction and mapping approaches against those fixtures without assuming an external service.
+- [ ] Define supported input formats/languages, limits, source provenance, temporary-data handling, and unsupported-file recovery.
+- [ ] Specify editable preview behaviour and the boundary between tentative suggestions and confirmed trip fields.
+- [ ] Compare import plus correction with manual entry; record field/association errors and critical wrong-address or wrong-stay failures.
+- [ ] Decide whether text and PDF can ship together or text should ship first. Define the processing/privacy decision before choosing libraries or services.
+
+Exit condition: a bounded import scope and processing approach demonstrate lower entry effort without concealing uncertainty or weakening the device-local arrival experience. If correction is harder than manual entry, narrow the supported inputs before committing to a fast-follow release.
+
+#### 8.1 — Paste text into a reviewed trip draft
+
+- [ ] Add explicit paste entry and cancellable processing.
+- [ ] Map supported itinerary text into independently owned visits/stays and their associations, with optional saved transfers.
+- [ ] Show editable source-backed review, missing information, uncertain dates, and unmapped content.
+- [ ] Save only the traveller-confirmed new journey; keep readiness unchecked and notifications opt-in.
+- [ ] Verify persistence, backup round trip, duplicate-import review, and recovery from cancellation/failure.
+
+Exit condition: a traveller can paste a supported itinerary, correct its proposed structure, and save an accurate journey without entering every arrival manually. The confirmed trip remains usable offline.
+
+#### 8.2 — PDF itinerary intake
+
+- [ ] Add explicit PDF selection and bounded extraction into the same review flow.
+- [ ] Preserve page/source references for proposed details and handle multi-page layout ambiguity.
+- [ ] Detect or clearly report protected, scanned, malformed, oversized, and unsupported PDFs. Offer text/manual entry when extraction cannot proceed.
+- [ ] Offer explicit source-PDF retention and reviewed evidence associations through the existing encrypted attachment pipeline.
+- [ ] Verify cancellation, temporary-file cleanup, unreadable input recovery, and retained-source readability.
+
+Exit condition: a supported PDF produces a reviewable journey draft with correct visit/stay associations. Unsupported files fail honestly without losing existing data or implying successful conversion.
+
+#### Acceptance and follow-up gate
+
+| Scenario | Required result |
+|---|---|
+| All four place/stay combinations | Correct independent visits/stays and associations; no assumed one-to-one mapping |
+| Several places using one base | One accommodation period, booking, and check-in; base location stays accurate |
+| Return visit / repeat property | Preserve distinct visits and new accommodation periods where explicitly present |
+| Missing address, year, or end date | Clearly incomplete draft or confirmation request; no invented factual field |
+| Cancelled booking or suggested alternative | Not silently promoted into an active stay |
+| Unsupported or scanned PDF | Honest recovery; OCR availability is not assumed |
+| Mixed itinerary and sightseeing text | Arrival fields mapped; excluded content acknowledged |
+| User correction and source retention | Confirmed edits persisted; retained evidence associated only with reviewed contexts |
+| Cancel, failure, or repeat import | Existing data unchanged; no orphaned partial trip or silent merge |
+| Saved import in airplane mode | Arrival content works offline; parsed content is not automatically marked ready |
+
+OCR, broader language support, and updates to existing journeys remain future candidates. Promote them only when measured import failures or traveller demand justify their complexity. Review errors and correction burden are release criteria, not just extraction completion.
+
 ## Considered, deferred, and superseded register
 
 This register preserves ideas that came up during planning but were not required
@@ -480,8 +805,8 @@ Claude project handoff history.
 | Considered item | Status | Why it was parked | Revisit trigger or destination |
 |---|---|---|---|
 | Product name: “Travel with Thikana” | Confirmed on 3 November 2026 | The app now uses Travel with Thikana across launcher branding, screens, widgets, shared text and exports. Saved travel records are called trips. | Use this name in store listings and public product copy. The existing application ID and storage identifiers are retained for compatibility. |
-| Arrival date and time | Superseded | The product deliberately stores an arrival date only. A required time added form friction and implied precision the core arrival flow did not need. | Reconsider only if traveller testing demonstrates a task that cannot be handled by arrival date, check-in cutoff, or saved last-departure information. |
-| Creating trips for historical arrival dates | Rejected for creation | New and edited trips allow today or a future date, while existing past arrivals remain readable and maintainable as references. | Reconsider only if importing or reconstructing past trips becomes a validated job. |
+| Arrival date and time | Date-only remains the default; optional timing deferred | A required time added form friction and implied precision the core arrival flow did not need. Phase 7 preserves date-only creation. | Phase 7.3 may introduce optional endpoint timing where traveller validation proves a reminder or transfer need; required precise arrival times remain outside scope. |
+| Creating trips for historical arrival dates | Current restriction; targeted change planned | Shipped creation/editing limits dates to today or later. An ongoing multi-stay journey may need a stay whose check-in has already occurred. | Phase 7.1 permits that ongoing-journey case. Arbitrary historical reconstruction is not a prerequisite. |
 
 ### Phase 2 — Arrival evidence
 
@@ -514,6 +839,9 @@ kept outside the Phase 3.5 commitments shown above.
 | Bag recovery pack | Future candidate | Luggage photos, baggage tags, airline contacts, and missing-bag references are adjacent to arrival resilience but form a distinct recovery workflow. | Promote only after research shows it is frequent and urgent enough to remain inside the first-90-minutes boundary. |
 | User-initiated “I arrived” message | Future candidate | A prefilled system share avoids tracking, but traveller demand is mixed and formal check-ins can create unwanted safety expectations. | Validate demand during 3.5.5; keep it explicit, user-initiated, and free of background monitoring. |
 | Duplicate an arrival trip | Future candidate | Reuse may help frequent travellers, but curated and personal checklist templates already cover part of the need. | Validate whether users need whole-trip duplication before adding it to Phase 5. |
+| Several arrivals in one journey | Promoted to planned roadmap | One hotel per trip cannot represent hotel changes or repeated city visits while preserving a coherent journey. | Phase 7.1–7.3. Group arrivals while retaining the first-90-minutes boundary; implementation has not started. |
+| Traveller-supplied itinerary conversion | Promoted to planned roadmap | Re-entering existing itinerary text/PDFs adds preparation effort. | Phase 8: reviewed import into the Phase 7 model; candidate fast follow after 7.2. This does not introduce itinerary generation or automatic inbox scanning. |
+| OCR and updates to an existing imported journey | Future candidates | Image-only inputs and merging changes add recognition, identity, and conflict-handling requirements beyond the first import slice. | Revisit after Phase 8 measures unsupported-input frequency and correction burden; retain the explicit review/privacy gates. |
 
 ### Explicit boundaries, not future enhancements
 
@@ -545,6 +873,8 @@ The following are intentionally outside the near-term product:
 
 These areas are crowded, frequently require connectivity or backend infrastructure, and dilute Travel with Thikana's arrival-focused value.
 
+Phase 8 converts an existing, explicitly supplied itinerary into arrival records. It does not change the non-goals of itinerary generation, automatic inbox scanning, or full day-by-day planning.
+
 ## Backend posture
 
 The planned product remains achievable without a proprietary backend:
@@ -560,6 +890,8 @@ Firebase Analytics is used only for product telemetry and is not a storage, sync
 
 A backend should only be reconsidered if validated demand emerges for real-time cross-device sync, collaborative editing, or automated safety check-ins. Those capabilities require a separate privacy, security, cost, and operational decision.
 
+Phase 8 starts with a device-local processing preference and commits to no remote provider. If its feasibility review proposes remote extraction, that requires its own explicit privacy, security, retention, consent, cost, and offline-fallback decision before implementation. It does not authorise a backend or automatic travel-content upload.
+
 ## Product success measures
 
 Early validation should focus on behaviour rather than download volume:
@@ -571,6 +903,9 @@ Early validation should focus on behaviour rather than download volume:
 - Users report lower arrival anxiety compared with Notes, screenshots, or email.
 - Users understand the product without interpreting it as a general itinerary planner.
 - Users trust the local-only privacy model and understand its backup trade-off.
+- A traveller with several stays selects the correct current or next arrival and retrieves its address/evidence offline without opening unrelated bookings.
+- A traveller with one stay experiences no unnecessary setup or navigation from the journey grouping.
+- A traveller imports an existing itinerary with less total entry/correction effort than manual creation, understands uncertainty, and saves the correct arrival associations without exposing travel content unexpectedly.
 
 ## Decision log
 
@@ -627,6 +962,22 @@ Early validation should focus on behaviour rather than download volume:
 ### 21 August 2026
 
 - Added the considered, deferred, and superseded register after reconstructing Phase 1–3 decisions from the Codex session and Claude handoff history. Future candidates now have explicit revisit triggers, promoted ideas point to their owning milestone, and rejected decisions are separated from backlog.
+
+### 3 November 2026 — Journey grouping proposal
+
+- Recorded the multiple-place/multiple-stay proposal and subsequent scope clarification as planned Phase 7; no app implementation is claimed.
+- Kept the original offline first-90-minutes purpose and extended it to each arrival, including hotel changes within the same city.
+- Chose an overall trip with distinct visits, stays, and optional saved transfers as the recommended domain direction. Concrete persistence and navigation types are to be settled in 7.0.
+- Expanded the acceptance model to all four place/stay combinations, including multiple places with one base stay. Visits and stays are independently trip-owned with explicit associations; this supersedes exclusive stay ownership under a stop.
+- Distinguished an accommodation's actual location from its role as a base for another place. Returning to an ongoing stay does not repeat check-in; a separate accommodation period at the same property is a new stay.
+- Prioritised a simple single-stay flow and complete same-place accommodation-change support before multiple destinations and advanced country context. Destination names supplied in the discussion were illustrative examples, not product requirements.
+- Required scoped documents, checklists, readiness, current/next selection, and safe migration in the first working slice.
+- Preserved date-only creation, inexact opt-in reminders, existing visual/scroll treatment, and device-local travel content.
+- Planned a narrow relaxation of past-date validation for stays already underway; broader historical reconstruction remains outside the first slice.
+- Made version 7 database upgrades, version 1 backup conversion, stable legacy IDs, and readable encrypted evidence release gates.
+- Kept country-entry preparation and optional precise transfer timing behind later validation; daily itinerary planning, booking, tracking, discovery, and backend services remain non-goals.
+- Added planned Phase 8 for explicit text/PDF itinerary conversion, with editable source-backed review before saving. It is a candidate fast follow after 7.2 and does not block journey grouping.
+- Kept extraction approach open pending feasibility work; no AI service, remote upload, or universal PDF/OCR support is assumed. Saved imports retain normal scoped offline readiness checks.
 
 ## Maintaining this plan
 

@@ -4,6 +4,8 @@ Travel with Thikana is an offline-first Android companion for the first 90 minut
 
 The durable product vision, research findings, roadmap, non-goals, and decision history live in [`docs/product-plan.md`](docs/product-plan.md).
 
+The planned [journey roadmap](docs/product-plan.md#phase-7--offline-arrivals-throughout-a-journey) groups several arrivals and hotel stays under one trip while retaining the offline arrival focus. This extension is not implemented yet; the current app stores one destination and accommodation per trip.
+
 ## Current milestone
 
 - Create, edit, view, and delete trips.
@@ -87,7 +89,10 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Next product slices
 
-1. Complete large-text and screen-reader validation for Arrival Mode.
-2. Add encrypted local export/import through Android's document picker.
-3. Add accessibility, instrumentation, and screenshot tests.
-4. Validate the first-90-minutes card with frequent and anxious travellers before broad itinerary features.
+1. Define all four single/multiple-place and single/multiple-stay combinations, independent visit/stay ownership, base-stay associations, and migration fixtures in product-plan Phase 7.0.
+2. Deliver one journey with several stays, correct current/next arrivals, scoped evidence and readiness, and compatible backups in Phase 7.1.
+3. Extend to multiple places with one shared base or several stays, return visits, and optional saved transfers in Phase 7.2.
+4. Validate advanced country context and optional transfer timing before Phase 7.3; keep open-ended journeys and date-only creation supported.
+5. Add reviewed text/PDF itinerary import in [Phase 8](docs/product-plan.md#phase-8--import-an-existing-itinerary), a candidate fast follow after 7.2. Choose the processing approach through feasibility/privacy review; imported details remain editable and unchecked until normal readiness verification.
+
+Accessibility, offline retrieval, encrypted-file preservation, and traveller validation apply throughout. The detailed scope and exit criteria are maintained in the product plan.
