@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -75,7 +76,7 @@ class JournalDoodleMotionTest {
         assertEquals(initial, inkBounds())
         assertEquals(geometry, state.layoutInfo.visibleItemsInfo.map { it.index to (it.offset to it.size) })
         assertEquals(10, state.layoutInfo.totalItemsCount)
-        assertTrue(state.layoutInfo.visibleItemsInfo.all { it.size == (220 * density).toInt() })
+        assertTrue(state.layoutInfo.visibleItemsInfo.all { it.size == (220 * density).roundToInt() })
 
         composeRule.runOnIdle { scope.launch { state.animateScrollBy(40 * density) } }
         composeRule.waitForIdle()

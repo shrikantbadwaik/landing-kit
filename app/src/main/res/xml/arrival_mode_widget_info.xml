@@ -6,9 +6,6 @@
     android:minHeight="72dp"
     android:minResizeWidth="180dp"
     android:minResizeHeight="72dp"
-    android:previewLayout="@layout/arrival_mode_widget"
     android:resizeMode="horizontal|vertical"
-    android:targetCellWidth="3"
-    android:targetCellHeight="1"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen" />

@@ -61,6 +61,8 @@ Dependency coordinates, plugin versions, Compose BOM, and SDK/toolchain levels a
 
 ## Privacy posture
 
+The user-facing [Privacy Policy](docs/privacy-policy.md) describes local storage, Firebase Analytics, sharing, backups, and deletion.
+
 The app includes Firebase Analytics and therefore declares `android.permission.INTERNET` and `android.permission.ACCESS_NETWORK_STATE`. Firebase may collect its default app, device, and session telemetry when connectivity is available. Advertising ID collection and ad-personalization signals are disabled, and advertising-related permissions contributed by the SDK are removed during manifest merging. Travel with Thikana does not send destinations, addresses, booking details, notes, checklist content, or attachments to Firebase, and no custom analytics events containing travel content are implemented. Every arrival feature remains usable without connectivity.
 
 Trip records are stored under the app sandbox, Android backup is disabled, and no trip content is exported automatically. Uninstalling the app removes its data. Broad storage permissions remain intentionally absent.
@@ -75,7 +77,7 @@ The product name is **Travel with Thikana**, and saved travel records are called
 
 ## Build
 
-Requirements: JDK 17 and Android SDK 35.
+Requirements: JDK 17 and Android SDK 36.
 
 ```shell
 ./gradlew :core:model:test :app:assembleDebug
