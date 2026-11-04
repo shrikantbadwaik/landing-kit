@@ -89,10 +89,13 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Next product slices
 
-1. Define all four single/multiple-place and single/multiple-stay combinations, independent visit/stay ownership, base-stay associations, and migration fixtures in product-plan Phase 7.0.
-2. Deliver one journey with several stays, correct current/next arrivals, scoped evidence and readiness, and compatible backups in Phase 7.1.
-3. Extend to multiple places with one shared base or several stays, return visits, and optional saved transfers in Phase 7.2.
-4. Validate advanced country context and optional transfer timing before Phase 7.3; keep open-ended journeys and date-only creation supported.
-5. Add reviewed text/PDF itinerary import in [Phase 8](docs/product-plan.md#phase-8--import-an-existing-itinerary), a candidate fast follow after 7.2. Choose the processing approach through feasibility/privacy review; imported details remain editable and unchecked until normal readiness verification.
+1. Validate real hotel-change, current/next, and return-to-base problems in Phase 7.0A, including comparison with existing traveller workarounds and a single-stay control.
+2. Settle explicit Arrival creation/identity rules, conservative legacy checklist mapping, the smallest sufficient relationship model, prototypes, and migration fixtures in Phase 7.0B.
+3. Independently reproduce and correct Delete/Undo evidence loss, stale ticket routing, plaintext-preview lifetime, interrupted restore, and staged file/database recovery in Phase 7.0C; this work can proceed while traveller validation runs.
+4. Only after all three 7.0 gates pass, deliver non-destructive schema/backup migration and legacy single-arrival compatibility in Phase 7.1A.
+5. Deliver the validated same-place accommodation-change slice with correct current/next arrivals and scoped documents/readiness in Phase 7.1B. Ship an ongoing-base return flow only if specifically validated; otherwise retain contract and persistence fixtures for it.
+6. Extend to multiple places, shared bases, return visits, and saved transfers in Phase 7.2 only when direct traveller evidence justifies that UI.
+7. Validate country context and advanced timing before Phase 7.3; retain open-ended journeys and date-only creation.
+8. Evaluate [Phase 8](docs/product-plan.md#phase-8--import-an-existing-itinerary) independently using `ImportCandidate` and field/relationship uncertainty. Fixtures can start after the 7.0 contract stabilises; text ships first and PDF requires a separate measured release gate. OCR, translation, and remote AI need separate approval.
 
-Accessibility, offline retrieval, encrypted-file preservation, and traveller validation apply throughout. The detailed scope and exit criteria are maintained in the product plan.
+Problem, contract, reliability, compatibility, and vertical-slice evidence determine progress rather than a percentage-readiness estimate. The committed roadmap is a proposed direction, not permission to begin migration before the 7.0 gates pass. Accessibility, offline retrieval, encrypted-file preservation, and traveller validation apply throughout. Implementation remains pending; detailed scope and exit criteria are maintained in the product plan.

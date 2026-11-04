@@ -1,6 +1,6 @@
 # Travel with Thikana Product Plan
 
-Last updated: 3 November 2026
+Last updated: 4 November 2026
 
 ## Product vision
 
@@ -460,11 +460,13 @@ Success condition: users repeatedly reuse Travel with Thikana before travel rath
 
 ### Phase 7 — Offline arrivals throughout a journey
 
-Status: planned on 3 November 2026; implementation has not started.
+Status: planned on 3 November 2026; validation, contract, and sequencing refined on 4 November 2026; implementation has not started.
 
 Goal: support one journey with several destinations or accommodation changes while preserving the original calm, offline arrival experience.
 
-This is the next proposed product implementation sequence. Phase numbers preserve the existing roadmap history; unfinished preparation experiments in Phase 5 are not prerequisites. Phase 6 quality and traveller validation apply to every milestone below. No release date or effort estimate is committed.
+This is a proposed, gated direction rather than authorisation to begin schema migration. Phase 7.0 validates the traveller problem, settles the smallest sufficient behavioural contract, and independently repairs reliability weaknesses that migration would otherwise amplify. Only passing all three 7.0 gates authorises Phase 7.1A implementation. Phase numbers preserve the existing roadmap history; unfinished preparation experiments in Phase 5 are not prerequisites. Phase 6 quality and traveller validation apply to every milestone below. No release date or effort estimate is committed.
+
+The same-place accommodation change is the strongest first hypothesis because it extends the existing arrival job without requiring broad journey planning. Support for all four place/stay structures remains a design requirement so that the first schema does not create a dead end; it is not evidence that every structure should immediately receive product UI. Multi-place implementation remains conditional on traveller evidence from the earlier gates.
 
 #### Product boundary and first delivery
 
@@ -472,11 +474,19 @@ The product promise remains essential arrival information ready offline, at ever
 
 The first working demonstration is one trip with two accommodation stays in the same place: prepare the first arrival, move to the second accommodation, open the correct saved confirmation, and retain the first stay for reference. A single-place, single-stay trip must remain as simple to create and use as the current experience.
 
-Trip-owned place visits, accommodation stays, and transfers are the recommended domain structure. Visits and stays are independent collections with explicit associations, not an exclusive `Trip → Stop → Stay` hierarchy. Their separation supports reliable ownership and navigation; it does not imply four mandatory forms or screens. Advanced transport timing, reusable country context, and border-entry preparation are later extensions with their own validation gates.
+The trip owns place visits, stays, persisted arrivals, transfers, and evidence. Visits and stays are independent collections with explicit associations, not an exclusive `Trip → Stop → Stay` hierarchy. Each arrival is a stable operational target; Arrival Mode composes its display from that identity and its referenced information. This separation supports reliable ownership and navigation without requiring additional forms in the simple flow. Advanced transport timing, reusable country context, and border-entry preparation are later extensions with their own validation gates.
+
+#### What qualifies as a place visit
+
+A place visit records a place the traveller deliberately wants an offline arrival pack for, not every attraction, restaurant, or excursion. Apply this inclusion test:
+
+> Does the traveller need offline destination, transfer, handoff, fallback, or return information for this place?
+
+If not, it does not need a Thikana arrival. The traveller may prepare an incomplete visit before filling its pack, but recording sightseeing activity is not its purpose. Imports must not automatically turn every mentioned place into a visit or arrival. A hotel change or meaningful return to a base may need a new arrival within an existing visit; creating another place visit is not mandatory.
 
 #### Reference journeys
 
-These scenarios describe journey structures that the product must support. They are independent of destination names, specific routes, and domestic or international travel.
+These scenarios describe journey structures that the domain must remain capable of supporting without redesign. They are independent of destination names, specific routes, and domestic or international travel. Their inclusion here does not authorise immediate UI implementation; delivery remains subject to the milestone entry gates.
 
 | Scenario | Representation | Required experience |
 |---|---|---|
@@ -496,27 +506,45 @@ Domestic/international context and route complexity are independent. The same mo
 
 | Concept | Responsibility | Rules |
 |---|---|---|
-| Trip | The overall journey: title, optional date range, ordered route, lifecycle; owns visits, stays, and transfers | One Home card per journey. An unknown end date is supported. |
-| Stop / place visit | A particular visit to a place, with optional stay associations | May be a city, region, island, neighbourhood, or traveller-defined label. Repeated visits have different IDs. |
+| Trip | The overall journey: title, optional date range, ordered route, lifecycle; owns visits, stays, arrivals, transfers, and evidence | One Home card per journey. An unknown end date is supported. |
+| Stop / place visit | A deliberate visit requiring an offline arrival pack, with optional stay associations | May be a city, region, island, neighbourhood, or traveller-defined label. Distinct repeat visits have different IDs; one visit can have several arrivals. |
 | Stay | A trip-owned accommodation period, its actual location, and optional check-in/check-out dates | A visit may reference zero, one, or several stays. One stay can serve several visits. Separate accommodation periods/bookings at the same property retain separate IDs. |
 | Visit–stay association | Explains how a stay relates to a particular visit | Distinguishes accommodation in the visited place from a base elsewhere; does not relocate, duplicate, or restart the stay. |
 | Transfer | Saved movement instructions and evidence between locations | Optional; can cover the initial approach, an intercity journey, a hotel change, or return travel. Exact times are not required. |
-| Arrival context | The selected visit/stay combined with relevant incoming travel, notes, and evidence | Arrival Mode is a focused view of this context. Stable target identity must survive reordering and edits. |
+| Evidence | Trip-owned protected source files with explicit associations to relevant records | One file may support several arrivals/stays/transfers without duplication; quick-access selection belongs to an arrival. |
+| Arrival | A persisted operational event referencing one visit, optionally a stay and incoming transfer | Own immutable `arrivalId`; used by navigation, reminders, widget/shortcut targets, readiness snapshots, quick access, and arrival tasks. May remain invisible as a separate concept in simple UI. |
+| Arrival context | A display composed from one persisted arrival and its referenced facts/evidence | A projection, not the source of operational identity. It cannot retarget an existing arrival through sorting or association changes. |
 
-Engineering should choose concrete entities and navigation types during 7.0. A separate persisted arrival-event table is not assumed. A stop without a stay can still expose saved destination or transfer information and honestly show what is missing.
+Engineering should choose concrete fields and navigation types during 7.0 within the persisted-arrival contract. An arrival without a stay can expose saved destination or transfer information and honestly show what is missing, including overnight-transit arrival needs without a fake hotel.
 
-The domain must support a journey with one uninterrupted accommodation stay and several place visits without cloning the booking. Each stay retains its actual location/address; a base association never implies that accommodation is located in every visited place. Association rules must preserve trip ownership and referential integrity. Changes to a shared stay invalidate dependent views/checks where relevant, without duplicating its readiness history or check-in reminder.
+The domain must support a journey with one uninterrupted accommodation stay and several place visits without cloning the booking. Each stay retains its actual location/address; a base association never implies that accommodation is located in every visited place. Association rules must preserve trip ownership and referential integrity. Shared-stay changes invalidate dependent arrival checks where relevant, but neither completed check-in tasks nor readiness results are copied to newly created arrivals.
+
+#### Arrival identity and state invariants
+
+The minimum relationship contract is `Arrival(id, tripId, visitId, stayId?, incomingTransferId?)`. A trip owns zero or more arrivals; every non-deleted arrival references one visit in that trip and optionally a stay/transfer from the same trip. Draft visits can initially have zero arrivals; a visit or stay may be referenced by several distinct arrivals.
+
+- Persist `arrivalId` independently of route order, labels, dates, and visit–stay associations. IDs are never reused.
+- **Do not make `(visitId, stayId, incomingTransferId)` unique.** Several meaningful returns can reference the same ongoing base, visit, and transfer information while retaining separate arrival identities.
+- Reordering and corrections to the same intended event preserve identity. Replacing that event with a different intended arrival creates a new ID; the previous target is cancelled or removed, not silently repurposed.
+- Unlinking or deleting a referenced visit, stay, or transfer must follow explicit impact/recovery rules. It cannot redirect an existing arrival or notification to another booking. Define correction versus replacement behaviour in 7.0.
+- Navigation routes, readiness snapshots, quick-access choices, checklists, and specific notification/widget/shortcut actions target `arrivalId`. A generic “next arrival” action selects a persisted eligible arrival; it does not alter that arrival's identity.
+- Keep arrival lifecycle (`planned`, `cancelled`, `completed`) separate from offline readiness (`not checked`, `ready on this phone`, `needs attention`). Plan B readiness is also separate. Completion does not establish readiness, and readiness does not imply arrival occurred.
+- Removal is represented by a tombstone or resolvable identity history, not an overloaded lifecycle/readiness value. Cancelled targets retain their resolvable identity; deleted targets resolve to honest removed-target recovery.
+- Old notification taps show the intended arrival or an explicit cancelled/deleted response. They never automatically open a replacement. Choosing another arrival is a new traveller action.
+- Cancellation/removal cancels scheduled reminders and updates published targets, while stale entry points remain safe to resolve.
+- Tombstones/history retain only the minimum ID/removal metadata needed for recovery, not deleted addresses, booking references, documents, or checklist content. Define retention, explicit history purge, backup handling, and parent-trip deletion in 7.0; after purge, an unknown ID still shows honest missing-target recovery and is never recycled.
 
 Information ownership:
 
 - Trip: reusable overall preparation tasks and shared journey information.
 - Stop: local destination notes.
-- Stay: accommodation name, regular/local-language address, contact, booking reference, check-in guidance, and accommodation Plan B.
+- Stay: accommodation name, regular/local-language address, contact, booking reference, check-in guidance, accommodation Plan B facts, and stay-level check-in tasks.
+- Arrival: event-specific transport/return tasks, quick-access selection, reminder intent, lifecycle, and offline/Plan B readiness snapshots. Referenced stay/transfer facts can be shared without copying event completion state.
 - Transfer: incoming travel instructions, ticket, transport fallback, and optional endpoint timing.
 - Country-entry event, if validated in 7.3: preparation for that particular crossing, including a repeated entry.
 - Evidence: one encrypted file with explicit associations to the relevant contexts. A document may support more than one stay or transfer.
 
-Checklists reuse descriptions through templates, not completed state. Each genuinely new arrival starts with its own incomplete tasks unless the traveller explicitly changes them. Referencing the same ongoing base stay from another visit does not recreate its accommodation checklist, readiness history, or check-in. Trip preparation, visit/transfer tasks, and stay readiness are separate.
+Checklists reuse descriptions through templates, not completed state. New arrival-level transport/return tasks start incomplete unless the traveller explicitly changes them. Stay-level check-in tasks belong to the accommodation period and remain complete on a return to that ongoing stay. A new arrival gets its own unchecked readiness snapshot; it can reuse the same evidence and stay facts, not inherit another arrival's readiness result. A return reminder is distinct from the original check-in reminder and is opt-in.
 
 #### Interaction and design requirements
 
@@ -535,7 +563,7 @@ Checklists reuse descriptions through templates, not completed state. Each genui
 
 #### Dates, lifecycle, and target selection
 
-- Trip lifecycle, booking status, and offline readiness answer different questions and must remain separate.
+- Trip lifecycle, booking status, arrival lifecycle, offline readiness, and Plan B readiness answer different questions and must remain separate.
 - A journey does not become past merely because its first arrival date has passed. Completion must account for known duration and explicit user control.
 - Unknown end dates remain unknown; do not complete an open-ended journey from its last currently planned stay.
 - Stay dates are local dates. Count nights using inclusive check-in and exclusive check-out dates without implying a midnight physical departure.
@@ -546,6 +574,9 @@ Checklists reuse descriptions through templates, not completed state. Each genui
 - Refresh date-derived state at local midnight, on resume, and after relevant clock/timezone changes.
 - Do not switch current accommodation at midnight solely because another booking starts that day. Suggestions must remain distinct from actual arrival/check-out confirmation.
 - Reminder and notification targets use stable arrival identities. A tapped reminder opens its intended arrival, not whichever record is currently earliest.
+- Cancelled/completed arrivals are excluded from automatic next-arrival suggestions; current stay access remains distinct. Deleted targets resolve through removal history or honest missing-target recovery.
+- Each arrival owns its optional planned local date and reminder intent. A return arrival cannot inherit its date from the original stay check-in or a reused transfer. Unknown dates remain unknown; precise times are optional.
+- Define a deterministic selection contract across overlapping trips as well as within a trip. An explicit current-trip/arrival choice takes priority among eligible targets; tied or undated candidates require a chooser. Route order, local dates, and operational completion are distinct inputs, not interchangeable sorts.
 - Preserve opt-in, battery-friendly inexact reminders; exact-minute alarms are not introduced.
 - Country and IANA timezone metadata can be optional foundations from the first schema design. A missing timezone remains unknown rather than inferred from nationality, phone locale, or a free-text place name.
 - When destination-local reminders or optional transfer times are introduced, use the relevant location/event timezone, not the phone's current timezone. Departure and arrival endpoints can have different local dates and zones.
@@ -553,67 +584,148 @@ Checklists reuse descriptions through templates, not completed state. Each genui
 
 #### Evidence, readiness, and deletion
 
-- Scope quick access to the selected stay or transfer; unrelated documents must not become its implicit default.
+- Persist quick access against the selected arrival, drawing from explicitly associated stay/transfer/evidence records; unrelated documents must not become its implicit default.
 - Store shared evidence once and retain stable storage identity separately from route order or display names.
 - Use explicit associations with referential integrity. Removing one association must preserve a file that another arrival still uses.
 - Removing a visit or its base-stay association does not delete the trip-owned stay, shorten its dates, or remove its documents. Explicit stay deletion reviews affected visits and preserves independent visit/transfer information.
+- Apply the arrival recovery contract when an association or referenced entity is removed. Do not let cascades destroy the ability to resolve an old arrival target honestly.
 - Define explicit unlink versus delete-everywhere behaviour with clear impact confirmation. Delete an orphaned encrypted file only after its associations are safely removed; preserve original source documents.
 - Scope offline and Plan B checks to their arrival dependencies. An overall count may summarise checked arrivals but must not imply that one check verifies the whole journey.
 - Invalidate affected results after relevant address, instruction, document, or quick-access changes; unaffected arrivals retain their results.
 - Support a deliberate “not applicable” evidence requirement for arrivals that genuinely have no booking document. Missing required evidence must not be hidden by that mechanism.
 - Draft completeness, task completion, and readiness on this phone remain different states. Readiness does not guarantee live booking validity, border eligibility, personal safety, or recovery from phone loss.
+- Define readiness requirements by arrival purpose: accommodation check-in, destination-only arrival, transit, or return to an ongoing base. These are requirement profiles, not mandatory creation modes. A missing stay is not automatically a failure for a non-accommodation arrival; a return does not require another check-in rehearsal. The relevant destination/return address, transfer, fallback, and evidence requirements must remain explicit.
+- Fingerprint the selected arrival's effective requirements and referenced content. Apply an asynchronous check result only if its target, requirement profile, and dependency revision still match; a shared address/document edit invalidates affected results without copying another arrival's readiness.
 
-#### 7.0 — Product and migration preparation
+#### Durable operations and restore contracts
 
-Goal: settle a reviewable first slice and data-preservation strategy before app implementation.
+- Commit related structured edits consistently, then reconcile external effects such as alarms and widgets idempotently. Check target existence, lifecycle, reminder enablement, and relevant revision again when an alarm fires; cancellation races must not post a reminder for a removed arrival.
+- Use distinct Android pending-intent identity and notification tag/ID namespaces per arrival, not only intent extras or a hash-derived integer. Several arrivals on the same day must not replace each other's alarms or notifications. Preserve explicit legacy mapping during upgrade.
+- Define recovery after process termination during save, unlink, file cleanup, restore, and reminder publication. Database transactions do not by themselves make encrypted-file deletion or Android scheduling atomic. Cleanup must preserve files still referenced; reconciliation must not recreate cancelled targets.
+- Export a consistent snapshot of the graph, evidence references, and file content. Concurrent edits/deletion must not create dangling associations or a backup that silently omits required evidence.
+- Preserve restored readiness as history, not proof of readiness on the receiving installation. Imported/restored arrivals need a fresh effective “Not checked” state until verified locally; in-place migration may retain an equivalent check where its semantics and local evidence remain unchanged.
+- Define conflict handling between existing records/removal history and older backups. Deleted or cancelled arrivals must not silently become active or publish reminders on restore. Explicit reviewed restoration may recover the same original event; an intentional copy uses new IDs.
+- Preserve saved reminder preferences as intent, but review/reconcile eligibility, permissions, and dates before restoring active alarms. Restoration is not permission to publish stale reminders.
 
-- [ ] Specify all four place/stay combinations, including a shared base across several visits, draft creation, current/next selection, and incomplete dates. Preserve the same-place accommodation-change flow as the first implementation slice.
-- [ ] Define status transitions, ambiguous-date selection, cancellation behaviour, evidence requirements, and the reminder timezone fallback.
-- [ ] Map existing fields to trip, stop, stay, transfer, and readiness ownership without dropping saved content.
+These are bounded 7.0 contracts and 7.1A/7.1B verification cases, not additional itinerary functionality.
+
+#### 7.0 — Validation, contracts, and reliability preparation
+
+Phase 7.0 contains three required gates, not a serial work queue. Problem validation precedes final architecture approval, although behavioural design may be explored alongside research. Existing reliability repairs in 7.0C can proceed immediately and independently because they benefit the current product. No migration implementation begins until all three gates pass.
+
+##### 7.0A — Problem-validation gate
+
+Goal: establish that grouping several arrival packs solves demonstrated traveller problems without turning preparation into itinerary management.
+
+- [ ] Study real recent or upcoming hotel-change journeys, current-versus-next confusion, and meaningful returns to an ongoing base. Use actual notes, screenshots, separate records, and retrieval workarounds rather than hypothetical feature reactions.
+- [ ] Compare the existing separate-trip/card approach with simple grouped-arrival prototypes for preparation effort, correct-target selection, and offline retrieval.
+- [ ] Include single-stay travellers as a control and verify that journey grouping introduces no additional organisational work for them.
+- [ ] Record whether travellers describe the value as preparing for arrivals rather than organising daily activities.
+- [ ] Treat any wrong address, booking, or arrival opened during evaluation as a critical design failure requiring correction and retest.
+- [ ] Keep multi-place UI conditional on evidence. Designing all four place/stay structures for compatibility does not authorise implementing all four flows.
+
+Exit condition — problem gate: repeated real-journey evidence supports the same-place accommodation-change problem; travellers can identify and retrieve the intended arrival more reliably or with less effort; and the single-stay experience remains familiar. If this evidence does not pass, narrow or stop Phase 7 before migration.
+
+##### 7.0B — Behavioural-contract and prototype gate
+
+Goal: settle arrival identity, creation semantics, cardinalities, selection rules, product boundaries, prototypes, and data-preservation contracts before app implementation.
+
+- [ ] Specify all four place/stay combinations, including a shared base across several visits, draft creation, current/next selection, and incomplete dates. Preserve the validated same-place accommodation-change flow as the first implementation slice.
+- [ ] Specify persisted Arrival fields/cardinalities and identity invariants, including several distinct IDs for the same reference tuple.
+- [ ] Define creation commands explicitly: saving a simple trip creates one visit and one planned arrival without exposing domain terminology; accommodation remains optional when omitted; an incomplete draft visit may have no arrival; “Add another stay” and explicit “Prepare return” actions create new arrivals; linking records alone never does.
+- [ ] Define correction versus replacement: edits to the same intended event preserve `arrivalId`; deliberate replacement cancels/removes the previous target and creates another; sorting, imports, date calculations, and association changes never create or retarget arrivals silently.
+- [ ] Define arrival lifecycle transitions separately from offline/Plan B readiness, ambiguous-date selection, cancellation behaviour, evidence requirements, and the reminder timezone fallback.
+- [ ] Define arrival-owned dates, purpose-specific readiness, and current/next selection across overlapping trips; include same-reference return arrivals on different dates.
+- [ ] Specify tombstone/resolvable-history behaviour for removal, stale entry points, parent deletion, retention/purge, and backup restoration without retaining deleted travel content.
+- [ ] Map existing fields to trip, visit, stay, arrival, transfer, and readiness ownership without dropping saved content.
+- [ ] Preserve every ambiguous legacy checklist item together under its original migrated arrival, retaining item ID, order, wording, category, and completion. Move an item to journey or stay ownership only where reliable existing provenance or explicit traveller choice supports it; never infer ownership from task wording alone.
+- [ ] Preserve existing transfer instructions through a conservative migration location. A complete transfer subsystem is not required for the accommodation-change slice.
 - [ ] Define trip-owned visits/stays, their associations, accommodation-location versus base semantics, and separate bookings at a repeated property. Include unlink, cancellation, deletion, and shared-dependency behaviour.
+- [ ] Separate stay-level check-in tasks from arrival-level transport/return tasks. Prototype a new return arrival to an ongoing base with no duplicate check-in or inherited readiness.
+- [ ] Apply the place-visit inclusion test and distinguish a deliberate offline pack from an ordinary excursion.
 - [ ] Specify stable IDs, navigation compatibility, scoped attachment associations, and deletion semantics.
 - [ ] Design non-destructive Room migration and independently versioned backup conversion with representative fixtures.
-- [ ] Review layout sketches against the existing design and the two-tap offline retrieval goal.
+- [ ] Specify consistent backup snapshots, receiving-installation readiness, restore-versus-removal-history conflicts, distinct alarm/notification identities, stale check rejection, and recovery from interrupted database/file/scheduling operations.
+- [ ] Keep the implementation model no broader than the validated slice: avoid generic itinerary events, country hierarchy, polymorphic ownership, automatic transfer generation, or traveller-facing relationship terminology.
+- [ ] Review simple and multi-stay wireframes against the existing design and the two-tap offline retrieval goal.
 
-Exit condition: product behaviour, domain contracts, migration mapping, and acceptance fixtures are concrete enough to implement without guessing about data ownership or legacy handling. The model supports all four combinations even though delivery is staged; several visits can share one uninterrupted stay without duplicated bookings, check-in reminders, or accommodation completion state.
+Exit condition — contract gate: product behaviour, creation/replacement commands, cardinalities, identity/recovery invariants, conservative state/task ownership, migration mapping, wireframes, and acceptance fixtures are agreed and reviewable. The model can represent all four combinations without requiring their immediate UI implementation, including distinct ongoing-base return arrivals with the same reference tuple. No readiness percentage substitutes for this gate.
 
-#### 7.1 — One journey, multiple stays
+##### 7.0C — Reliability-baseline gate
+
+Goal: repair and verify existing behaviours that would create data loss, privacy, or recovery risk when shared arrival relationships are introduced.
+
+Code inspection on 4 November 2026 identified the concerns below; the review did not reproduce them on-device. Reproduction, correction, and failure testing are part of this gate.
+
+- [ ] Resolve trip Delete/Undo semantics. Current deletion removes encrypted evidence before the snackbar can restore only the captured structured `Trip`; either implement a genuinely recoverable trash operation or remove the misleading Undo path while retaining explicit irreversible confirmation.
+- [ ] Distinguish loading from a completed empty/missing result in ticket presentation. A stale trip or deleted attachment route must show honest recovery instead of an indefinite `LoadingScreen`.
+- [ ] Make decrypted viewing previews session-bounded and restart-safe. Clean them after the viewing grant is no longer needed, authentication expiry, and startup recovery without revoking a file while an external viewer is actively using its granted access.
+- [ ] Design and verify durable recovery for interrupted backup restore. Exception rollback in one running process is insufficient evidence for process-termination safety.
+- [ ] Use transactional metadata/association changes plus staged, idempotent filesystem operations; Room transactions cannot include file deletion. Verify restart between every stage, orphan cleanup, shared-file unlinking, and delete/restore failure paths.
+- [ ] Confirm these corrections through focused automated tests and an on-device rehearsal before changing the persistence model.
+
+Exit condition — reliability gate: the four inspected weaknesses are reproduced or disproved, accepted corrections pass automated and on-device checks, and staged file/metadata operations recover safely after interruption. No migration implementation begins with these issues unresolved.
+
+#### 7.1A — Compatibility foundation
+
+Goal: introduce the new persisted structure without breaking existing single-arrival use or saved data.
+
+Entry condition: the 7.0A problem-validation, 7.0B behavioural-contract, and 7.0C reliability-baseline gates have all passed. Documentation of a proposed schema alone does not satisfy this condition.
+
+- [ ] Introduce only the trip-owned visits, stays, persisted arrivals, evidence associations, and resolvable removal history required by the validated slice through non-destructive schema changes.
+- [ ] Preserve existing transfer instructions in the conservative location agreed in 7.0B and support the nullable arrival relationship without requiring a complete transfer subsystem.
+- [ ] Map each existing record to its compatible arrival identity and preserve existing single-arrival screens/operations.
+- [ ] Keep ambiguous legacy checklist items on the migrated legacy arrival with exact identity, order, wording, category, and completion; do not classify them from their text.
+- [ ] Preserve legacy routes, encrypted attachment storage, checklists, readiness history where valid, reminder intent, widget/shortcut routing, and quick-access choices.
+- [ ] Implement version 1 backup conversion and new-format round trips, including stable arrivals and removal-history rules.
+- [ ] Verify migration paths, encrypted-file readability, stale/cancelled/deleted target recovery, and interrupted/duplicate restore handling.
+- [ ] Verify consistent backup export during edits, removal-history conflicts on restore, local readiness reset, and idempotent file/alarm/widget reconciliation after process termination.
+- [ ] Prove the schema permits all four combinations and repeated arrival reference tuples before the multi-place UI ships.
+
+Exit condition — compatibility gate: representative existing records and backups survive migration, single-arrival operations remain usable, and old entry points open the intended arrival or honest recovery. No unrelated arrival is substituted and no saved evidence is lost. This is independently verifiable engineering delivery; a separate public release is optional.
+
+#### 7.1B — Multi-stay vertical delivery
 
 Goal: support accommodation changes within one place while preserving a simple single-stay experience.
 
-- [ ] Introduce the journey container with independently owned visits and stays, explicit associations, optional duration, and draft support. The schema must permit shared base stays even before the multi-place UI ships.
+- [ ] Add optional duration and draft support on the compatibility foundation.
 - [ ] Add several stays within one place and the compact arrival overview.
 - [ ] Keep the journey active beyond its first arrival and expose current stay plus next arrival.
-- [ ] Route detail, Arrival Mode, notification, widget, and shortcut entry to the correct arrival.
-- [ ] Scope checklist completion, evidence, quick access, readiness, Plan B, and handoff to the selected arrival.
-- [ ] Complete upgrade, old-backup import, new-backup round trip, and encrypted-file preservation.
+- [ ] Route detail, Arrival Mode, notifications, widgets, and shortcuts to the correct persisted arrival; apply cancellation/removal recovery.
+- [ ] Verify same-day alarm/notification coexistence, cancellation races, and explicit selection across overlapping trips.
+- [ ] Scope documents, quick access, readiness, Plan B, and handoff to the selected arrival, with separately owned stay check-in and arrival transport tasks.
+- [ ] If 7.0A finds evidence for a traveller-facing ongoing-base return flow, deliver a distinct return arrival without duplicating a stay, completed check-in tasks, or the check-in reminder; keep its transport/return tasks and readiness independent. Otherwise verify the same-reference arrival structure through contract/persistence fixtures without shipping this flow.
+- [ ] Validate the new multi-stay data through backup round trips and encrypted evidence retrieval.
 - [ ] Preserve the current theme and scroll treatment; verify long content, large text, TalkBack, and airplane-mode retrieval.
 
-Exit condition: in airplane mode, a traveller can move between two accommodation stays within one place, retrieve the correct address and confirmation within two taps from the relevant arrival entry, and keep the first stay's content and completion history intact. A single-stay trip requires no extra organisational work.
+Exit condition — vertical-slice gate: in airplane mode, a traveller can move between two accommodation stays within one place, retrieve the correct address and confirmation within two taps from the relevant arrival entry, and keep the first stay's content and completion history intact. A single-stay trip requires no extra organisational work. If the return flow was validated and included, it must also preserve one ongoing stay's completed check-in while retaining independent return preparation; otherwise persistence fixtures prove that later return arrivals will not require another migration.
 
-Shared evidence, correct entry targets, and migration are part of this working slice, not follow-up reliability work.
+Shared evidence, correct entry targets, and verified compatibility are required for this working slice, not follow-up reliability work.
 
 #### 7.2 — Several places and saved transfers
 
 Goal: support journeys through several places and return visits without turning the route into an activity itinerary.
 
+Entry condition: the 7.1B vertical slice has passed and direct traveller evidence shows that multi-place grouping improves arrival preparation or retrieval. Structural support in the schema is not sufficient authorisation for this UI.
+
 - [ ] Add, edit, cancel, and reorder distinct visits to places.
 - [ ] Support multiple visits using one base stay, several stays associated with a visit, and visits without booked accommodation.
-- [ ] Let the traveller associate an existing stay with another visit without copying its booking, documents, readiness state, or check-in reminder.
+- [ ] Let the traveller associate an existing stay with another visit without copying its booking, documents, or check-in reminder. A new operational arrival gets a distinct ID and unchecked readiness.
 - [ ] Keep base accommodation location and return details distinct from the selected visit's destination address.
 - [ ] Add optional incoming travel instructions and linked transfer evidence, including same-city hotel movement and initial approach.
 - [ ] Preserve booking dates, document associations, readiness, and stable targets when stops move.
 - [ ] Represent gaps and overnight transit without fake accommodation.
 - [ ] Keep earlier and return visits to the same place separate.
 - [ ] Distinguish returning to an uninterrupted base stay from returning to the same property for a new accommodation period.
+- [ ] Apply the place-visit inclusion test; ordinary sightseeing mentions do not automatically create arrival records.
 
 Exit condition: all four place/stay combinations work without configuration modes. The traveller can navigate several places and a repeated place, with the correct incoming travel and stay information available offline for every selected arrival. A shared base remains accessible without false relocation, duplicate check-in, or lost booking information.
 
-#### 7.3 — Cross-country context and open-ended journeys
+#### 7.3 — Discovery-gated country context and advanced timing
 
 Goal: support flexible multi-country arrivals without adding live travel advice or mandatory precision.
 
-Open-ended trip storage and lifecycle are foundational in 7.1. This milestone validates longer routes and introduces only advanced context justified by arrival needs.
+Open-ended trip storage and lifecycle are foundational in 7.1A/7.1B. This milestone validates longer routes and introduces only advanced context justified by arrival needs.
 
 - [ ] Validate reusable country notes, country revisits, and border-entry preparation with travellers before exposing additional forms.
 - [ ] Support explicit reuse of country notes with visible local overrides; do not silently copy stale information.
@@ -629,13 +741,14 @@ Exit condition: an open-ended, multi-country journey can change route and revisi
 
 Baseline reviewed on 3 November 2026: Room schema version 7; manual encrypted backup format version 1; encrypted attachment paths include the existing trip ID. Confirm the baseline again before implementation.
 
-- Wrap each legacy record in one journey with one visit and one trip-owned stay, linked through an explicit association and compatible arrival context.
+- Wrap each legacy record in one journey with one visit, one trip-owned stay, and one persisted arrival, retaining its legacy target ID or an explicit compatibility mapping.
 - Preserve legacy IDs or an explicit compatibility mapping for attachment paths, reminders, navigation, widgets, and shortcuts. Internal names need not change for the new product model.
 - Preserve checklist identity/completion, booking details, notes, reminder preferences, quick-access choices, and readable encrypted attachments.
 - Leave check-out, country, timezone, and other absent fields unknown. Do not derive facts from free-text destination names.
 - Preserve historical archived presentation through an explicit legacy mapping; let the traveller expand/reactivate a record. Do not reactivate all old arrivals because they lack end dates.
 - Retain readiness history, but keep a result valid only where its dependency semantics remain equivalent. Changed semantics require a fresh check.
-- Read version 1 backups through an explicit conversion path. Version the new backup independently from Room, preserve shared visit–stay associations in new-format backups, validate relationships, and roll back partial restore failures.
+- Treat backup restoration separately from in-place migration: retained history never establishes readiness on the receiving installation, and conflicts with current removal history require explicit review.
+- Read version 1 backups through an explicit conversion path. Version the new backup independently from Room, preserve shared visit–stay associations, distinct arrival IDs, and defined removal-history semantics in new-format backups; validate relationships and roll back partial restore failures.
 - Test duplicate restore and shared-file deletion. Unsupported future backup versions fail clearly without changing existing records.
 - Test every supported database migration path and representative backup fixtures with actual encrypted evidence. Do not use destructive migration fallback.
 
@@ -643,31 +756,58 @@ Baseline reviewed on 3 November 2026: Room schema version 7; manual encrypted ba
 
 | Scenario | Required result | Owning milestone |
 |---|---|---|
-| One place, one stay | Focused creation/detail; no mandatory multi-stop setup | 7.1 |
-| One place, multiple stays | One active journey; separate stay details and completion | 7.1 |
-| Multiple places, one stay | One base booking and accommodation period; accessible across visits without duplicate documents, checklists, readiness history, or check-in reminders | 7.0/7.1 model; 7.2 flow |
-| Multiple places, multiple stays | Correct visit/stay associations and incoming travel; no forced one-to-one mapping | 7.0/7.1 model; 7.2 flow |
-| Hotel-change day | Current and next accommodation accessible together; no silent midnight swap | 7.1 |
-| Stay already underway | Earlier check-in allowed within an ongoing journey | 7.1 |
-| Missing dates or overlapping bookings | Explicit choice/review; no guessed arrival target | 7.1 |
-| Independent readiness | Checking or editing one arrival does not mark another ready | 7.1 |
-| Shared confirmation PDF | Unlinking one stay leaves the other association readable | 7.1 |
-| Scoped handoff | Address sharing exposes only the selected arrival's reviewed details | 7.1 |
-| Notification after route edit | Opens its stable intended arrival or shows honest cancellation/missing-target recovery | 7.1 |
-| Midnight while app remains open | Date-derived state refreshes without false physical-arrival assumptions | 7.1 |
-| Existing database and version 1 backup | Saved content and encrypted files remain usable; no invented dates | 7.1 |
+| Real hotel-change problem | Grouped arrivals improve preparation or correct-target retrieval over existing workarounds; no wrong target is accepted | 7.0A |
+| One place, one stay | Focused creation/detail; no mandatory multi-stop setup | 7.0A validation; 7.1A compatibility; 7.1B flow |
+| One place, multiple stays | One active journey; separate stay details and completion | 7.1B |
+| Multiple places, one stay | One base booking and accommodation period; stay check-in state shared, arrival transport tasks and readiness independently owned | 7.0B/7.1A model; 7.2 flow |
+| Multiple places, multiple stays | Correct visit/stay associations and incoming travel; no forced one-to-one mapping | 7.0B/7.1A model; 7.2 flow |
+| Hotel-change day | Current and next accommodation accessible together; no silent midnight swap | 7.1B |
+| Stay already underway | Earlier check-in allowed within an ongoing journey | 7.1B |
+| Missing dates or overlapping bookings | Explicit choice/review; no guessed arrival target | 7.1B |
+| Independent lifecycle and readiness | Completed is not ready; ready is not completed; cancellation does not overload readiness | 7.0B contract; 7.1A persistence; 7.1B flow |
+| Independent readiness | Checking or editing one arrival does not mark another ready; shared dependency changes invalidate affected snapshots | 7.1B |
+| Ongoing-base return | New arrival ID and fresh transport/return tasks/readiness; same stay, completed check-in tasks, and original check-in reminder | 7.0B/7.1A model; conditional 7.1B flow when validated; later evidence-gated flow otherwise |
+| Identical arrival reference tuples | Distinct arrivals persist with the same visit/stay/transfer tuple and retain independent operational state | 7.0B/7.1A persistence; conditional 7.1B flow |
+| Shared confirmation PDF | Unlinking one stay leaves the other association readable | 7.1A persistence; 7.1B flow |
+| Scoped handoff | Address sharing exposes only the selected arrival's reviewed details | 7.1B |
+| Notification after route edit | Opens its stable intended arrival; corrected event keeps its ID, replacement never silently reuses it | 7.1A compatibility; 7.1B flow |
+| Cancelled/deleted arrival target | Explicit recovery through retained identity/tombstone or honest missing-target handling; never opens a replacement automatically | 7.1A |
+| Removal-history purge / parent deletion | Deleted travel content is removed; stale IDs still cannot be recycled or silently retargeted | 7.0B contract; 7.1A |
+| Existing reliability baseline | Delete/restore, missing ticket routes, preview cleanup, and interrupted restore recover without data loss or indefinite loading | 7.0C |
+| Ordinary excursion without an offline pack need | No automatic arrival record; deliberate meaningful arrivals remain supported | 7.0B contract; 7.2 flow |
+| Midnight while app remains open | Date-derived state refreshes without false physical-arrival assumptions | 7.1B |
+| Existing database and version 1 backup | Saved content and encrypted files remain usable; legacy routes resolve; no invented dates | 7.1A |
 | Airplane mode, large text, TalkBack | Selected address and evidence remain reachable and readable | Every milestone |
 | Return to a previously visited place | Separate visit identity; reuse an uninterrupted base or create a distinct stay for a new accommodation period as appropriate | 7.2 |
 | Base outside the selected place | Clearly labelled actual accommodation location; selected destination address is not replaced by the base address | 7.2 |
 | Remove a visit using a base | Stay, dates, documents, and other visit associations remain intact | 7.2 |
-| Shared base backup round trip | One stay with all visit associations restored; evidence remains readable without duplicated bookings | 7.1 persistence; 7.2 end-to-end |
+| Shared base backup round trip | One stay, all visit associations, and distinct arrival IDs restored; evidence remains readable without duplicated bookings | 7.1A persistence; 7.2 end-to-end |
 | Overnight bus / unbooked stop | Gap is allowed; no fabricated hotel | 7.2 |
 | Reordered route | Booking dates and document ownership stay unchanged | 7.2 |
-| Open-ended journey | Remains open until explicitly completed or an agreed known-end rule applies | 7.1; extended in 7.3 |
-| Phone timezone change | Known destination-local reminder intent is preserved; unknown-zone fallback is explicit | 7.1 contract; advanced timing in 7.3 |
+| Open-ended journey | Remains open until explicitly completed or an agreed known-end rule applies | 7.1A model; 7.1B flow; extended in 7.3 |
+| Phone timezone change | Known destination-local reminder intent is preserved; unknown-zone fallback is explicit | 7.0B contract; 7.1B reminders; advanced timing in 7.3 |
+| Return arrivals on different dates with identical references | Each keeps its own planned date and reminder; original check-in is not reused as the return date | 7.0B contract; 7.1B |
+| Destination/transit arrival without a stay | Purpose-specific readiness verifies relevant information without requiring a fake hotel | 7.0B contract; 7.2 flow |
+| Overlapping trips / tied next arrivals | Explicit eligible choice or chooser; no unintended cross-trip target | 7.0B contract; 7.1B |
+| Edit while an offline check is running | Stale result cannot establish readiness for changed dependencies | 7.1B |
+| Two same-day reminders / cancellation race | Independent alarms/notifications; cancelled target does not post | 7.1A identity; 7.1B flow |
+| Process termination during mutation / backup | Consistent graph and evidence; idempotent recovery without lost shared files or recreated reminders | 7.0C baseline; 7.1A graph migration |
+| Restore older backup on a receiving installation | Historical checks are not current readiness; removed arrivals and old reminders do not reactivate without review | 7.1A |
 | Re-entry to a country | New entry context; old completed entry tasks do not silently carry over | 7.3 |
 
 Validate that travellers can identify the intended arrival and retrieve its address/evidence without increased friction in the single-stay flow. Organisation alone is not the success measure; correct offline retrieval remains the primary outcome.
+
+#### Implementation planning and delivery gates
+
+Track concrete evidence instead of a percentage estimate of roadmap readiness:
+
+1. **Problem gate — 7.0A:** real-journey evidence that grouping solves hotel-change/current-next retrieval without burdening single-stay use.
+2. **Contract gate — 7.0B:** reviewed creation commands, identity/cardinality invariants, lifecycle/readiness separation, conservative legacy mapping, inclusion rule, task ownership, selection/recovery rules, prototypes, and migration fixtures.
+3. **Reliability gate — 7.0C:** verified delete/restore, missing-route, preview-lifetime, interrupted-restore, and staged file-operation corrections.
+4. **Compatibility gate — 7.1A:** passing non-destructive migration/backup/encrypted-file checks and correct legacy/stale entry-point resolution.
+5. **Vertical-slice gate — 7.1B:** passing single-stay and two-stay scenarios across offline retrieval, readiness, tasks, reminders, widgets/shortcuts, and handoff; include the ongoing-base return flow only when 7.0A validates that need, while retaining its persistence fixture in either case.
+
+Document completion of each gate only after its own required work and verification. This roadmap update does not claim any gate has passed or authorise migration implementation.
 
 #### Research informing this direction
 
@@ -683,10 +823,11 @@ The sources below informed the 3 November 2026 proposal. Vendor capabilities est
 | [RFC 5545](https://www.rfc-editor.org/rfc/rfc5545.html) | Distinguishes dates, date-times, timezone context, and non-inclusive event ends. | Calendar semantics inform interval handling; they do not dictate physical hotel check-out time. |
 | [IANA Time Zone Database](https://www.iana.org/time-zones) | Location-based timezone rules support event-local timing. | No timezone is guessed when the place or event lacks enough information. |
 | [Android Room migrations](https://developer.android.com/training/data-storage/room/migrating-db-versions) | Supports explicit migrations and migration testing; destructive fallback can lose data. | Database tests alone do not verify encrypted files or manual backup conversion. |
+| [Android PendingIntent](https://developer.android.com/reference/android/app/PendingIntent) | Intent extras alone do not distinguish pending intents; distinct matching identity or request codes are needed for separate operations. | Persistent Arrival IDs still need correct Android alarm/notification mapping and receiver-side validation. Reviewed on 4 November 2026. |
 
 ### Phase 8 — Import an existing itinerary
 
-Status: planned on 3 November 2026; implementation has not started. Candidate fast follow to Phase 7.2, not a prerequisite for Phase 7 delivery. Advanced country context in 7.3 is not a dependency.
+Status: planned on 3 November 2026; refined on 4 November 2026; implementation has not started. Independently gated product/reliability releases, not a promised fast follow or a prerequisite for Phase 7 delivery. Advanced country context in 7.3 is not a dependency.
 
 Goal: reduce manual entry by converting traveller-supplied itinerary text or a selected PDF into a reviewable trip draft using the Phase 7 model.
 
@@ -695,14 +836,26 @@ This is an input shortcut for information the traveller already has. It does not
 #### Import flow and scope
 
 1. The traveller explicitly pastes text or chooses an itinerary PDF.
-2. The app extracts candidate journey details into a temporary draft.
-3. A review shows proposed visits, stays, associations, transfer information, missing fields, and unresolved ambiguities alongside relevant source excerpts.
+2. The app extracts suggestions into an `ImportCandidate`, separate from persisted trip entities.
+3. A review shows proposed visits, stays, arrivals, associations, transfer information, missing fields, and unresolved field/relationship ambiguities alongside relevant source excerpts.
 4. The traveller corrects, excludes, or confirms the proposed information.
 5. A deliberate save creates the journey. Imported arrivals remain “Not checked” until their normal offline readiness checks run.
 
 Supported inputs are pasted textual itineraries and PDFs with extractable text. Arbitrary layouts, unsupported languages, password-protected files, and scanned/image-only PDFs need explicit detection or honest failure handling; recognition of every document is not promised. OCR is a later candidate if traveller evidence and processing evaluation justify it.
 
-The first release creates a new trip. Importing into an existing trip, merging bookings, and updating an earlier import are deferred until identity and conflict handling are defined. Text import can ship before PDF import if that produces a reliable smaller slice.
+The first release creates a new trip. Importing into an existing trip, merging bookings, and updating an earlier import are deferred until identity and conflict handling are defined. Text import ships first through 8.1; PDF import is a separate 8.2 release with its own quality gate.
+
+#### ImportCandidate and uncertainty contract
+
+`ImportCandidate` is an extraction/review model, not a partially saved `Trip`. It has candidate-local IDs, source excerpts/page references, proposed fields and relationships, unresolved alternatives, and traveller edits. Candidate IDs never become operational notification or navigation targets.
+
+- Track uncertainty and confirmation separately for each field and relationship, including dates, address ownership, visit–stay base links, and proposed arrivals.
+- Distinguish directly extracted, tentative, missing, conflicting, and traveller-confirmed information. Do not use one overall confidence score to hide uncertain associations.
+- A place mentioned in source text is not automatically a meaningful visit or arrival. Apply the Phase 7 offline-pack inclusion rule.
+- Keep an ongoing-base return distinct from a new accommodation period, even when the proposed arrival reference tuples match.
+- Resolve candidate relationships and validate invariants before commit. Only deliberate save creates persisted trip/visit/stay/arrival IDs and their associations.
+- No candidate schedules notifications, publishes widget/shortcut targets, or records operational readiness. Saving confirmed content creates planned arrivals with unchecked readiness and opt-in reminders.
+- If the review draft is retained across app restarts, define candidate-specific storage, protection, expiry/cleanup, and provenance handling in 8.0; retained candidates remain outside operational trip repositories.
 
 #### Mapping and review contract
 
@@ -713,7 +866,7 @@ The first release creates a new trip. Importing into an existing trip, merging b
 - Preserve date-only information. Missing years, ambiguous numeric dates, relative dates, overnight transfers, and timezones require review; suggestions remain visibly tentative until confirmed.
 - Never fabricate a hotel, address, check-out date, country, timezone, booking reference, or confirmation of booking validity.
 - Distinguish booked accommodation from alternatives, cancelled reservations, and recommendations. Unresolved alternatives remain review items rather than active stays.
-- Identify proposed fields as source-derived or needing confirmation. Keep the source excerpt/page reference available during review; do not use an unexplained confidence percentage as a correctness guarantee.
+- Identify each proposed field and relationship as source-derived or needing confirmation. Keep the source excerpt/page reference available during review; uncertainty cannot be replaced with a single confidence percentage.
 - Preserve provided address wording and local-language text. Any future language translation must remain visibly separate from the original, especially for driver handoff.
 - Activities, restaurant suggestions, marketing copy, and other information outside the arrival model do not create new product features. Show an excluded/unmapped-content summary; offer explicit source retention rather than silently claiming the entire itinerary was imported.
 - Treat document content as data, not instructions to the app or processing engine. It cannot authorise uploads, external actions, changes to existing trips, or bypassing review.
@@ -723,7 +876,7 @@ The first release creates a new trip. Importing into an existing trip, merging b
 
 - Prefer device-local processing. Select the extraction approach only after evaluating supported formats, accuracy, device cost, and offline behaviour in 8.0; neither AI nor a particular provider is assumed.
 - No automatic clipboard reading, background import, or upload of text/PDF content. Paste and file selection are explicit user actions.
-- If local processing cannot meet the agreed scope, any proposed remote processing needs a separate product/privacy decision before implementation: transmitted fields, provider handling/retention, cost, consent, and network failure behaviour. Existing offline arrival features must remain independent of it.
+- OCR, language translation, and remote AI are outside 8.2 unless separately approved through a recorded scope/privacy decision. If local processing cannot meet the agreed scope, narrow it or propose that separate decision before implementation: transmitted fields, provider handling/retention, cost, consent, and network failure behaviour. Existing offline arrival features must remain independent of it.
 - Keep travel content out of telemetry, crash reports, and diagnostic logs. Limit temporary copies and define their cleanup and draft-retention behaviour.
 - Reuse existing file limits and safe document intake controls. Source PDF retention is explicit and uses the protected attachment pipeline, not an unprotected parallel store.
 - Parsing a PDF does not attach it to every arrival. The traveller reviews evidence associations; one retained source may support several contexts without duplication.
@@ -733,34 +886,40 @@ The first release creates a new trip. Importing into an existing trip, merging b
 
 #### 8.0 — Extraction and review feasibility
 
-- [ ] Define representative, non-sensitive fixtures for all four place/stay combinations, repeated places, unbooked sections, alternatives, and ambiguous dates.
+Fixture evaluation can begin once the 7.0 domain contract stabilises, before import UI implementation. It can expose model gaps without blocking Phase 7 or authorising an import release. Persisted-trip integration depends on the relevant verified Phase 7 capabilities.
+
+- [ ] Define representative, non-sensitive fixtures for all four place/stay combinations, repeated places, ongoing-base returns, ordinary excursions, unbooked sections, alternatives, and ambiguous dates.
+- [ ] Define `ImportCandidate`, candidate-local identity, field/relationship uncertainty, provenance, review edits, and commit mapping to persisted Arrival IDs.
 - [ ] Evaluate text extraction and mapping approaches against those fixtures without assuming an external service.
 - [ ] Define supported input formats/languages, limits, source provenance, temporary-data handling, and unsupported-file recovery.
 - [ ] Specify editable preview behaviour and the boundary between tentative suggestions and confirmed trip fields.
-- [ ] Compare import plus correction with manual entry; record field/association errors and critical wrong-address or wrong-stay failures.
-- [ ] Decide whether text and PDF can ship together or text should ship first. Define the processing/privacy decision before choosing libraries or services.
+- [ ] Predeclare measurable release thresholds, fixture/trial sample sizes, and denominators for wrong-address rate, wrong stay/visit association rate, date interpretation errors, correction time versus manual entry, and import abandonment. Measure extraction proposals and final saved errors separately.
+- [ ] Compare total import/review/correction effort with manual entry using the same supported journeys. Include unsupported-input and cancellation outcomes rather than measuring successful imports alone.
+- [ ] Define separate text and PDF benchmarks; confirm text-first delivery and the independently gated PDF release.
+- [ ] Define the processing/privacy decision before choosing libraries or services. Keep OCR, translation, and remote AI outside the initial text/PDF commitments.
 
-Exit condition: a bounded import scope and processing approach demonstrate lower entry effort without concealing uncertainty or weakening the device-local arrival experience. If correction is harder than manual entry, narrow the supported inputs before committing to a fast-follow release.
+Exit condition: a bounded import scope, `ImportCandidate` contract, processing approach, and measurable release thresholds are agreed. Fixture/trial evidence must show lower entry effort without hiding uncertainty before either release proceeds. Thresholds remain to be set in 8.0; no accuracy result or fast-follow schedule is claimed.
 
 #### 8.1 — Paste text into a reviewed trip draft
 
 - [ ] Add explicit paste entry and cancellable processing.
-- [ ] Map supported itinerary text into independently owned visits/stays and their associations, with optional saved transfers.
+- [ ] Map supported itinerary text into candidate visits/stays/arrivals and their associations, with optional saved transfers.
 - [ ] Show editable source-backed review, missing information, uncertain dates, and unmapped content.
-- [ ] Save only the traveller-confirmed new journey; keep readiness unchecked and notifications opt-in.
+- [ ] Commit only the traveller-confirmed candidate as a new journey with stable Arrival IDs; keep lifecycle planned, readiness unchecked, and notifications opt-in.
 - [ ] Verify persistence, backup round trip, duplicate-import review, and recovery from cancellation/failure.
 
-Exit condition: a traveller can paste a supported itinerary, correct its proposed structure, and save an accurate journey without entering every arrival manually. The confirmed trip remains usable offline.
+Exit condition: the text-specific quality thresholds defined in 8.0 pass, and a traveller can paste a supported itinerary, correct its proposed structure, and save a journey with correct arrival associations and less effort than manual entry. The confirmed trip remains usable offline. No undetected critical address/association error is accepted in the release fixture results.
 
 #### 8.2 — PDF itinerary intake
 
-- [ ] Add explicit PDF selection and bounded extraction into the same review flow.
+- [ ] Add explicit PDF selection and bounded extraction into the same `ImportCandidate` review flow as a separate release.
 - [ ] Preserve page/source references for proposed details and handle multi-page layout ambiguity.
 - [ ] Detect or clearly report protected, scanned, malformed, oversized, and unsupported PDFs. Offer text/manual entry when extraction cannot proceed.
 - [ ] Offer explicit source-PDF retention and reviewed evidence associations through the existing encrypted attachment pipeline.
 - [ ] Verify cancellation, temporary-file cleanup, unreadable input recovery, and retained-source readability.
+- [ ] Meet the independently measured PDF thresholds; do not use text-import results as proof of PDF accuracy. OCR, language translation, and remote AI are not part of this release without a separate recorded approval.
 
-Exit condition: a supported PDF produces a reviewable journey draft with correct visit/stay associations. Unsupported files fail honestly without losing existing data or implying successful conversion.
+Exit condition: the PDF-specific quality thresholds defined in 8.0 pass, and a supported PDF produces a reviewable candidate with correct visit/stay/arrival associations. Unsupported files fail honestly without losing existing data or implying successful conversion. No undetected critical address/association error is accepted in the release fixture results.
 
 #### Acceptance and follow-up gate
 
@@ -769,6 +928,9 @@ Exit condition: a supported PDF produces a reviewable journey draft with correct
 | All four place/stay combinations | Correct independent visits/stays and associations; no assumed one-to-one mapping |
 | Several places using one base | One accommodation period, booking, and check-in; base location stays accurate |
 | Return visit / repeat property | Preserve distinct visits and new accommodation periods where explicitly present |
+| Ongoing-base return | Distinct candidate/persisted arrivals can share the same references; no duplicate stay/check-in or copied readiness |
+| Ordinary excursion | Excluded unless the traveller deliberately needs an offline arrival pack |
+| Uncertain relationship | Visit/stay/arrival association flagged and reviewed, even where extracted names and dates appear clear |
 | Missing address, year, or end date | Clearly incomplete draft or confirmation request; no invented factual field |
 | Cancelled booking or suggested alternative | Not silently promoted into an active stay |
 | Unsupported or scanned PDF | Honest recovery; OCR availability is not assumed |
@@ -777,7 +939,7 @@ Exit condition: a supported PDF produces a reviewable journey draft with correct
 | Cancel, failure, or repeat import | Existing data unchanged; no orphaned partial trip or silent merge |
 | Saved import in airplane mode | Arrival content works offline; parsed content is not automatically marked ready |
 
-OCR, broader language support, and updates to existing journeys remain future candidates. Promote them only when measured import failures or traveller demand justify their complexity. Review errors and correction burden are release criteria, not just extraction completion.
+OCR, language translation, broader input-language support, remote AI, and updates to existing journeys remain separately evaluated candidates. Promote them only when measured import failures or traveller demand justify their complexity and the required scope/privacy decision is recorded. Review errors, correction burden, and abandonment are release criteria, not just extraction completion.
 
 ## Considered, deferred, and superseded register
 
@@ -806,7 +968,7 @@ Claude project handoff history.
 |---|---|---|---|
 | Product name: “Travel with Thikana” | Confirmed on 3 November 2026 | The app now uses Travel with Thikana across launcher branding, screens, widgets, shared text and exports. Saved travel records are called trips. | Use this name in store listings and public product copy. The existing application ID and storage identifiers are retained for compatibility. |
 | Arrival date and time | Date-only remains the default; optional timing deferred | A required time added form friction and implied precision the core arrival flow did not need. Phase 7 preserves date-only creation. | Phase 7.3 may introduce optional endpoint timing where traveller validation proves a reminder or transfer need; required precise arrival times remain outside scope. |
-| Creating trips for historical arrival dates | Current restriction; targeted change planned | Shipped creation/editing limits dates to today or later. An ongoing multi-stay journey may need a stay whose check-in has already occurred. | Phase 7.1 permits that ongoing-journey case. Arbitrary historical reconstruction is not a prerequisite. |
+| Creating trips for historical arrival dates | Current restriction; targeted change planned | Shipped creation/editing limits dates to today or later. An ongoing multi-stay journey may need a stay whose check-in has already occurred. | Phase 7.1B permits that ongoing-journey case. Arbitrary historical reconstruction is not a prerequisite. |
 
 ### Phase 2 — Arrival evidence
 
@@ -839,8 +1001,8 @@ kept outside the Phase 3.5 commitments shown above.
 | Bag recovery pack | Future candidate | Luggage photos, baggage tags, airline contacts, and missing-bag references are adjacent to arrival resilience but form a distinct recovery workflow. | Promote only after research shows it is frequent and urgent enough to remain inside the first-90-minutes boundary. |
 | User-initiated “I arrived” message | Future candidate | A prefilled system share avoids tracking, but traveller demand is mixed and formal check-ins can create unwanted safety expectations. | Validate demand during 3.5.5; keep it explicit, user-initiated, and free of background monitoring. |
 | Duplicate an arrival trip | Future candidate | Reuse may help frequent travellers, but curated and personal checklist templates already cover part of the need. | Validate whether users need whole-trip duplication before adding it to Phase 5. |
-| Several arrivals in one journey | Promoted to planned roadmap | One hotel per trip cannot represent hotel changes or repeated city visits while preserving a coherent journey. | Phase 7.1–7.3. Group arrivals while retaining the first-90-minutes boundary; implementation has not started. |
-| Traveller-supplied itinerary conversion | Promoted to planned roadmap | Re-entering existing itinerary text/PDFs adds preparation effort. | Phase 8: reviewed import into the Phase 7 model; candidate fast follow after 7.2. This does not introduce itinerary generation or automatic inbox scanning. |
+| Several arrivals in one journey | Promoted to planned roadmap | One hotel per trip cannot represent hotel changes or repeated city visits while preserving a coherent journey. | Phase 7.1A compatibility, 7.1B multi-stay delivery, then 7.2/7.3. Persist operational Arrival IDs while retaining the first-90-minutes boundary; implementation has not started. |
+| Traveller-supplied itinerary conversion | Promoted to independently gated releases | Re-entering existing itinerary text/PDFs adds preparation effort, but conversion needs its own accuracy and correction-effort evidence. | Phase 8 uses `ImportCandidate`; 8.0 fixtures can follow the stabilised 7.0 contract. Text ships first; PDF needs a separate release gate. No fast-follow schedule, itinerary generation, or automatic inbox scanning is committed. |
 | OCR and updates to an existing imported journey | Future candidates | Image-only inputs and merging changes add recognition, identity, and conflict-handling requirements beyond the first import slice. | Revisit after Phase 8 measures unsupported-input frequency and correction burden; retain the explicit review/privacy gates. |
 
 ### Explicit boundaries, not future enhancements
@@ -976,8 +1138,27 @@ Early validation should focus on behaviour rather than download volume:
 - Planned a narrow relaxation of past-date validation for stays already underway; broader historical reconstruction remains outside the first slice.
 - Made version 7 database upgrades, version 1 backup conversion, stable legacy IDs, and readable encrypted evidence release gates.
 - Kept country-entry preparation and optional precise transfer timing behind later validation; daily itinerary planning, booking, tracking, discovery, and backend services remain non-goals.
-- Added planned Phase 8 for explicit text/PDF itinerary conversion, with editable source-backed review before saving. It is a candidate fast follow after 7.2 and does not block journey grouping.
+- Added planned Phase 8 for explicit text/PDF itinerary conversion, with editable source-backed review before saving. Initially framed as a candidate fast follow after 7.2; the 4 November decision below replaces that sequencing assumption. It does not block journey grouping.
 - Kept extraction approach open pending feasibility work; no AI service, remote upload, or universal PDF/OCR support is assumed. Saved imports retain normal scoped offline readiness checks.
+
+### 4 November 2026 — Arrival contract and independent import gates
+
+- Required a persisted Arrival as the operational target for navigation, reminders, widgets/shortcuts, quick access, readiness, and arrival tasks. The earlier uncommitted arrival-persistence choice is superseded.
+- Separated arrival lifecycle (`planned`, `cancelled`, `completed`) from offline and Plan B readiness. Removal history/tombstones support honest old-target recovery without retaining deleted travel content or reusing IDs.
+- Prohibited uniqueness on `(visitId, stayId, incomingTransferId)`: meaningful returns can share those references and still have distinct arrival IDs.
+- Separated stay-owned check-in completion from arrival-owned transport/return preparation. Added ongoing-base return scenarios with no duplicate booking, check-in tasks, or check-in reminder, and no copied readiness.
+- Defined place visits by deliberate offline arrival-pack need; ordinary excursions and imported place mentions do not automatically create arrivals.
+- Split implementation into 7.0 contracts/prototypes, 7.1A compatibility foundation, 7.1B multi-stay vertical delivery, 7.2 multiple places, and discovery-gated 7.3 extensions.
+- Replaced informal percentage-readiness assessments with explicit contract, compatibility, and vertical-slice gates. No gate is claimed complete by this documentation update.
+- Recast Phase 8 as an independent reliability/product decision using `ImportCandidate`, with uncertainty per field and relationship. Its fixtures can evaluate the stabilised 7.0 contract early.
+- Required predeclared, measured release thresholds for address/association/date errors, correction effort, and abandonment. Text import ships first; PDF is a separate release, with OCR, language translation, and remote AI outside its scope unless separately approved.
+- Updated roadmap and compatibility requirements only; app implementation remains pending.
+- Audited remaining Phase 7 edges before committing the plan: arrival-owned dates, purpose-specific readiness, overlapping-trip selection, stale-check rejection, distinct Android entry identities, interrupted-operation recovery, consistent backups, and reviewed restoration of removed targets. Added these to 7.0 contracts and delivery acceptance; no extra itinerary capability was introduced.
+- Separated evidence of traveller need from architectural soundness. Phase 7.0 now begins with real hotel-change/current-next/return-to-base validation; all four structures remain design compatibility scenarios, not immediate implementation commitments.
+- Defined explicit creation semantics and conservative legacy checklist migration: simple saves create the first arrival, drafts may have none, only deliberate actions create additional arrivals, edits preserve identity, and ambiguous existing tasks remain intact on the migrated arrival.
+- Added a reliability-baseline gate before migration for Delete/Undo evidence loss, stale ticket-route loading, viewer-safe plaintext-preview cleanup, interrupted restore, and staged filesystem/database recovery. These are code-inspection findings pending reproduction and verification.
+- Limited 7.1 implementation to the smallest relationships required by validated accommodation changes. Multi-place UI requires evidence after the vertical slice; migration is not authorised merely because this proposed roadmap is committed.
+- Clarified that reliability repairs can proceed independently of traveller validation, while all three 7.0 gates remain prerequisites for migration. Restricted 7.1A to the minimum validated relationships and made traveller-facing return-to-base delivery conditional on evidence while retaining its architectural fixture.
 
 ## Maintaining this plan
 
