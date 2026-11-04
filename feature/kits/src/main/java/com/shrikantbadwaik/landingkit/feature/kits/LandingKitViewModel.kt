@@ -72,6 +72,7 @@ class LandingKitViewModel @Inject constructor(
     private val _planBCheckState =
         MutableStateFlow<PlanBCheckUiState>(PlanBCheckUiState.Idle)
     private var attachmentRelockJob: Job? = null
+    private var attachmentViewingGeneration = 0
 
     init {
         viewModelScope.launch {
@@ -215,16 +216,20 @@ class LandingKitViewModel @Inject constructor(
         _isAttachmentAccessUnlocked.value = true
         attachmentRelockJob = viewModelScope.launch {
             delay(ATTACHMENT_UNLOCK_DURATION_MILLIS)
-            _isAttachmentAccessUnlocked.value = false
+            lockAttachmentAccess()
         }
     }
 
     fun lockAttachmentAccess() {
+        attachmentViewingGeneration++
+        attachmentRepository.endViewingSession()
         attachmentRelockJob?.cancel()
         attachmentRelockJob = null
         _isAttachmentAccessUnlocked.value = false
         _pendingAttachmentAuthentication.value = null
     }
+
+    fun cleanInactiveViewingPreviews() = attachmentRepository.cleanInactiveViewingPreviews()
 
     fun acceptSharedAttachments(sources: List<Uri>) {
         if (sources.isEmpty()) return
@@ -308,15 +313,23 @@ class LandingKitViewModel @Inject constructor(
         attachmentId: String,
         onPrepared: (Result<PreparedAttachment>) -> Unit,
     ) {
+        val generation = attachmentViewingGeneration
         viewModelScope.launch {
             val result = try {
+                if (userPreferences.attachmentProtectionEnabled.first() && !_isAttachmentAccessUnlocked.value) {
+                    throw SecurityException("Attachment access is locked")
+                }
                 Result.success(attachmentRepository.prepareForViewing(attachmentId))
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Throwable) {
                 Result.failure(error)
             }
-            onPrepared(result)
+            if (generation == attachmentViewingGeneration) {
+                onPrepared(result)
+            } else {
+                result.getOrNull()?.close()
+            }
         }
     }
 

@@ -2,6 +2,9 @@ package com.shrikantbadwaik.landingkit.feature.kits.presentation.security
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.ClipData
+import android.content.pm.PackageManager
+import android.os.Process
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -47,20 +50,36 @@ internal fun rememberProtectedAttachmentOpener(
     val openExternally: (KitAttachment) -> Unit = { attachment ->
         onPrepareAttachment(attachment.id) { result ->
             result.onSuccess { prepared ->
-                val contentUri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.fileprovider",
-                    prepared.file,
-                )
-                val intent = Intent(Intent.ACTION_VIEW)
-                    .setDataAndType(contentUri, prepared.mimeType)
-                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 try {
+                    val contentUri = FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        prepared.file,
+                    )
+                    val intent = Intent(Intent.ACTION_VIEW)
+                        .setDataAndType(contentUri, prepared.mimeType)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        .apply { clipData = ClipData.newRawUri("Saved document", contentUri) }
+                    val recipients = context.packageManager.queryIntentActivities(
+                        intent,
+                        PackageManager.MATCH_DEFAULT_ONLY,
+                    ).map { it.activityInfo.applicationInfo.uid }
+                    if (recipients.isEmpty()) throw ActivityNotFoundException()
+                    // The resolver owns the grant while a chooser is waiting for a selection.
+                    val recipientUids = (recipients + listOfNotNull(
+                        intent.resolveActivityInfo(context.packageManager, PackageManager.MATCH_DEFAULT_ONLY)
+                            ?.applicationInfo?.uid,
+                    )).distinct().filter { it != Process.myUid() }
+                    // Persist possible grantees before Android hands the URI to the selected viewer.
+                    prepared.retainForExternalViewing(contentUri, recipientUids)
                     context.startActivity(intent)
                 } catch (_: ActivityNotFoundException) {
                     latestFeedback.value(context.getString(R.string.attachment_no_viewer))
-                } catch (_: RuntimeException) {
+                } catch (_: Exception) {
                     latestFeedback.value(context.getString(R.string.attachment_open_failed))
+                } finally {
+                    // Android's grant, rather than our Activity's onStop, owns the external copy.
+                    prepared.close()
                 }
             }.onFailure {
                 latestFeedback.value(context.getString(R.string.attachment_open_failed))

@@ -64,6 +64,9 @@ import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.shrikantbadwaik.landingkit.core.data.PreparedAttachment
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.KitAttachment
@@ -71,9 +74,14 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.component.journa
 import com.shrikantbadwaik.landingkit.feature.kits.R
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Composable
 internal fun TicketPresentationScreen(
@@ -122,10 +130,44 @@ internal fun TicketPresentationScreen(
         if (attachmentProtectionEnabled && !isAttachmentAccessUnlocked) onExit()
     }
 
-    LaunchedEffect(attachment.id) {
-        onPrepareAttachment(attachment.id) { result ->
-            result.onSuccess { prepared = it }
-                .onFailure { preparationFailed = true }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(attachment.id, attachmentProtectionEnabled, isAttachmentAccessUnlocked, lifecycleOwner) {
+        var generation = 0
+        var active = false
+        fun stop() {
+            active = false
+            generation++
+            prepared?.close()
+            prepared = null
+        }
+        fun start() {
+            if (active || (attachmentProtectionEnabled && !isAttachmentAccessUnlocked)) return
+            active = true
+            preparationFailed = false
+            val requestGeneration = ++generation
+            onPrepareAttachment(attachment.id) { result ->
+                if (!active || requestGeneration != generation) {
+                    result.getOrNull()?.close()
+                } else {
+                    result.onSuccess {
+                        prepared?.close()
+                        prepared = it
+                    }.onFailure { preparationFailed = true }
+                }
+            }
+        }
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> start()
+                Lifecycle.Event.ON_STOP -> stop()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) start()
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            stop()
         }
     }
 
@@ -285,12 +327,19 @@ private fun PdfEvidence(
     onFailure: () -> Unit,
 ) {
     val document by produceState<PdfDocument?>(initialValue = null, file) {
-        value = withContext(Dispatchers.IO) { runCatching { PdfDocument(file) }.getOrNull() }
-        if (value == null) onFailure()
-    }
-    DisposableEffect(document) {
-        val activeDocument = document
-        onDispose { activeDocument?.close() }
+        var opened: PdfDocument? = null
+        try {
+            value = withContext(Dispatchers.IO) {
+                PdfDocument(file).also { opened = it }
+            }
+            awaitDispose { opened?.close() }
+        } catch (cancellation: CancellationException) {
+            opened?.close()
+            throw cancellation
+        } catch (_: Exception) {
+            opened?.close()
+            onFailure()
+        }
     }
     val pdf = document ?: return
 
@@ -499,14 +548,21 @@ private fun decodeImage(file: File): Bitmap? = runCatching {
 
 private class PdfDocument(file: File) : AutoCloseable {
     private val descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-    private val renderer = PdfRenderer(descriptor)
+    private val renderer = try {
+        PdfRenderer(descriptor)
+    } catch (error: Throwable) {
+        descriptor.close()
+        throw error
+    }
     private val mutex = Mutex()
+    private val closeRequested = AtomicBoolean(false)
     val pageCount: Int = renderer.pageCount
     val pageSizes: List<Pair<Float, Float>> = (0 until pageCount).map { index ->
         renderer.openPage(index).use { page -> page.width.toFloat() to page.height.toFloat() }
     }
 
-    suspend fun render(index: Int, width: Int): Bitmap = mutex.withLock {
+    suspend fun render(index: Int, width: Int): Bitmap? = mutex.withLock {
+        if (closeRequested.get()) return@withLock null
         renderer.openPage(index).use { page ->
             val height = (width * page.height.toFloat() / page.width).toInt().coerceAtLeast(1)
             Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
@@ -517,8 +573,21 @@ private class PdfDocument(file: File) : AutoCloseable {
     }
 
     override fun close() {
-        renderer.close()
-        descriptor.close()
+        if (closeRequested.compareAndSet(false, true)) {
+            closeScope.launch {
+                mutex.withLock {
+                    try {
+                        renderer.close()
+                    } finally {
+                        descriptor.close()
+                    }
+                }
+            }
+        }
+    }
+
+    private companion object {
+        val closeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     }
 }
 

@@ -10,6 +10,8 @@ interface AttachmentRepository {
     suspend fun importAttachment(tripId: String, source: Uri): KitAttachment
     suspend fun loadThumbnail(attachmentId: String): ByteArray?
     suspend fun prepareForViewing(attachmentId: String): PreparedAttachment
+    fun endViewingSession()
+    fun cleanInactiveViewingPreviews()
     suspend fun verifyAttachmentReadable(attachmentId: String): Boolean
     suspend fun setQuickAccessAttachment(tripId: String, attachmentId: String?)
     suspend fun deleteAttachment(attachmentId: String)
@@ -19,7 +21,15 @@ interface AttachmentRepository {
 data class PreparedAttachment(
     val file: File,
     val mimeType: String,
-)
+    private val onClose: () -> Unit = {},
+    private val onExternalAccess: (Uri, List<Int>) -> Unit = { _, _ -> },
+) : AutoCloseable {
+    fun retainForExternalViewing(uri: Uri, recipientUids: List<Int>) {
+        onExternalAccess(uri, recipientUids)
+    }
+
+    override fun close() = onClose()
+}
 
 class UnsupportedAttachmentException : IllegalArgumentException()
 class AttachmentTooLargeException : IllegalArgumentException()

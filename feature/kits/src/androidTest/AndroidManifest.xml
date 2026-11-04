@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Installed only in the instrumentation APK, never in the shipped app. -->
+        <activity
+            android:name="com.shrikantbadwaik.landingkit.feature.kits.presentation.security.PreviewGrantTestActivity"
+            android:exported="true"
+            android:label="Thikana verification viewer">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="application/pdf" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

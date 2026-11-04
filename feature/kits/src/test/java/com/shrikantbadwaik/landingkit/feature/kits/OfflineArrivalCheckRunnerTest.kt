@@ -131,6 +131,9 @@ class OfflineArrivalCheckRunnerTest {
         override suspend fun prepareForViewing(attachmentId: String): PreparedAttachment =
             PreparedAttachment(File("unused"), "application/pdf")
 
+        override fun endViewingSession() = Unit
+        override fun cleanInactiveViewingPreviews() = Unit
+
         override suspend fun verifyAttachmentReadable(attachmentId: String): Boolean = readable
         override suspend fun setQuickAccessAttachment(
             tripId: String,

@@ -99,26 +99,41 @@ class LocalAttachmentRepository(
                             store.saveThumbnail(attachment.tripId, attachment.id, thumbnail)
                         }
                     } finally {
-                        store.clearViewingPreviews(attachment.tripId, attachment.id)
+                        store.releaseViewingPreview(preview)
                     }
                 }
             }
         }
 
-    override suspend fun prepareForViewing(attachmentId: String): PreparedAttachment =
-        withContext(Dispatchers.IO) {
-            attachmentMutex.withLock {
-                val attachment = requireNotNull(dao.getAttachment(attachmentId))
-                PreparedAttachment(
-                    file = store.decryptToPreview(
+    override suspend fun prepareForViewing(attachmentId: String): PreparedAttachment {
+        var prepared: PreparedAttachment? = null
+        try {
+            return withContext(Dispatchers.IO) {
+                attachmentMutex.withLock {
+                    val attachment = requireNotNull(dao.getAttachment(attachmentId))
+                    val file = store.decryptToPreview(
                         tripId = attachment.tripId,
                         attachmentId = attachment.id,
                         extension = attachment.mimeType.previewExtension(),
-                    ),
-                    mimeType = attachment.mimeType,
-                )
+                    )
+                    PreparedAttachment(
+                        file = file,
+                        mimeType = attachment.mimeType,
+                        onClose = { store.releaseViewingPreview(file) },
+                        onExternalAccess = { uri, uids -> store.retainExternalPreview(file, uri, uids) },
+                    ).also { prepared = it }
+                }
             }
+        } catch (error: Throwable) {
+            // withContext may cancel delivery after IO has already created the plaintext copy.
+            prepared?.close()
+            throw error
         }
+    }
+
+    override fun endViewingSession() = store.endViewingSession()
+
+    override fun cleanInactiveViewingPreviews() = store.cleanInactiveViewingPreviews()
 
     override suspend fun verifyAttachmentReadable(attachmentId: String): Boolean =
         withContext(Dispatchers.IO) {

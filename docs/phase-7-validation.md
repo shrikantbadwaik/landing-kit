@@ -90,8 +90,9 @@ do not substitute a confidence percentage for evidence.
 - 7.0B: Tokyo fixture prepared; behavioural contract and prototypes pending review.
 - 7.0C: first repair slice removes misleading Delete/Undo and handles missing ticket
   targets. Explicit route document IDs now take precedence over pinned documents.
-- Viewing-preview lifetime, interrupted restore, and staged file/database recovery
-  remain outstanding. Neither this document nor the first repair slice closes 7.0C.
+- Viewing-preview lifetime is repaired and verified in the second delivery below.
+  Interrupted restore and staged file/database recovery remain outstanding;
+  7.0C stays open.
 
 ## First reliability delivery — 4 November 2026
 
@@ -127,6 +128,46 @@ do not substitute a confidence percentage for evidence.
 - Removed the temporary trip and its synthetic Downloads file after the rehearsal.
   Interruption/failure testing and the remaining reliability repairs are still
   required before closing 7.0C.
+
+## Viewing-preview reliability delivery — 4 November 2026
+
+- Decrypted copies now have unique session filenames. Thumbnail preparation cannot
+  replace or remove a copy being presented. Leaving the in-app presenter,
+  backgrounding, authentication expiry, and session lock release internal copies.
+  A preparation completing after its session ended is discarded.
+- Startup and foreground recovery remove abandoned plaintext copies and interrupted
+  temporary writes. Original encrypted attachments and encrypted thumbnails are
+  preserved.
+- Before opening an external viewer, an atomic journal records its preview URI and
+  eligible recipient UIDs, including the Android resolver. Cleanup checks Android's
+  actual read grants and preserves copies while their granted activity remains
+  active, including across Thikana process death. After the grant ends, cleanup
+  runs on foreground entry or a five-second retry while Thikana is running.
+  If its process is absent, recovery runs at the next startup.
+- PDF renderer and descriptor disposal now coordinate with rendering and close
+  resources when preparation is cancelled, the screen exits, or it backgrounds.
+- Automated verification on the Pixel 10 Pro API 37 emulator: seven preview-session
+  tests and two encrypted-store tests passed; five presenter lifecycle tests,
+  four route tests, and one accessibility/window test passed (19 total).
+  Session tests cover unique copies, lock, interrupted preparation, restart,
+  simulated active grants, failed launches, and malformed journal recovery.
+  Presenter tests include a generated PDF and background/foreground recreation.
+- All 53 existing model/feature unit tests passed. The debug build and app lint
+  passed; app lint reported zero errors and 16 dependency/version warnings.
+- Manual rehearsal used a separate `Preview-Verification` trip and synthetic PNG.
+  Android's Photos app rendered it; returning to Thikana removed its plaintext
+  copy and journal. The resolver chooser also retained the copy while open.
+- A test-only viewer in a separate app UID reopened the URI successfully after
+  `am kill` terminated Thikana's background process. The FileProvider restarted
+  Thikana (PID 9744 became 16803), and the viewer read all 511 bytes again.
+  Finishing that viewer removed both the copy and journal.
+- Arrival Mode's in-app presenter opened the same image using one internal copy
+  without an external journal; Back navigation left the preview directory empty.
+- Removed the temporary trip, its encrypted files, its synthetic Downloads file,
+  and the test-only viewer APK. The existing Kyoto trip remained present.
+  The viewer fixture exists only in instrumentation sources, outside the shipped app.
+- This closes the preview-lifetime item, not the reliability gate. Interrupted
+  backup restore and staged filesystem/database failure recovery are still pending.
 
 ## Verification practice for subsequent deliveries
 

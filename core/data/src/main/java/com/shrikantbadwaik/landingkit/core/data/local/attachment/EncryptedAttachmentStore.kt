@@ -18,10 +18,11 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+import android.net.Uri
 
 class EncryptedAttachmentStore(context: Context) {
     private val attachmentRoot = File(context.filesDir, "encrypted_attachments")
-    private val previewRoot = File(context.cacheDir, "attachment_previews")
+    private val previewSessions = AttachmentPreviewSessions(context)
 
     fun encrypt(
         tripId: String,
@@ -116,20 +117,11 @@ class EncryptedAttachmentStore(context: Context) {
         attachmentId: String,
         extension: String,
     ): File {
-        previewRoot.mkdirs()
-        deletePreviews(tripId, attachmentId)
         val source = attachmentFile(tripId, attachmentId)
-        val previewName = "$tripId-$attachmentId"
-        val destination = safeChild(previewRoot, "$previewName.$extension")
-        val temporary = safeChild(previewRoot, "$previewName.tmp")
-        try {
+        return previewSessions.create("$tripId-$attachmentId", extension) { temporary ->
             BufferedOutputStream(temporary.outputStream()).use { output ->
                 decryptFile(source, output, MAX_ATTACHMENT_BYTES)
             }
-            check(temporary.renameTo(destination)) { "Could not prepare attachment preview" }
-            return destination
-        } finally {
-            temporary.delete()
         }
     }
 
@@ -150,32 +142,24 @@ class EncryptedAttachmentStore(context: Context) {
     fun delete(tripId: String, attachmentId: String) {
         attachmentFile(tripId, attachmentId).delete()
         thumbnailFile(tripId, attachmentId).delete()
-        deletePreviews(tripId, attachmentId)
+        previewSessions.releaseMatching("$tripId-$attachmentId.")
     }
 
-    fun clearViewingPreviews(tripId: String, attachmentId: String) {
-        deletePreviews(tripId, attachmentId)
-    }
+    fun releaseViewingPreview(file: File) = previewSessions.release(file)
+
+    fun retainExternalPreview(file: File, uri: Uri, recipientUids: List<Int>) =
+        previewSessions.retainExternally(file, uri, recipientUids)
+
+    fun endViewingSession() = previewSessions.endSession()
+
+    fun cleanInactiveViewingPreviews() = previewSessions.cleanInactive()
 
     fun deleteTrip(tripId: String) {
         val tripDirectory = safeChild(attachmentRoot, tripId)
         if (tripDirectory.exists() && !tripDirectory.deleteRecursively()) {
             throw IOException("Could not delete encrypted trip attachments")
         }
-        previewRoot.listFiles()
-            ?.filter { it.name.startsWith("$tripId-") }
-            ?.forEach { preview ->
-                if (preview.exists() && !preview.delete()) {
-                    throw IOException("Could not delete attachment preview")
-                }
-            }
-    }
-
-    private fun deletePreviews(tripId: String, attachmentId: String) {
-        val prefix = "$tripId-$attachmentId."
-        previewRoot.listFiles()
-            ?.filter { it.name.startsWith(prefix) }
-            ?.forEach(File::delete)
+        previewSessions.releaseMatching("$tripId-")
     }
 
     private fun attachmentFile(tripId: String, attachmentId: String): File =

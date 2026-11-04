@@ -40,6 +40,11 @@ class MainActivity : FragmentActivity() {
         if (!isChangingConfigurations) viewModel.lockAttachmentAccess()
     }
 
+    override fun onStart() {
+        super.onStart()
+        viewModel.cleanInactiveViewingPreviews()
+    }
+
     private fun receiveSharedAttachments(incomingIntent: Intent?) {
         if (incomingIntent == null || !incomingIntent.isAttachmentShare) return
         val sources = incomingIntent.sharedAttachmentUris()
