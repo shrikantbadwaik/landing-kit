@@ -1,6 +1,7 @@
 package com.shrikantbadwaik.landingkit.core.data.local.repository
 
 import com.shrikantbadwaik.landingkit.core.data.local.backup.BackupRecoveryAccess
+import com.shrikantbadwaik.landingkit.core.data.local.backup.BackupRestoreRecovery
 import android.content.ContentResolver
 import android.database.Cursor
 import android.graphics.Bitmap
@@ -35,6 +36,7 @@ class LocalAttachmentRepository(
     private val dao: AttachmentDao,
     private val store: EncryptedAttachmentStore,
     private val access: BackupRecoveryAccess = BackupRecoveryAccess(),
+    private val recovery: BackupRestoreRecovery,
 ) : AttachmentRepository {
     private val attachmentMutex = Mutex()
 
@@ -43,7 +45,7 @@ class LocalAttachmentRepository(
 
     override suspend fun importAttachment(tripId: String, source: Uri): KitAttachment =
         withContext(Dispatchers.IO) {
-            attachmentMutex.withLock {
+            locked {
                 access.requireReady()
                 val metadata = source.metadata()
                 if (!metadata.mimeType.isSupportedAttachment()) throw UnsupportedAttachmentException()
@@ -51,9 +53,10 @@ class LocalAttachmentRepository(
                     throw AttachmentTooLargeException()
                 }
                 val id = UUID.randomUUID().toString()
-                try {
+                val publish: suspend () -> KitAttachment = {
                     val input = contentResolver.openInputStream(source) ?: throw FileNotFoundException()
                     val encryptedSize = store.encrypt(tripId, id, input)
+                    recovery.mutations.documentWritten()
                     if (metadata.mimeType.startsWith("image/")) {
                         source.imageThumbnail()?.let { thumbnail ->
                             try {
@@ -72,15 +75,12 @@ class LocalAttachmentRepository(
                         createdAtMillis = System.currentTimeMillis(),
                         isQuickAccess = false,
                     )
-                    try {
-                        dao.insertAttachment(entity)
-                    } catch (error: Throwable) {
-                        store.delete(tripId, id)
-                        throw error
-                    }
+                    dao.insertAttachment(entity)
                     entity.toModel()
+                }
+                try {
+                    recovery.mutations.import(tripId, id, publish)
                 } catch (_: AttachmentSizeLimitException) {
-                    store.delete(tripId, id)
                     throw AttachmentTooLargeException()
                 }
             }
@@ -88,10 +88,10 @@ class LocalAttachmentRepository(
 
     override suspend fun loadThumbnail(attachmentId: String): ByteArray? =
         withContext(Dispatchers.IO) {
-            attachmentMutex.withLock {
+            locked {
                 access.requireReady()
-                val attachment = dao.getAttachment(attachmentId) ?: return@withLock null
-                if (!attachment.mimeType.startsWith("image/")) return@withLock null
+                val attachment = dao.getAttachment(attachmentId) ?: return@locked null
+                if (!attachment.mimeType.startsWith("image/")) return@locked null
                 store.readThumbnail(attachment.tripId, attachment.id) ?: run {
                     val preview = store.decryptToPreview(
                         tripId = attachment.tripId,
@@ -113,7 +113,7 @@ class LocalAttachmentRepository(
         var prepared: PreparedAttachment? = null
         try {
             return withContext(Dispatchers.IO) {
-                attachmentMutex.withLock {
+                locked {
                     access.requireReady()
                     val attachment = requireNotNull(dao.getAttachment(attachmentId))
                     val file = store.decryptToPreview(
@@ -142,9 +142,9 @@ class LocalAttachmentRepository(
 
     override suspend fun verifyAttachmentReadable(attachmentId: String): Boolean =
         withContext(Dispatchers.IO) {
-            attachmentMutex.withLock {
+            locked {
                 access.requireReady()
-                val attachment = dao.getAttachment(attachmentId) ?: return@withLock false
+                val attachment = dao.getAttachment(attachmentId) ?: return@locked false
                 store.exists(attachment.tripId, attachment.id) &&
                     store.verifyDecryptable(attachment.tripId, attachment.id)
             }
@@ -154,28 +154,29 @@ class LocalAttachmentRepository(
         tripId: String,
         attachmentId: String?,
     ) = withContext(Dispatchers.IO) {
-        attachmentMutex.withLock {
+        locked {
             access.requireReady()
             dao.setQuickAccessAttachment(tripId, attachmentId)
         }
     }
 
     override suspend fun deleteAttachment(attachmentId: String) = withContext(Dispatchers.IO) {
-        attachmentMutex.withLock {
+        locked {
             access.requireReady()
-            val attachment = dao.getAttachment(attachmentId) ?: return@withLock
-            store.delete(attachment.tripId, attachment.id)
-            dao.deleteAttachment(attachment.id)
+            val attachment = dao.getAttachment(attachmentId) ?: return@locked
+            recovery.mutations.deleteAttachment(attachment.tripId, attachment.id)
         }
     }
 
     override suspend fun deleteAttachments(tripId: String): Int = withContext(Dispatchers.IO) {
-        attachmentMutex.withLock {
+        locked {
             access.requireReady()
-            store.deleteTrip(tripId)
-            dao.deleteAttachments(tripId)
+            recovery.mutations.deleteAttachments(tripId)
         }
     }
+
+    private suspend fun <T> locked(block: suspend () -> T): T =
+        recovery.dataOperation { attachmentMutex.withLock { block() } }
 
     private fun Uri.metadata(): SourceMetadata {
         val providerType = contentResolver.getType(this)

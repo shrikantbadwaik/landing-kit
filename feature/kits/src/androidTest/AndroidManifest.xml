@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application>
+        <activity
+            android:name="com.shrikantbadwaik.landingkit.feature.kits.notification.ReminderDeletionProbeActivity"
+            android:exported="true"
+            android:label="Thikana reminder verification">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <!-- Installed only in the instrumentation APK, never in the shipped app. -->
         <activity
             android:name="com.shrikantbadwaik.landingkit.feature.kits.presentation.security.PreviewGrantTestActivity"

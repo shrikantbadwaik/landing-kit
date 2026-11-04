@@ -441,6 +441,7 @@
     <string name="attachment_open_failed">This attachment couldn’t be opened.</string>
     <string name="attachment_no_viewer">No app on this device can open this file type.</string>
     <string name="attachment_delete_failed">This attachment couldn’t be removed. Try again.</string>
+    <string name="trip_delete_failed">Trip removal needs another attempt. Try recovery again if prompted.</string>
     <string name="attachment_protection_title">Ask before opening</string>
     <string name="attachment_protection_description">Use biometrics or your screen lock. Access stays open for 5 minutes, or until you leave the app.</string>
     <string name="attachment_protection_toggle_description">Require identity confirmation before opening attachments</string>

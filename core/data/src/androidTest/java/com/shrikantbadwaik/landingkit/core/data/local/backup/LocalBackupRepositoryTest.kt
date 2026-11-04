@@ -71,9 +71,9 @@ class LocalBackupRepositoryTest {
     fun encryptedRoundTripRestoresNewContentAndSkipsDuplicates() = runBlocking {
         val source = repository(sourceDatabase)
         val target = repository(targetDatabase)
-        val sourceTripRepository = LocalTripRepository(sourceDatabase.tripDao(), store)
+        val sourceTripRepository = LocalTripRepository(sourceDatabase.tripDao(), store, recovery = recovery(sourceDatabase))
         val sourceTemplateRepository = LocalChecklistTemplateRepository(
-            sourceDatabase.checklistTemplateDao(),
+            sourceDatabase.checklistTemplateDao(), recovery = recovery(sourceDatabase),
         )
         sourceTripRepository.saveTrip(sampleTrip())
         sourceTemplateRepository.saveTemplate(
@@ -127,7 +127,7 @@ class LocalBackupRepositoryTest {
     @Test
     fun wrongPasswordAndTamperingCannotBeInspected() = runBlocking {
         val source = repository(sourceDatabase)
-        LocalTripRepository(sourceDatabase.tripDao(), store).saveTrip(sampleTrip())
+        LocalTripRepository(sourceDatabase.tripDao(), store, recovery = recovery(sourceDatabase)).saveTrip(sampleTrip())
         source.exportBackup(Uri.fromFile(backupFile), PASSWORD.copyOf())
 
         assertUnlockFails {
@@ -154,7 +154,7 @@ class LocalBackupRepositoryTest {
         val target = repository(targetDatabase)
         for (id in listOf("hostile\u0000id", "hostile\nid", "x".repeat(65))) {
             sourceDatabase.tripDao().deleteTrip(id)
-            LocalTripRepository(sourceDatabase.tripDao(), store).saveTrip(sampleTrip().copy(id = id))
+            LocalTripRepository(sourceDatabase.tripDao(), store, recovery = recovery(sourceDatabase)).saveTrip(sampleTrip().copy(id = id))
             source.exportBackup(Uri.fromFile(backupFile), PASSWORD.copyOf())
             for (inspect in listOf(true, false)) {
                 try {
@@ -171,13 +171,11 @@ class LocalBackupRepositoryTest {
 
     private fun repository(database: LandingKitDatabase): LocalBackupRepository {
         val selectedStore = if (database === targetDatabase) targetStore else store
-        val recovery = BackupRestoreRecovery(context, database, selectedStore, UserPreferences(context),
-            File(targetRoot, if (database === targetDatabase) "target.json" else "source.json"),
-            File(context.cacheDir, "restore-work-${database.hashCode()}"))
+        val recovery = recovery(database)
         return LocalBackupRepository(
         context = context,
-        tripRepository = LocalTripRepository(database.tripDao(), selectedStore),
-        templateRepository = LocalChecklistTemplateRepository(database.checklistTemplateDao()),
+        tripRepository = LocalTripRepository(database.tripDao(), selectedStore, recovery = recovery),
+        templateRepository = LocalChecklistTemplateRepository(database.checklistTemplateDao(), recovery = recovery),
         attachmentDao = database.attachmentDao(),
         attachmentStore = selectedStore,
         userPreferences = UserPreferences(context),
@@ -185,6 +183,11 @@ class LocalBackupRepositoryTest {
         recovery = recovery,
     )
     }
+
+    private fun recovery(database: LandingKitDatabase) = BackupRestoreRecovery(context, database,
+        if (database === targetDatabase) targetStore else store, UserPreferences(context),
+        File(targetRoot, if (database === targetDatabase) "target.json" else "source.json"),
+        File(context.cacheDir, "restore-work-${database.hashCode()}"))
 
     private fun sampleTrip() = Trip(
         id = tripId,

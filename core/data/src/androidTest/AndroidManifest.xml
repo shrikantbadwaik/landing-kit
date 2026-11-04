@@ -1,5 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
+        <provider
+            android:name="com.shrikantbadwaik.landingkit.core.data.local.attachment.MutationEvidenceProvider"
+            android:authorities="com.shrikantbadwaik.landingkit.core.data.test.mutation-evidence"
+            android:exported="false" />
+        <activity
+            android:name="com.shrikantbadwaik.landingkit.core.data.local.attachment.MutationProcessProbeActivity"
+            android:exported="true"
+            android:label="Thikana document verification" />
         <activity
             android:name="com.shrikantbadwaik.landingkit.core.data.local.backup.RestoreProcessProbeActivity"
             android:exported="true"

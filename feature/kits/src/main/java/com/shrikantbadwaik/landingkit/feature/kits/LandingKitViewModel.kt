@@ -141,11 +141,19 @@ class LandingKitViewModel @Inject constructor(
         viewModelScope.launch { repository.setItemComplete(tripId, itemId, complete) }
     }
 
-    internal fun deleteKit(tripId: String, onDeleted: () -> Unit) {
+    internal fun deleteKit(tripId: String, onDeleted: (Result<Unit>) -> Unit) {
         viewModelScope.launch {
-            repository.deleteTrip(tripId)
-            arrivalReminderScheduler.cancel(tripId)
-            onDeleted()
+            val result = try {
+                repository.deleteTrip(tripId)
+                arrivalReminderScheduler.cancel(tripId)
+                Result.success(Unit)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                Log.e(ATTACHMENT_LOG_TAG, "Trip removal needs another attempt", error)
+                Result.failure(error)
+            }
+            onDeleted(result)
         }
     }
 

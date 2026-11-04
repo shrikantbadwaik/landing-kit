@@ -1,6 +1,7 @@
 package com.shrikantbadwaik.landingkit.core.data.local.repository
 
 import com.shrikantbadwaik.landingkit.core.data.local.backup.BackupRecoveryAccess
+import com.shrikantbadwaik.landingkit.core.data.local.backup.BackupRestoreRecovery
 import com.shrikantbadwaik.landingkit.core.data.TripRepository
 import com.shrikantbadwaik.landingkit.core.data.local.dao.TripDao
 import com.shrikantbadwaik.landingkit.core.data.local.attachment.EncryptedAttachmentStore
@@ -19,6 +20,7 @@ class LocalTripRepository(
     private val tripDao: TripDao,
     private val attachmentStore: EncryptedAttachmentStore,
     private val access: BackupRecoveryAccess = BackupRecoveryAccess(),
+    private val recovery: BackupRestoreRecovery,
 ) : TripRepository {
     private val writeMutex = Mutex()
 
@@ -31,7 +33,7 @@ class LocalTripRepository(
         return tripDao.getTrip(id)?.toModel()
     }
 
-    override suspend fun saveTrip(trip: Trip) = writeMutex.withLock {
+    override suspend fun saveTrip(trip: Trip) = locked {
         access.requireReady()
         val errors = TripValidator.validate(trip)
         require(errors.isEmpty()) { errors.joinToString() }
@@ -58,17 +60,16 @@ class LocalTripRepository(
         )
     }
 
-    override suspend fun deleteTrip(id: String) = writeMutex.withLock {
+    override suspend fun deleteTrip(id: String) = locked {
         access.requireReady()
-        attachmentStore.deleteTrip(id)
-        tripDao.deleteTrip(id)
+        recovery.mutations.deleteTrip(id)
     }
 
     override suspend fun setItemComplete(
         tripId: String,
         itemId: String,
         complete: Boolean,
-    ) = writeMutex.withLock {
+    ) = locked {
         access.requireReady()
         tripDao.setItemComplete(tripId = tripId, itemId = itemId, complete = complete)
     }
@@ -76,7 +77,7 @@ class LocalTripRepository(
     override suspend fun setArrivalReminderEnabled(
         tripId: String,
         enabled: Boolean,
-    ) = writeMutex.withLock {
+    ) = locked {
         access.requireReady()
         tripDao.setArrivalReminderEnabled(tripId = tripId, enabled = enabled)
     }
@@ -86,7 +87,7 @@ class LocalTripRepository(
         status: OfflineArrivalCheckStatus,
         checkedAtMillis: Long,
         contentFingerprint: String,
-    ) = writeMutex.withLock {
+    ) = locked {
         access.requireReady()
         tripDao.recordOfflineArrivalCheck(
             tripId = tripId,
@@ -101,7 +102,7 @@ class LocalTripRepository(
         status: OfflineArrivalCheckStatus,
         checkedAtMillis: Long,
         contentFingerprint: String,
-    ) = writeMutex.withLock {
+    ) = locked {
         access.requireReady()
         tripDao.recordPlanBCheck(
             tripId = tripId,
@@ -110,4 +111,7 @@ class LocalTripRepository(
             contentFingerprint = contentFingerprint,
         )
     }
+    private suspend fun <T> locked(block: suspend () -> T): T =
+        recovery.dataOperation { writeMutex.withLock { block() } }
+
 }

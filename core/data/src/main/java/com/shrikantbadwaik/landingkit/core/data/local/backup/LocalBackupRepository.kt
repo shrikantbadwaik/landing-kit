@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.room.withTransaction
 import com.shrikantbadwaik.landingkit.core.data.local.database.LandingKitDatabase
 import com.shrikantbadwaik.landingkit.core.data.local.mapper.toEntity
+import com.shrikantbadwaik.landingkit.core.data.local.mapper.toModel
 import com.shrikantbadwaik.landingkit.core.data.BackupExportResult
 import com.shrikantbadwaik.landingkit.core.data.BackupPreview
 import com.shrikantbadwaik.landingkit.core.data.BackupRepository
@@ -59,6 +60,7 @@ class LocalBackupRepository(
     private val database: LandingKitDatabase,
     private val recovery: BackupRestoreRecovery,
     private val checkpoint: (RestoreCheckpoint) -> Unit = {},
+    private val snapshotCaptured: suspend () -> Unit = {},
 ) : BackupRepository {
 
     override suspend fun exportBackup(
@@ -67,10 +69,15 @@ class LocalBackupRepository(
     ): BackupExportResult = withContext(Dispatchers.IO) {
         recovery.operation {
             require(password.size >= MIN_PASSWORD_LENGTH)
-            val trips = tripRepository.observeTrips().first()
-            val templates = templateRepository.observeTemplates().first()
-            val attachments = attachmentDao.getAllAttachments()
+            // One metadata snapshot; the shared operation lock keeps its document files
+            // alive until the encrypted backup is complete.
+            val (trips, templates, attachments) = database.withTransaction {
+                Triple(database.tripDao().getAllTrips().map { it.toModel() },
+                    database.checklistTemplateDao().getAllTemplates().map { it.toModel() },
+                    attachmentDao.getAllAttachments())
+            }
             val protectionEnabled = userPreferences.attachmentProtectionEnabled.first()
+            snapshotCaptured()
             val payload = temporaryFile("backup-payload")
             try {
                 DataOutputStream(BufferedOutputStream(payload.outputStream())).use { output ->

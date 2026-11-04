@@ -65,6 +65,13 @@ class EncryptedAttachmentStore(
         }
     }
 
+    fun requireEmptyImportDestination(tripId: String, attachmentId: String) {
+        val original = attachmentFile(tripId, attachmentId)
+        val thumbnail = thumbnailFile(tripId, attachmentId)
+        require(listOf(original, thumbnail, File(original.path + ".tmp"),
+            File(thumbnail.path + ".tmp")).none(File::exists)) { "Document files already exist" }
+    }
+
     fun decryptForBackup(
         tripId: String,
         attachmentId: String,
@@ -151,9 +158,19 @@ class EncryptedAttachmentStore(
     }
 
     fun delete(tripId: String, attachmentId: String) {
-        attachmentFile(tripId, attachmentId).delete()
-        thumbnailFile(tripId, attachmentId).delete()
+        deleteFile(attachmentFile(tripId, attachmentId))
+        deleteFile(thumbnailFile(tripId, attachmentId))
+        deleteTemporaryFiles(tripId, attachmentId)
         previewSessions.releaseMatching("$tripId-$attachmentId.")
+    }
+
+    fun deleteTemporaryFiles(tripId: String, attachmentId: String) {
+        deleteFile(File(attachmentFile(tripId, attachmentId).path + ".tmp"))
+        deleteFile(File(thumbnailFile(tripId, attachmentId).path + ".tmp"))
+    }
+
+    private fun deleteFile(file: File) {
+        if (file.exists() && !file.delete()) throw IOException("Could not remove encrypted document file")
     }
 
     fun releaseViewingPreview(file: File) = previewSessions.release(file)

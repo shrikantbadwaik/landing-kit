@@ -13,6 +13,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TripDao {
+    @Transaction
+    @Query("SELECT * FROM trips ORDER BY arrival_at ASC")
+    suspend fun getAllTrips(): List<TripWithItems>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertRestoredTrip(trip: TripEntity)
 

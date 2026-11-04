@@ -215,6 +215,7 @@ internal fun LandingKitNavHost(
                 val deletedMessage = trip?.let {
                     stringResource(R.string.kit_deleted_message, it.destination)
                 }
+                val deleteFailedMessage = stringResource(R.string.trip_delete_failed)
 
                 LaunchedEffect(route.tripId, trip) {
                     if (trip == null) {
@@ -250,12 +251,15 @@ internal fun LandingKitNavHost(
                         },
                         onEdit = { navController.navigate(KitRoute.Edit(trip.id)) },
                         onDelete = {
-                            viewModel.deleteKit(trip.id) {
-                                animatedTripIds = animatedTripIds - trip.id
-                                navController.popBackStack()
+                            viewModel.deleteKit(trip.id) { result ->
+                                if (result.isSuccess) {
+                                    animatedTripIds = animatedTripIds - trip.id
+                                    navController.popBackStack()
+                                }
                                 scope.launch {
                                     snackbarHostState.showSnackbar(
-                                        message = checkNotNull(deletedMessage),
+                                        message = if (result.isSuccess) checkNotNull(deletedMessage)
+                                            else deleteFailedMessage,
                                         duration = SnackbarDuration.Long,
                                     )
                                 }

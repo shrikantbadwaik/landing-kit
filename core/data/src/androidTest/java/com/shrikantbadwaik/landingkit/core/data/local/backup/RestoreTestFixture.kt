@@ -30,18 +30,18 @@ internal class RestoreTestFixture(val context: Context, val root: File) {
 
     suspend fun seed() {
         preferences.setAttachmentProtectionEnabled(false)
-        LocalTripRepository(target.tripDao(), targetStore).saveTrip(trip(EXISTING, "Existing journey"))
+        LocalTripRepository(target.tripDao(), targetStore, recovery = recovery).saveTrip(trip(EXISTING, "Existing journey"))
         saveDocument(target, targetStore, EXISTING, EXISTING_DOC, "existing private document".toByteArray())
         val source = open("source.db")
         try {
-            LocalTripRepository(source.tripDao(), sourceStore).saveTrip(trip(RESTORED, "Synthetic restore journey"))
-            LocalChecklistTemplateRepository(source.checklistTemplateDao()).saveTemplate(
+            val sourceRecovery = BackupRestoreRecovery(context, source, sourceStore, preferences,
+                File(root, "source.json"), File(root, "source-work"))
+            LocalTripRepository(source.tripDao(), sourceStore, recovery = sourceRecovery).saveTrip(trip(RESTORED, "Synthetic restore journey"))
+            LocalChecklistTemplateRepository(source.checklistTemplateDao(), recovery = sourceRecovery).saveTemplate(
                 ChecklistTemplate(TEMPLATE, "Synthetic routine", listOf(ChecklistTemplateItem("Save an address"))))
             saveDocument(source, sourceStore, RESTORED, DOCUMENT, DOCUMENT_BYTES)
             saveDocument(source, sourceStore, RESTORED, DOCUMENT_TWO, DOCUMENT_TWO_BYTES, quick = false)
             preferences.setAttachmentProtectionEnabled(true)
-            val sourceRecovery = BackupRestoreRecovery(context, source, sourceStore, preferences,
-                File(root, "source.json"), File(root, "source-work"))
             repository(source, sourceStore, sourceRecovery).exportBackup(uri, PASSWORD.copyOf())
             preferences.setAttachmentProtectionEnabled(false)
         } finally { source.close() }
@@ -82,8 +82,8 @@ internal class RestoreTestFixture(val context: Context, val root: File) {
     }
     private fun repository(db: LandingKitDatabase, store: EncryptedAttachmentStore,
         recovery: BackupRestoreRecovery, hook: (RestoreCheckpoint) -> Unit = {}) = LocalBackupRepository(
-        context, LocalTripRepository(db.tripDao(), store),
-        LocalChecklistTemplateRepository(db.checklistTemplateDao()), db.attachmentDao(), store,
+        context, LocalTripRepository(db.tripDao(), store, recovery = recovery),
+        LocalChecklistTemplateRepository(db.checklistTemplateDao(), recovery = recovery), db.attachmentDao(), store,
         preferences, db, recovery, hook)
     private suspend fun saveDocument(db: LandingKitDatabase, store: EncryptedAttachmentStore,
         trip: String, id: String, bytes: ByteArray, quick: Boolean = true) {

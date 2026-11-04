@@ -92,8 +92,12 @@ do not substitute a confidence percentage for evidence.
   targets. Explicit route document IDs now take precedence over pinned documents.
 - Viewing-preview lifetime is repaired and verified in the second delivery below.
 - Interrupted restore is repaired and verified in the third delivery below.
-  Broader staged file/database recovery and final combined verification remain
-  outstanding; 7.0C stays open.
+- Current single-owner import/deletion recovery and coordinated backup snapshots
+  are repaired and verified in the fourth delivery below. Shared-association
+  unlinking, the policy for older unclaimed files, and final combined verification
+  remain outstanding; 7.0C stays open.
+- The reminder-cancellation review below closes the durable deletion-to-cancellation
+  gap without changing those remaining gates.
 
 ## First reliability delivery — 4 November 2026
 
@@ -256,6 +260,136 @@ do not substitute a confidence percentage for evidence.
 - The interrupted-restore item is complete. General attachment import/unlink/
   deletion recovery, shared-file ownership, snapshot consistency, and final
   combined verification still belong to the remaining 7.0C work.
+
+## Staged-document operation delivery — 4 November 2026
+
+- Added an atomic document-operation journal outside cache, coordinated with the
+  existing backup recovery lock and startup access gate. It contains an operation
+  kind and bounded trip/document IDs; no addresses, file contents, or credentials.
+  All repositories require the shared coordinator, so alternate construction
+  cannot silently fall back to the old file-first deletion path.
+- Before import writes an encrypted original or thumbnail, verify the parent trip
+  exists, the document ID is unused, and the destination files are unoccupied;
+  then record durable import intent. Attachment metadata is the publication
+  boundary. Restart removes an unpublished import's owned original, thumbnail,
+  and temporary files; a published import is retained. Never delete another
+  owner's metadata or files when a recovery record has conflicting ownership.
+- Confirmed document/trip deletion records durable intent before mutation.
+  Remove metadata first, using a Room transaction and foreign-key cascades for
+  trip removal; then remove encrypted files and finish the journal. This gives
+  restart/retry a deterministic completion path. Once intent is durable,
+  cancellation or interruption completes the confirmed removal rather than
+  promising Undo.
+- File removal now checks failures rather than ignoring `File.delete()` results.
+  A failed cleanup retains the journal, blocks repository access/ID reuse, and
+  offers recovery retry. Ordinary failure and cancellation attempt cleanup in a
+  non-cancellable coroutine. Unreadable or oversized journals remain preserved
+  and block access. Trip-removal errors are handled in the ViewModel instead of
+  escaping its coroutine.
+- All repository mutations and document file access share the backup-operation
+  lock. Export reads trips/tasks, templates, and attachment metadata in one Room
+  transaction and retains the lock until the encrypted backup is written. A
+  concurrent edit or deletion therefore cannot invalidate the captured document
+  set. This serialises writes/file access during export; it is a consistency
+  tradeoff, not a background-export performance claim.
+- Room remains version 7, backup format version 1, and encrypted-document format
+  unchanged. Current metadata has one trip owner per document ID and derives
+  its file path from that owner. No shared association schema or Phase 7 journey
+  migration is introduced.
+- Automated verification: the full 37-case core-data emulator run passed, followed
+  by all 12 staged-operation tests after adding explicit ownership-conflict
+  coverage (38 distinct core-data cases across the runs). This exercised on-disk
+  reopen/idempotent recovery at all import and deletion boundaries, cancellation
+  before/after publication, permission-denied file removal and retry, interrupted
+  atomic-journal fallback, missing-parent/publication failures, owned temporary
+  cleanup, malformed/oversized records, cross-owner refusal, and backup export
+  while concurrent edit/deletion waited. The resulting backup restored the
+  captured tasks and decrypted documents correctly.
+- All 53 model/feature unit tests passed. The final debug build and app lint
+  passed with zero errors and 16 dependency/version warnings. `git diff --check`
+  passed.
+- Actual process-termination rehearsal used the isolated test APK. Import passed
+  five boundaries: journal, encrypted document, metadata publication, settled
+  files, and journal cleanup. Individual document removal, clearing all trip
+  documents, and trip deletion each passed four boundaries: journal, metadata
+  removal, settled files, and journal cleanup. All 17 restarts/retries preserved
+  the other synthetic trip/document; document removal also preserved the second
+  document and its quick-access flag. Trip-deletion cases successfully restored
+  both documents from the pre-deletion backup.
+- Installed the final production debug app without clearing its data. Through the
+  UI, created a temporary “Recovery rehearsal” trip, imported a valid synthetic
+  PDF via Android's file picker, removed that document through confirmation, and
+  imported it again. Scoped a filesystem permission failure to that trip's new
+  encrypted directory, then confirmed permanent trip deletion. The app displayed
+  recovery UI without crashing, and the retained journal referenced only the
+  synthetic trip. Restoring its permissions and tapping retry completed deletion
+  and returned Home with Kyoto intact. Inspected the confirmation/recovery/Home
+  states; no unrelated traveller content was edited.
+- Verified the temporary trip directory, operation/restore journals, and backup
+  work were gone and the pre-existing encrypted directories were unchanged.
+  Removed the downloaded synthetic PDF, UI dump, and isolated test APK.
+- Coverage limits: these tests simulate process termination and permission
+  failures, not device power loss or failing storage hardware. Orphan cleanup is
+  limited to files owned by a durable journal; older unclaimed directories remain
+  preserved, and restore still refuses to overwrite them. A policy for those
+  files remains open. Cross-owner refusal and single-owner isolation do not prove
+  shared-file unlinking; its association/last-reference rules and fixtures still
+  need agreement before shared persistence is introduced. Final combined
+  reliability verification is also pending. Phase 7.0C remains open.
+
+## Durable reminder cancellation review — 4 November 2026
+
+- Confirmed the gap in the fourth delivery: deleting the trip and then calling
+  the reminder scheduler from the ViewModel was not durable. Startup's live-trip
+  scan could not identify the deleted ID, so its alarm/notification could remain.
+- Added an atomic cancellation queue independent of Room trip rows. Trip deletion
+  first commits metadata removal, then durably queues the ID before completing
+  file cleanup and clearing the deletion journal. Termination between metadata
+  removal and queue persistence leaves that deletion journal to replay enqueue.
+  The queue retains only the opaque trip ID and a request token, excludes travel
+  content, and is not exported in travel backups.
+- Cancellation performs both the alarm/PendingIntent cancellation and notification
+  cancellation before durable acknowledgement. Partial failure or termination
+  leaves requests to replay idempotently. A batch uses one acknowledgement write;
+  token matching preserves requests added during processing and prevents a stale
+  acknowledgement from erasing a later deletion of the same restored ID. The
+  durable empty queue removes completed IDs instead of retaining removal history.
+- Application startup/recovery and boot/package/timezone reconciliation drain the
+  queue before reading live trips to schedule. Scheduler operations are serialised
+  on IO, and ordinary sync/show re-read persisted trip state so stale callers
+  cannot re-arm or show a deleted/disabled trip. Restoring the same ID drains its
+  old cancellation before scheduling the restored trip's enabled reminder.
+- Coverage applies to deletions performed or recovered by this workflow. A
+  reminder scheduled by older code is cancelled by its existing identity when
+  that trip is deleted through the new workflow; a registry of all scheduled
+  alarms is not required. This does not claim to discover already-deleted,
+  untracked identities from before the fix.
+- Automated verification: the full core-data run passed 43 tests and the feature
+  run passed 34 tests. After batching acknowledgement and adding its concurrent
+  enqueue case, the final five queue tests and five real-reminder recovery tests
+  passed separately (78 distinct emulator cases across runs). All 53 unit tests,
+  the final debug build, and app lint passed, with zero errors and 16
+  dependency/version warnings. `git diff --check` passed.
+- Tests used isolated disk databases, the real scheduler, Android AlarmManager
+  PendingIntents, and posted synthetic notifications. They covered reopen after
+  completed deletion, the database-to-queue gap, interruption after alarm or
+  notification cancellation and acknowledgement, notification-service failure,
+  stale sync/show, and restoring the same ID. An unrelated trip's alarm and
+  notification remained available throughout recovery.
+- Actual process termination/restart passed five checkpoints: database deletion
+  before enqueue, completed deletion before scheduler cancellation, alarm
+  cancelled, notification cancelled, and queue acknowledged. The deleted-before-
+  cancellation rehearsal independently inspected Android's alarm/notification
+  state after termination: both synthetic trip reminders remained. Startup
+  recovery then removed the deleted trip's alarm and notification, retained the
+  other reminder, and emptied the queue. Test effects were cleaned after their
+  preservation had been verified.
+- These are cancellation/recovery checks, not a timed notification-delivery test
+  or a simulation of device power loss. Room stays version 7 and travel backup
+  stays version 1. The remaining 7.0C work and its gate status are unchanged.
+- Removed the isolated test APK and its synthetic OS effects. Installed the final
+  production debug build without clearing data and confirmed Home with Kyoto
+  intact. Removed the verification UI dumps.
 
 ## Verification practice for subsequent deliveries
 

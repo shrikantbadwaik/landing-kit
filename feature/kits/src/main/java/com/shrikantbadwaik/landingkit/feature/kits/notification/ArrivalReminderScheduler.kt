@@ -25,29 +25,52 @@ import javax.inject.Singleton
 import androidx.core.net.toUri
 import com.shrikantbadwaik.landingkit.core.data.TripRepository
 import kotlinx.coroutines.flow.first
+import com.shrikantbadwaik.landingkit.core.data.local.reminder.ReminderCancellationStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 @Singleton
 class ArrivalReminderScheduler @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val repository: TripRepository,
+    private val cancellationStore: ReminderCancellationStore,
 ) {
     private val alarmManager = context.getSystemService(AlarmManager::class.java)
     private val notificationManager = NotificationManagerCompat.from(context)
+    private val mutex = Mutex()
+    private val cancellationProcessor = ReminderCancellationProcessor(
+        cancellationStore, ::cancelAlarm, ::cancelNotification,
+    )
 
-    fun sync(trip: Trip) {
-        if (trip.arrivalReminderEnabled) schedule(trip) else cancel(trip.id)
+    suspend fun sync(trip: Trip) = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            cancellationProcessor.drain()
+            // A UI/startup snapshot can become stale during deletion or a reminder toggle.
+            val current = repository.getTrip(trip.id)
+            if (current?.arrivalReminderEnabled == true) scheduleLocked(current)
+            else cancelLocked(trip.id)
+        }
     }
 
-    suspend fun reconcile(repository: TripRepository) {
-        repository.observeTrips().first().forEach(::sync)
+    suspend fun reconcile(repository: TripRepository = this.repository) = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            // Deleted IDs survive outside Room until both external effects are cancelled.
+            cancellationProcessor.drain()
+            repository.observeTrips().first().forEach { trip ->
+                if (trip.arrivalReminderEnabled) scheduleLocked(trip) else cancelLocked(trip.id)
+            }
+        }
     }
 
-    fun schedule(trip: Trip) {
+    private suspend fun scheduleLocked(trip: Trip) {
         val triggerAt = arrivalReminderTriggerAt(
             arrivalDate = trip.arrivalDate,
             zoneId = ZoneId.systemDefault(),
             now = Instant.now(),
         ) ?: run {
-            cancel(trip.id)
+            cancelLocked(trip.id)
             return
         }
 
@@ -67,7 +90,17 @@ class ArrivalReminderScheduler @Inject constructor(
         )
     }
 
-    fun cancel(tripId: String) {
+    suspend fun cancel(tripId: String) = withContext(Dispatchers.IO) {
+        mutex.withLock { cancelLocked(tripId) }
+    }
+
+    private suspend fun cancelLocked(tripId: String) {
+        cancellationProcessor.drain(tripId)
+        cancelAlarm(tripId)
+        cancelNotification(tripId)
+    }
+
+    internal fun cancelAlarm(tripId: String) {
         val intent = Intent(context, ArrivalReminderReceiver::class.java)
             .setAction(ACTION_SHOW_ARRIVAL_REMINDER)
             .setData(reminderUri(tripId))
@@ -76,12 +109,28 @@ class ArrivalReminderScheduler @Inject constructor(
             0,
             intent,
             PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
-        )?.let(alarmManager::cancel)
+        )?.let {
+            alarmManager.cancel(it)
+            it.cancel()
+        }
+    }
+
+    internal fun cancelNotification(tripId: String) {
         notificationManager.cancel(notificationId(tripId))
     }
 
     @SuppressLint("MissingPermission")
-    internal fun show(tripId: String) {
+    internal suspend fun show(tripId: String) = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            cancellationProcessor.drain()
+            val trip = repository.getTrip(tripId)
+            if (trip?.arrivalReminderEnabled == true) showNotification(tripId)
+            else cancelLocked(tripId)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun showNotification(tripId: String) {
         if (!canPostNotifications()) return
         createChannel()
 

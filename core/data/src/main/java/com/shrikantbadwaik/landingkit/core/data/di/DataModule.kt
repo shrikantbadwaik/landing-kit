@@ -21,6 +21,8 @@ import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalChecklistT
 import com.shrikantbadwaik.landingkit.core.data.local.backup.LocalBackupRepository
 import com.shrikantbadwaik.landingkit.core.data.local.backup.BackupRestoreRecovery
 import com.shrikantbadwaik.landingkit.core.data.local.backup.BackupRecoveryAccess
+import com.shrikantbadwaik.landingkit.core.data.local.reminder.ReminderCancellationStore
+import java.io.File
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalAttachmentRepository
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalTripRepository
 import com.shrikantbadwaik.landingkit.core.data.preferences.UserPreferences
@@ -74,14 +76,16 @@ object DataModule {
         tripDao: TripDao,
         attachmentStore: EncryptedAttachmentStore,
         access: BackupRecoveryAccess,
-    ): TripRepository = LocalTripRepository(tripDao, attachmentStore, access)
+        recovery: BackupRestoreRecovery,
+    ): TripRepository = LocalTripRepository(tripDao, attachmentStore, access, recovery)
 
     @Provides
     @Singleton
     fun provideChecklistTemplateRepository(
         dao: ChecklistTemplateDao,
         access: BackupRecoveryAccess,
-    ): ChecklistTemplateRepository = LocalChecklistTemplateRepository(dao, access)
+        recovery: BackupRestoreRecovery,
+    ): ChecklistTemplateRepository = LocalChecklistTemplateRepository(dao, access, recovery)
 
     @Provides
     @Singleton
@@ -90,11 +94,17 @@ object DataModule {
         dao: AttachmentDao,
         store: EncryptedAttachmentStore,
         access: BackupRecoveryAccess,
-    ): AttachmentRepository = LocalAttachmentRepository(context.contentResolver, dao, store, access)
+        recovery: BackupRestoreRecovery,
+    ): AttachmentRepository = LocalAttachmentRepository(context.contentResolver, dao, store, access, recovery)
 
     @Provides
     @Singleton
     fun provideBackupRecoveryAccess(): BackupRecoveryAccess = BackupRecoveryAccess(initiallyReady = false)
+
+    @Provides
+    @Singleton
+    fun provideReminderCancellations(@ApplicationContext context: Context): ReminderCancellationStore =
+        ReminderCancellationStore(File(context.filesDir, "arrival-reminder-cancellations.json"))
 
     @Provides
     @Singleton
@@ -104,7 +114,9 @@ object DataModule {
         store: EncryptedAttachmentStore,
         preferences: UserPreferences,
         access: BackupRecoveryAccess,
-    ): BackupRestoreRecovery = BackupRestoreRecovery(context, database, store, preferences, access = access)
+        reminderCancellations: ReminderCancellationStore,
+    ): BackupRestoreRecovery = BackupRestoreRecovery(context, database, store, preferences,
+        access = access, reminderCancellations = reminderCancellations)
 
     @Provides
     @Singleton

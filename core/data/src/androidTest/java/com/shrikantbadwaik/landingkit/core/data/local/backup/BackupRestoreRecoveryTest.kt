@@ -133,7 +133,7 @@ class BackupRestoreRecoveryTest {
         val access = BackupRecoveryAccess(initiallyReady = false)
         val recovery = BackupRestoreRecovery(context, f.target, f.targetStore, f.preferences,
             File(f.root, "restore.json"), File(f.root, "work"), access)
-        val trips = LocalTripRepository(f.target.tripDao(), f.targetStore, access)
+        val trips = LocalTripRepository(f.target.tripDao(), f.targetStore, access, recovery)
         File(f.root, "restore.json").writeText("broken journal")
         try { recovery.recover(); fail("Expected failure") } catch (_: Exception) { }
         assertFalse(access.isReady)

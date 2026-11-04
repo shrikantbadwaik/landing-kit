@@ -43,9 +43,7 @@ class ArrivalReminderReceiver : BroadcastReceiver() {
                         ?.takeIf { it.arrivalReminderEnabled }
                         ?.let { scheduler.show(tripId = it.id) }
                 } else {
-                    repository.observeTrips().first()
-                        .filter { it.arrivalReminderEnabled }
-                        .forEach(scheduler::sync)
+                    scheduler.reconcile(repository)
                 }
             } catch (error: Exception) {
                 Log.w("ArrivalReminders", "Could not handle an arrival reminder", error)

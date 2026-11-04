@@ -1,6 +1,7 @@
 package com.shrikantbadwaik.landingkit.core.data.local.repository
 
 import com.shrikantbadwaik.landingkit.core.data.local.backup.BackupRecoveryAccess
+import com.shrikantbadwaik.landingkit.core.data.local.backup.BackupRestoreRecovery
 import com.shrikantbadwaik.landingkit.core.data.ChecklistTemplateRepository
 import com.shrikantbadwaik.landingkit.core.data.local.dao.ChecklistTemplateDao
 import com.shrikantbadwaik.landingkit.core.data.local.mapper.toEntity
@@ -14,13 +15,14 @@ import kotlinx.coroutines.sync.withLock
 class LocalChecklistTemplateRepository(
     private val dao: ChecklistTemplateDao,
     private val access: BackupRecoveryAccess = BackupRecoveryAccess(),
+    private val recovery: BackupRestoreRecovery,
 ) : ChecklistTemplateRepository {
     private val writeMutex = Mutex()
 
     override fun observeTemplates(): Flow<List<ChecklistTemplate>> =
         access.guard(dao.observeTemplates()).map { templates -> templates.map { it.toModel() } }
 
-    override suspend fun saveTemplate(template: ChecklistTemplate) = writeMutex.withLock {
+    override suspend fun saveTemplate(template: ChecklistTemplate) = locked {
         access.requireReady()
         require(template.name.isNotBlank()) { "Template name is required" }
         require(template.items.isNotEmpty()) { "A template needs at least one item" }
@@ -36,8 +38,11 @@ class LocalChecklistTemplateRepository(
         )
     }
 
-    override suspend fun deleteTemplate(id: String) = writeMutex.withLock {
+    override suspend fun deleteTemplate(id: String) = locked {
         access.requireReady()
         dao.deleteTemplate(id)
     }
+    private suspend fun <T> locked(block: suspend () -> T): T =
+        recovery.dataOperation { writeMutex.withLock { block() } }
+
 }

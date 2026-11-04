@@ -4,6 +4,8 @@ import android.content.Context
 import android.util.AtomicFile
 import androidx.room.withTransaction
 import com.shrikantbadwaik.landingkit.core.data.local.attachment.EncryptedAttachmentStore
+import com.shrikantbadwaik.landingkit.core.data.local.attachment.AttachmentMutationRecovery
+import com.shrikantbadwaik.landingkit.core.data.local.reminder.ReminderCancellationStore
 import com.shrikantbadwaik.landingkit.core.data.local.database.LandingKitDatabase
 import com.shrikantbadwaik.landingkit.core.data.preferences.UserPreferences
 import java.io.File
@@ -28,6 +30,13 @@ class BackupRestoreRecovery(
     private val journalFile: File = File(context.filesDir, "backup-restore.json"),
     val workDirectory: File = File(context.cacheDir, "backup_work"),
     private val access: BackupRecoveryAccess = BackupRecoveryAccess(),
+    val reminderCancellations: ReminderCancellationStore = ReminderCancellationStore(
+        File(journalFile.parentFile, journalFile.name + ".reminders"),
+    ),
+    val mutations: AttachmentMutationRecovery = AttachmentMutationRecovery(
+        database, store, File(journalFile.parentFile, journalFile.name + ".documents"),
+        reminderCancellations = reminderCancellations,
+    ),
 ) {
     private val journal = AtomicFile(journalFile)
     private val mutex = Mutex()
@@ -43,6 +52,24 @@ class BackupRestoreRecovery(
     internal suspend fun <T> operation(block: suspend () -> T): T = mutex.withLock {
         recoverLocked()
         block()
+    }
+
+    internal suspend fun <T> dataOperation(block: suspend () -> T): T = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            access.requireReady()
+            try {
+                mutations.recover()
+                block()
+            } catch (error: Exception) {
+                // A failed cleanup must block subsequent ID reuse and unsafe repository access.
+                try { withContext(kotlinx.coroutines.NonCancellable) { mutations.recover() } }
+                catch (cleanup: Exception) {
+                    access.blocked()
+                    error.addSuppressed(cleanup)
+                }
+                throw error
+            }
+        }
     }
 
     internal fun begin(tripIds: List<String>, templateIds: List<String>, protection: Boolean) {
@@ -69,6 +96,7 @@ class BackupRestoreRecovery(
     }
 
     private suspend fun recoverState() {
+        mutations.recover()
         if (journalFile.exists() || File("${journalFile.path}.bak").exists()) {
             val record = read() // Fail closed on unreadable state; never guess deletion ownership.
             if (record.committed) {

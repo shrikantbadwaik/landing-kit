@@ -47,7 +47,7 @@ class LandingKitApplication : Application() {
             return@withContext false
         }
         try {
-            // Covers termination after restore committed but before its ViewModel scheduled alarms.
+            // Drains deleted-trip cancellations, then reconciles restored/live reminder flags.
             reminders.reconcile(trips)
         } catch (cancellation: CancellationException) {
             throw cancellation
