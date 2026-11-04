@@ -1,5 +1,6 @@
 package com.shrikantbadwaik.landingkit.core.data.local.repository
 
+import com.shrikantbadwaik.landingkit.core.data.local.backup.BackupRecoveryAccess
 import com.shrikantbadwaik.landingkit.core.data.TripRepository
 import com.shrikantbadwaik.landingkit.core.data.local.dao.TripDao
 import com.shrikantbadwaik.landingkit.core.data.local.attachment.EncryptedAttachmentStore
@@ -17,16 +18,21 @@ import kotlinx.coroutines.sync.withLock
 class LocalTripRepository(
     private val tripDao: TripDao,
     private val attachmentStore: EncryptedAttachmentStore,
+    private val access: BackupRecoveryAccess = BackupRecoveryAccess(),
 ) : TripRepository {
     private val writeMutex = Mutex()
 
-    override fun observeTrips(): Flow<List<Trip>> = tripDao.observeTrips().map { trips ->
+    override fun observeTrips(): Flow<List<Trip>> = access.guard(tripDao.observeTrips()).map { trips ->
         trips.map { it.toModel() }
     }
 
-    override suspend fun getTrip(id: String): Trip? = tripDao.getTrip(id)?.toModel()
+    override suspend fun getTrip(id: String): Trip? {
+        access.requireReady()
+        return tripDao.getTrip(id)?.toModel()
+    }
 
     override suspend fun saveTrip(trip: Trip) = writeMutex.withLock {
+        access.requireReady()
         val errors = TripValidator.validate(trip)
         require(errors.isEmpty()) { errors.joinToString() }
         val existing = tripDao.getTrip(trip.id)?.trip
@@ -53,6 +59,7 @@ class LocalTripRepository(
     }
 
     override suspend fun deleteTrip(id: String) = writeMutex.withLock {
+        access.requireReady()
         attachmentStore.deleteTrip(id)
         tripDao.deleteTrip(id)
     }
@@ -62,6 +69,7 @@ class LocalTripRepository(
         itemId: String,
         complete: Boolean,
     ) = writeMutex.withLock {
+        access.requireReady()
         tripDao.setItemComplete(tripId = tripId, itemId = itemId, complete = complete)
     }
 
@@ -69,6 +77,7 @@ class LocalTripRepository(
         tripId: String,
         enabled: Boolean,
     ) = writeMutex.withLock {
+        access.requireReady()
         tripDao.setArrivalReminderEnabled(tripId = tripId, enabled = enabled)
     }
 
@@ -78,6 +87,7 @@ class LocalTripRepository(
         checkedAtMillis: Long,
         contentFingerprint: String,
     ) = writeMutex.withLock {
+        access.requireReady()
         tripDao.recordOfflineArrivalCheck(
             tripId = tripId,
             status = status.name,
@@ -92,6 +102,7 @@ class LocalTripRepository(
         checkedAtMillis: Long,
         contentFingerprint: String,
     ) = writeMutex.withLock {
+        access.requireReady()
         tripDao.recordPlanBCheck(
             tripId = tripId,
             status = status.name,

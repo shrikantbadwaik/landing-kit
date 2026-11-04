@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChecklistTemplateDao {
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertRestoredTemplate(template: ChecklistTemplateEntity)
+
     @Transaction
     @Query("SELECT * FROM checklist_templates ORDER BY created_at DESC")
     fun observeTemplates(): Flow<List<ChecklistTemplateWithItems>>

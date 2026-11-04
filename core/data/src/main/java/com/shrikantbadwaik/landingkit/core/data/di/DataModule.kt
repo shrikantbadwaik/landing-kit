@@ -19,6 +19,8 @@ import com.shrikantbadwaik.landingkit.core.data.local.database.MIGRATION_6_7
 import com.shrikantbadwaik.landingkit.core.data.local.database.LandingKitDatabase
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalChecklistTemplateRepository
 import com.shrikantbadwaik.landingkit.core.data.local.backup.LocalBackupRepository
+import com.shrikantbadwaik.landingkit.core.data.local.backup.BackupRestoreRecovery
+import com.shrikantbadwaik.landingkit.core.data.local.backup.BackupRecoveryAccess
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalAttachmentRepository
 import com.shrikantbadwaik.landingkit.core.data.local.repository.LocalTripRepository
 import com.shrikantbadwaik.landingkit.core.data.preferences.UserPreferences
@@ -71,13 +73,15 @@ object DataModule {
     fun provideTripRepository(
         tripDao: TripDao,
         attachmentStore: EncryptedAttachmentStore,
-    ): TripRepository = LocalTripRepository(tripDao, attachmentStore)
+        access: BackupRecoveryAccess,
+    ): TripRepository = LocalTripRepository(tripDao, attachmentStore, access)
 
     @Provides
     @Singleton
     fun provideChecklistTemplateRepository(
         dao: ChecklistTemplateDao,
-    ): ChecklistTemplateRepository = LocalChecklistTemplateRepository(dao)
+        access: BackupRecoveryAccess,
+    ): ChecklistTemplateRepository = LocalChecklistTemplateRepository(dao, access)
 
     @Provides
     @Singleton
@@ -85,7 +89,22 @@ object DataModule {
         @ApplicationContext context: Context,
         dao: AttachmentDao,
         store: EncryptedAttachmentStore,
-    ): AttachmentRepository = LocalAttachmentRepository(context.contentResolver, dao, store)
+        access: BackupRecoveryAccess,
+    ): AttachmentRepository = LocalAttachmentRepository(context.contentResolver, dao, store, access)
+
+    @Provides
+    @Singleton
+    fun provideBackupRecoveryAccess(): BackupRecoveryAccess = BackupRecoveryAccess(initiallyReady = false)
+
+    @Provides
+    @Singleton
+    fun provideBackupRestoreRecovery(
+        @ApplicationContext context: Context,
+        database: LandingKitDatabase,
+        store: EncryptedAttachmentStore,
+        preferences: UserPreferences,
+        access: BackupRecoveryAccess,
+    ): BackupRestoreRecovery = BackupRestoreRecovery(context, database, store, preferences, access = access)
 
     @Provides
     @Singleton
@@ -96,6 +115,8 @@ object DataModule {
         attachmentDao: AttachmentDao,
         attachmentStore: EncryptedAttachmentStore,
         userPreferences: UserPreferences,
+        database: LandingKitDatabase,
+        recovery: BackupRestoreRecovery,
     ): BackupRepository = LocalBackupRepository(
         context = context,
         tripRepository = tripRepository,
@@ -103,6 +124,8 @@ object DataModule {
         attachmentDao = attachmentDao,
         attachmentStore = attachmentStore,
         userPreferences = userPreferences,
+        database = database,
+        recovery = recovery,
     )
 
     @Provides

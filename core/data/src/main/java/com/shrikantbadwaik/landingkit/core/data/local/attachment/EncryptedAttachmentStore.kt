@@ -20,8 +20,10 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import android.net.Uri
 
-class EncryptedAttachmentStore(context: Context) {
-    private val attachmentRoot = File(context.filesDir, "encrypted_attachments")
+class EncryptedAttachmentStore(
+    context: Context,
+    private val attachmentRoot: File = File(context.filesDir, "encrypted_attachments"),
+) {
     private val previewSessions = AttachmentPreviewSessions(context)
 
     fun encrypt(
@@ -57,6 +59,12 @@ class EncryptedAttachmentStore(context: Context) {
         ).also { actual -> require(actual == expectedBytes) }
     }
 
+    fun requireEmptyRestoreDestination(tripId: String) {
+        require(!safeChild(attachmentRoot, tripId).exists()) {
+            "Restoring this trip would overwrite existing document files"
+        }
+    }
+
     fun decryptForBackup(
         tripId: String,
         attachmentId: String,
@@ -87,7 +95,8 @@ class EncryptedAttachmentStore(context: Context) {
             val cipher = Cipher.getInstance(TRANSFORMATION).apply {
                 init(Cipher.ENCRYPT_MODE, encryptionKey())
             }
-            DataOutputStream(BufferedOutputStream(temporary.outputStream())).use { output ->
+            val fileOutput = temporary.outputStream()
+            DataOutputStream(BufferedOutputStream(fileOutput)).use { output ->
                 output.write(MAGIC)
                 output.writeByte(cipher.iv.size)
                 output.write(cipher.iv)
@@ -104,6 +113,8 @@ class EncryptedAttachmentStore(context: Context) {
                     }
                 }
                 output.write(cipher.doFinal())
+                output.flush()
+                fileOutput.fd.sync()
             }
             check(temporary.renameTo(destination)) { "Could not finalize encrypted attachment" }
             return plaintextBytes

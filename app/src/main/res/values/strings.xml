@@ -7,4 +7,9 @@
     <string name="arrival_widget_open">Open</string>
     <string name="arrival_widget_description">Open your next Arrival Mode quickly.</string>
     <string name="arrival_widget_accessibility_label">Open Arrival Mode in Travel with Thikana</string>
+    <string name="restore_recovery_title">Let’s recover your saved travel</string>
+    <string name="restore_recovery_message">A backup restore needs another recovery attempt before your saved travel can be opened. Your existing information has not been replaced.</string>
+    <string name="restore_recovery_retry">Try recovery again</string>
+    <string name="restore_recovery_loading_title">Opening your saved travel</string>
+    <string name="restore_recovery_loading_message">We’re recovering your saved information. This may take a moment.</string>
 </resources>

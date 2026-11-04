@@ -2,6 +2,9 @@ package com.shrikantbadwaik.landingkit.core.data.local.backup
 
 import android.content.Context
 import android.net.Uri
+import androidx.room.withTransaction
+import com.shrikantbadwaik.landingkit.core.data.local.database.LandingKitDatabase
+import com.shrikantbadwaik.landingkit.core.data.local.mapper.toEntity
 import com.shrikantbadwaik.landingkit.core.data.BackupExportResult
 import com.shrikantbadwaik.landingkit.core.data.BackupPreview
 import com.shrikantbadwaik.landingkit.core.data.BackupRepository
@@ -42,9 +45,8 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 class LocalBackupRepository(
@@ -54,14 +56,16 @@ class LocalBackupRepository(
     private val attachmentDao: AttachmentDao,
     private val attachmentStore: EncryptedAttachmentStore,
     private val userPreferences: UserPreferences,
+    private val database: LandingKitDatabase,
+    private val recovery: BackupRestoreRecovery,
+    private val checkpoint: (RestoreCheckpoint) -> Unit = {},
 ) : BackupRepository {
-    private val operationMutex = Mutex()
 
     override suspend fun exportBackup(
         destination: Uri,
         password: CharArray,
     ): BackupExportResult = withContext(Dispatchers.IO) {
-        operationMutex.withLock {
+        recovery.operation {
             require(password.size >= MIN_PASSWORD_LENGTH)
             val trips = tripRepository.observeTrips().first()
             val templates = templateRepository.observeTemplates().first()
@@ -94,7 +98,7 @@ class LocalBackupRepository(
         source: Uri,
         password: CharArray,
     ): BackupPreview = withContext(Dispatchers.IO) {
-        operationMutex.withLock {
+        recovery.operation {
             withDecryptedPayload(source, password) { payloadFile ->
                 val payload = readAndValidatePayload(payloadFile)
                 val existingTripIds = tripRepository.observeTrips().first().mapTo(mutableSetOf(), Trip::id)
@@ -121,65 +125,86 @@ class LocalBackupRepository(
         source: Uri,
         password: CharArray,
     ): BackupRestoreResult = withContext(Dispatchers.IO) {
-        operationMutex.withLock {
+        recovery.operation {
             withDecryptedPayload(source, password) { payloadFile ->
                 val validated = readAndValidatePayload(payloadFile)
-                val existingTripIds = tripRepository.observeTrips().first().mapTo(mutableSetOf(), Trip::id)
-                val existingTemplateIds = templateRepository.observeTemplates().first()
-                    .mapTo(mutableSetOf(), ChecklistTemplate::id)
-                val tripsToRestore = validated.trips.filterNot { it.id in existingTripIds }
-                val templatesToRestore = validated.templates.filterNot { it.id in existingTemplateIds }
-                val restoredTrips = mutableListOf<String>()
-                val restoredTemplates = mutableListOf<String>()
-                val previousProtection = userPreferences.attachmentProtectionEnabled.first()
+                var restoredTrips = emptyList<Trip>()
+                var restoredTemplates = emptyList<ChecklistTemplate>()
                 var restoredAttachmentCount = 0
                 try {
-                    tripsToRestore.forEach { trip ->
-                        tripRepository.saveTrip(trip)
-                        restoredTrips += trip.id
-                    }
-                    templatesToRestore.forEach { template ->
-                        templateRepository.saveTemplate(template)
-                        restoredTemplates += template.id
-                    }
-                    DataInputStream(BufferedInputStream(payloadFile.inputStream())).use { input ->
-                        val payload = readPayload(input) { attachment, bytes ->
-                            if (attachment.tripId in restoredTrips) {
-                                val encryptedSize = attachmentStore.encryptFromBackup(
-                                    attachment.tripId,
-                                    attachment.id,
-                                    bytes,
-                                    attachment.sizeBytes,
-                                )
-                                attachmentDao.insertAttachment(
-                                    AttachmentEntity(
-                                        id = attachment.id,
-                                        tripId = attachment.tripId,
-                                        displayName = attachment.displayName,
-                                        mimeType = attachment.mimeType,
-                                        sizeBytes = encryptedSize,
-                                        createdAtMillis = attachment.createdAtMillis,
-                                        isQuickAccess = attachment.isQuickAccess,
-                                    ),
-                                )
-                                restoredAttachmentCount++
-                            } else {
-                                bytes.skipFully()
+                    database.withTransaction {
+                        val existingTripIds = tripRepository.observeTrips().first().mapTo(mutableSetOf(), Trip::id)
+                        val existingTemplateIds = templateRepository.observeTemplates().first()
+                            .mapTo(mutableSetOf(), ChecklistTemplate::id)
+                        restoredTrips = validated.trips.filterNot { it.id in existingTripIds }
+                        restoredTemplates = validated.templates.filterNot { it.id in existingTemplateIds }
+                        val tripIds = restoredTrips.map(Trip::id).toSet()
+                        val attachments = validated.attachments.filter { it.tripId in tripIds }
+                        attachments.forEach {
+                            require(attachmentDao.getAttachment(it.id) == null) { "Document ID already exists" }
+                        }
+                        // Refuse orphan/colliding paths rather than overwriting any existing evidence.
+                        tripIds.forEach(attachmentStore::requireEmptyRestoreDestination)
+                        recovery.begin(tripIds.toList(), restoredTemplates.map(ChecklistTemplate::id),
+                            validated.attachmentProtectionEnabled)
+                        checkpoint(RestoreCheckpoint.JOURNALED)
+                        DataInputStream(BufferedInputStream(payloadFile.inputStream())).use { input ->
+                            readPayload(input) { attachment, bytes ->
+                                if (attachment.tripId in tripIds) {
+                                    attachmentStore.encryptFromBackup(attachment.tripId, attachment.id,
+                                        bytes, attachment.sizeBytes)
+                                    restoredAttachmentCount++
+                                    checkpoint(RestoreCheckpoint.DOCUMENT_WRITTEN)
+                                } else {
+                                    bytes.skipFully()
+                                }
                             }
                         }
-                        userPreferences.setAttachmentProtectionEnabled(payload.attachmentProtectionEnabled)
+                        restoredTrips.forEach { trip ->
+                            database.tripDao().insertRestoredTrip(trip.toEntity())
+                            database.tripDao().insertRestoredItems(trip.items.mapIndexed { index, item ->
+                                item.toEntity(trip.id, index)
+                            })
+                            checkpoint(RestoreCheckpoint.TRIP_INSERTED)
+                        }
+                        restoredTemplates.forEach { template ->
+                            database.checklistTemplateDao().insertRestoredTemplate(
+                                template.toEntity(System.currentTimeMillis()))
+                            database.checklistTemplateDao().insertItems(template.items.mapIndexed { index, item ->
+                                item.toEntity(template.id, index)
+                            })
+                        }
+                        attachments.forEach { attachment ->
+                            attachmentDao.insertAttachment(AttachmentEntity(
+                                id = attachment.id, tripId = attachment.tripId,
+                                displayName = attachment.displayName, mimeType = attachment.mimeType,
+                                sizeBytes = attachment.sizeBytes, createdAtMillis = attachment.createdAtMillis,
+                                isQuickAccess = attachment.isQuickAccess,
+                            ))
+                        }
+                        checkpoint(RestoreCheckpoint.METADATA_WRITTEN)
                     }
+                    checkpoint(RestoreCheckpoint.DATABASE_COMMITTED)
+                    recovery.commit()
+                    checkpoint(RestoreCheckpoint.COMMITTED)
+                    userPreferences.setAttachmentProtectionEnabled(validated.attachmentProtectionEnabled)
+                    checkpoint(RestoreCheckpoint.PREFERENCE_APPLIED)
+                    recovery.recoverLocked()
                     BackupRestoreResult(
-                        restoredTripIds = restoredTrips,
+                        restoredTripIds = restoredTrips.map(Trip::id),
                         restoredTemplateCount = restoredTemplates.size,
                         restoredAttachmentCount = restoredAttachmentCount,
                         skippedTripCount = validated.trips.size - restoredTrips.size,
                         skippedTemplateCount = validated.templates.size - restoredTemplates.size,
                     )
-                } catch (error: Throwable) {
-                    restoredTrips.asReversed().forEach { tripRepository.deleteTrip(it) }
-                    restoredTemplates.asReversed().forEach { templateRepository.deleteTemplate(it) }
-                    userPreferences.setAttachmentProtectionEnabled(previousProtection)
+                } catch (error: Exception) {
+                    // Cancellation must not interrupt rollback. A process death leaves the journal
+                    // for startup; an ordinary failure uses exactly the same recovery protocol.
+                    withContext(NonCancellable) {
+                        try { recovery.recoverLocked() } catch (cleanup: Exception) {
+                            error.addSuppressed(cleanup)
+                        }
+                    }
                     throw error
                 }
             }
@@ -335,8 +360,10 @@ class LocalBackupRepository(
         }
     }
 
-    private fun temporaryFile(prefix: String): File =
-        File.createTempFile(prefix, ".tmp", context.cacheDir)
+    private fun temporaryFile(prefix: String): File {
+        check(recovery.workDirectory.isDirectory || recovery.workDirectory.mkdirs())
+        return File.createTempFile(prefix, ".tmp", recovery.workDirectory)
+    }
 
     private fun InputStream.copyLimitedTo(output: OutputStream) {
         val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
@@ -374,6 +401,10 @@ class LocalBackupRepository(
     ) : FilterInputStream(source) {
         var remaining: Long = length
             private set
+
+        // The enclosing payload reader owns the stream. Encrypting one document must
+        // not close the payload before the next document is restored.
+        override fun close() = Unit
 
         override fun read(): Int {
             if (remaining == 0L) return -1
@@ -413,10 +444,15 @@ class LocalBackupRepository(
         write(bytes)
     }
 
-    private fun DataInputStream.readText(): String {
-        val size = readInt().also { require(it in 0..MAX_TEXT_BYTES) }
+    private fun DataInputStream.readText(maximumBytes: Int = MAX_TEXT_BYTES): String {
+        val size = readInt().also { require(it in 0..maximumBytes) }
         return ByteArray(size).also(::readFully).toString(Charsets.UTF_8)
     }
+
+    private fun DataInputStream.readId(): String =
+        readText(BackupRecordId.MAX_LENGTH).also {
+            require(BackupRecordId.isValid(it)) { "Invalid backup record ID" }
+        }
 
     private fun DataOutputStream.writeNullableText(value: String?) {
         writeBoolean(value != null)
@@ -464,7 +500,7 @@ class LocalBackupRepository(
     }
 
     private fun DataInputStream.readTrip(): Trip {
-        val id = readText()
+        val id = readId()
         val destination = readText()
         val arrivalDate = java.time.LocalDate.ofEpochDay(readLong())
         val values = List(15) { readText() }
@@ -477,7 +513,7 @@ class LocalBackupRepository(
         val planBFingerprint = readNullableText()
         val items = List(readCount()) {
             ArrivalItem(
-                id = readText(),
+                id = readId(),
                 title = readText(),
                 detail = readText(),
                 category = ItemCategory.valueOf(readText()),
@@ -520,7 +556,7 @@ class LocalBackupRepository(
     }
 
     private fun DataInputStream.readTemplate() = ChecklistTemplate(
-        id = readText(),
+        id = readId(),
         name = readText(),
         items = List(readCount()) {
             ChecklistTemplateItem(readText(), readText(), ItemCategory.valueOf(readText()))
@@ -541,8 +577,8 @@ class LocalBackupRepository(
     }
 
     private fun DataInputStream.readAttachmentHeader() = BackupAttachment(
-        id = readText(),
-        tripId = readText(),
+        id = readId(),
+        tripId = readId(),
         displayName = readText(),
         mimeType = readText(),
         sizeBytes = readLong().also { require(it in 0..EncryptedAttachmentStore.MAX_ATTACHMENT_BYTES) },
@@ -568,4 +604,10 @@ class LocalBackupRepository(
         const val MAX_TEXT_BYTES = 1024 * 1024
         const val MAX_BACKUP_BYTES = 512L * 1024L * 1024L
     }
+}
+
+/** Fault injection checkpoints used by interruption tests; production has no callback. */
+enum class RestoreCheckpoint {
+    JOURNALED, DOCUMENT_WRITTEN, TRIP_INSERTED, METADATA_WRITTEN,
+    DATABASE_COMMITTED, COMMITTED, PREFERENCE_APPLIED,
 }

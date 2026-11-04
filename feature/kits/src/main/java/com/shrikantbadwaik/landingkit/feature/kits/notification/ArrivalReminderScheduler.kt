@@ -23,6 +23,8 @@ import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 import androidx.core.net.toUri
+import com.shrikantbadwaik.landingkit.core.data.TripRepository
+import kotlinx.coroutines.flow.first
 
 @Singleton
 class ArrivalReminderScheduler @Inject constructor(
@@ -33,6 +35,10 @@ class ArrivalReminderScheduler @Inject constructor(
 
     fun sync(trip: Trip) {
         if (trip.arrivalReminderEnabled) schedule(trip) else cancel(trip.id)
+    }
+
+    suspend fun reconcile(repository: TripRepository) {
+        repository.observeTrips().first().forEach(::sync)
     }
 
     fun schedule(trip: Trip) {

@@ -7,7 +7,7 @@ It does not authorise migration or declare any Phase 7.0 gate passed.
 
 | ID | Source | Evidence type | Interpretation |
 | --- | --- | --- | --- |
-| TOKYO-CHANGEOVER | Scenario supplied by Shrikant on 4 November 2026 | Concrete scenario; no participant interview, actual artefacts, or observed retrieval yet | Defines a testable same-place accommodation-change hypothesis. Does not establish frequency or prove grouping is better. |
+| TOKYO-CHANGEOVER | Synthetic scenario generated during planning on 4 November 2026 at the product owner’s request. | Engineering fixture; no participant interview, actual artefacts, or observed retrieval | Defines a testable same-place accommodation-change hypothesis. It is not traveller evidence and does not establish frequency or prove grouping is better. |
 
 No traveller interviews or comparative retrieval sessions have been recorded yet.
 Keep participant observations separate from proposed requirements and simulated fixtures.
@@ -91,8 +91,9 @@ do not substitute a confidence percentage for evidence.
 - 7.0C: first repair slice removes misleading Delete/Undo and handles missing ticket
   targets. Explicit route document IDs now take precedence over pinned documents.
 - Viewing-preview lifetime is repaired and verified in the second delivery below.
-  Interrupted restore and staged file/database recovery remain outstanding;
-  7.0C stays open.
+- Interrupted restore is repaired and verified in the third delivery below.
+  Broader staged file/database recovery and final combined verification remain
+  outstanding; 7.0C stays open.
 
 ## First reliability delivery — 4 November 2026
 
@@ -168,6 +169,93 @@ do not substitute a confidence percentage for evidence.
   The viewer fixture exists only in instrumentation sources, outside the shipped app.
 - This closes the preview-lifetime item, not the reliability gate. Interrupted
   backup restore and staged filesystem/database failure recovery are still pending.
+
+## Interrupted-restore reliability delivery — 4 November 2026
+
+- Replaced in-memory-only rollback with a durable atomic restore journal outside
+  cache. It records only newly owned trip/template IDs, the protection preference,
+  and commit state; it contains no addresses, booking references, or password.
+- Validate the complete decrypted backup before any restore mutation. Refuse
+  occupied document directories and existing document IDs. Insert trips and
+  checklist items with conflict-abort semantics so a colliding item ID cannot
+  replace an existing traveller's task.
+- Write and sync encrypted documents before publishing all new trips, checklist
+  items, templates, and attachment metadata in one Room transaction. Hold the
+  database writer during preparation to keep the ownership check and publication
+  consistent; existing readers continue to see the previously committed state.
+- Before the durable journal commit, restart rolls back only this restore's new
+  records and document directories. This includes termination after the Room
+  transaction committed but before the journal commit. After the durable journal
+  commit, recovery retains the restored content and finishes preference/cleanup.
+  Retain the journal until cleanup succeeds; repeated recovery is idempotent.
+- Ordinary exceptions and cancellation use the same recovery protocol, with
+  non-cancellable rollback. A process death leaves the journal for startup.
+  Startup recovery runs before ordinary repositories expose restored content.
+  Recovery and retry run in an application-owned IO coroutine; Application startup
+  does not wait for recursive cleanup. The UI distinguishes loading from failure,
+  and consumes a pending shortcut/share only after readiness becomes true.
+  Failed recovery blocks their reads/mutations and shows a retry screen. An
+  unreadable journal is preserved rather than guessed away; retry cannot repair
+  genuine journal corruption without repairing the underlying state.
+- Startup reconciles reminders from persisted trips, covering the gap between a
+  committed restore and its ViewModel scheduling alarms. Restored reminder flags
+  are checked by the fixture; physical alarm delivery was not rehearsed here.
+- Backup plaintext work now lives in a dedicated temporary directory and is
+  removed on startup/retry. Cleanup also handles abandoned payload files from the
+  previous implementation.
+- Fixed an additional multi-document defect: closing one limited document stream
+  previously closed the whole payload. The payload reader now retains stream
+  ownership so subsequent documents can be restored.
+- Constrain record IDs to 1–64 ASCII letters, numbers, underscores, hyphens, or
+  periods, excluding `.` and `..`. Backup parsing bounds ID byte lengths before
+  allocation; journal creation validates all IDs before writing. Journal reads
+  validate every ID before recovery mutates any target. Control characters, NUL,
+  Unicode, path separators, and oversized IDs are rejected.
+- Room remains version 7, backup format remains version 1, and the encrypted
+  attachment format is unchanged. No Phase 7 journey-model migration is introduced.
+- Automated verification after review fixes: all 26 core-data instrumentation tests
+  passed on the Pixel 10 Pro API 37 emulator. This includes twelve recovery tests,
+  three backup
+  round-trip/password/tampering tests, and the existing preview/store/migration
+  tests. All 53 model/feature unit tests passed; debug build and app lint passed
+  with zero errors and 16 dependency/version warnings.
+- The on-disk recovery fixture contains an existing journey/document, a new
+  journey with two documents, and a template. It checks all seven restore
+  checkpoints, restart/retry, atomic-journal fallback, cancellation, conflicting
+  task IDs, occupied file paths, interrupted filesystem cleanup, malformed state,
+  abandoned plaintext, and blocked access until recovery succeeds.
+- Real process-death rehearsal used a test-only APK with isolated synthetic
+  databases and files. Its process terminated at each of: journal creation,
+  first encrypted document, trip insertion, all metadata written, Room commit,
+  durable journal commit, and preference application. Restart produced the
+  expected rollback/retention in all seven cases; retry was safe, both restored
+  documents decrypted correctly, and the existing journey/document remained intact.
+  These are actual process terminations, separate from the automated fault hooks.
+- Installed the updated production debug app while preserving existing data.
+  Seeded only a synthetic uncommitted journal and owned test files; application
+  startup removed the journal, document directory, and plaintext work directory.
+  This checks startup integration; partial metadata rollback is exercised by the
+  separate process-death fixture.
+- A synthetic unreadable journal displayed the recovery screen. Inspected its
+  layout and tapped retry: access remained blocked while the fault persisted.
+  Removed only that synthetic journal, then tapped retry again; Home returned
+  with the existing Kyoto trip intact.
+- Rehearsed asynchronous cold startup with 60,000 empty synthetic document files.
+  The activity displayed in 828 ms while cleanup was still pending; a repeat
+  displayed in 657 ms and allowed visual inspection of the loading screen.
+  These are single-emulator observations, not a performance guarantee or a
+  large-payload benchmark. After readiness, the waiting shortcut opened its
+  expected missing-trip screen without replaying when returning Home.
+- Installed the final review build and repeated failed recovery with a pending
+  shortcut. After removing only the verified synthetic corrupt journal, the
+  application-owned retry completed, consumed the shortcut, and returned to Home
+  with Kyoto intact. Confirmed synthetic journals and work directories were gone.
+- Removed all synthetic production recovery state, the UI dump, and the test-only
+  probe APK. This rehearsal did not perform a full file-picker-to-restore journey
+  in the production UI or emulate device power loss/storage hardware failure.
+- The interrupted-restore item is complete. General attachment import/unlink/
+  deletion recovery, shared-file ownership, snapshot consistency, and final
+  combined verification still belong to the remaining 7.0C work.
 
 ## Verification practice for subsequent deliveries
 

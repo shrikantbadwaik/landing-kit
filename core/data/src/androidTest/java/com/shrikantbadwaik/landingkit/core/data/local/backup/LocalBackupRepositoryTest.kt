@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.shrikantbadwaik.landingkit.core.data.BackupUnlockException
+import com.shrikantbadwaik.landingkit.core.data.UnsupportedBackupException
 import com.shrikantbadwaik.landingkit.core.data.local.attachment.EncryptedAttachmentStore
 import com.shrikantbadwaik.landingkit.core.data.local.database.LandingKitDatabase
 import com.shrikantbadwaik.landingkit.core.data.local.entity.AttachmentEntity
@@ -23,6 +24,7 @@ import java.io.RandomAccessFile
 import java.time.LocalDate
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -38,6 +40,8 @@ class LocalBackupRepositoryTest {
     private lateinit var sourceDatabase: LandingKitDatabase
     private lateinit var targetDatabase: LandingKitDatabase
     private lateinit var store: EncryptedAttachmentStore
+    private lateinit var targetStore: EncryptedAttachmentStore
+    private lateinit var targetRoot: File
     private lateinit var backupFile: File
     private val tripId = UUID.randomUUID().toString()
     private val templateId = UUID.randomUUID().toString()
@@ -49,6 +53,8 @@ class LocalBackupRepositoryTest {
         sourceDatabase = Room.inMemoryDatabaseBuilder(context, LandingKitDatabase::class.java).build()
         targetDatabase = Room.inMemoryDatabaseBuilder(context, LandingKitDatabase::class.java).build()
         store = EncryptedAttachmentStore(context)
+        targetRoot = File(context.filesDir, "restore-test-${UUID.randomUUID()}")
+        targetStore = EncryptedAttachmentStore(context, targetRoot)
         backupFile = File(context.cacheDir, "round-trip-${UUID.randomUUID()}.lkb")
     }
 
@@ -57,6 +63,7 @@ class LocalBackupRepositoryTest {
         sourceDatabase.close()
         targetDatabase.close()
         store.deleteTrip(tripId)
+        targetRoot.deleteRecursively()
         backupFile.delete()
     }
 
@@ -108,7 +115,7 @@ class LocalBackupRepositoryTest {
         assertEquals(listOf(tripId), restored.restoredTripIds)
         assertEquals("Kyoto, Japan", targetDatabase.tripDao().getTrip(tripId)?.trip?.destination)
         assertNotNull(targetDatabase.attachmentDao().getAttachment(attachmentId))
-        assertTrue(store.verifyDecryptable(tripId, attachmentId))
+        assertTrue(targetStore.verifyDecryptable(tripId, attachmentId))
 
         val duplicatePreview = target.inspectBackup(Uri.fromFile(backupFile), PASSWORD.copyOf())
         assertFalse(duplicatePreview.hasNewContent)
@@ -141,14 +148,43 @@ class LocalBackupRepositoryTest {
         }
     }
 
-    private fun repository(database: LandingKitDatabase) = LocalBackupRepository(
+    @Test
+    fun invalidBackupIdsCannotCreateRecoveryState() = runBlocking {
+        val source = repository(sourceDatabase)
+        val target = repository(targetDatabase)
+        for (id in listOf("hostile\u0000id", "hostile\nid", "x".repeat(65))) {
+            sourceDatabase.tripDao().deleteTrip(id)
+            LocalTripRepository(sourceDatabase.tripDao(), store).saveTrip(sampleTrip().copy(id = id))
+            source.exportBackup(Uri.fromFile(backupFile), PASSWORD.copyOf())
+            for (inspect in listOf(true, false)) {
+                try {
+                    if (inspect) target.inspectBackup(Uri.fromFile(backupFile), PASSWORD.copyOf())
+                    else target.restoreBackup(Uri.fromFile(backupFile), PASSWORD.copyOf())
+                    org.junit.Assert.fail("Invalid backup ID accepted")
+                } catch (_: UnsupportedBackupException) { }
+                assertFalse(File(targetRoot, "target.json").exists())
+                assertTrue(targetDatabase.tripDao().observeTrips().first().isEmpty())
+            }
+            sourceDatabase.tripDao().deleteTrip(id)
+        }
+    }
+
+    private fun repository(database: LandingKitDatabase): LocalBackupRepository {
+        val selectedStore = if (database === targetDatabase) targetStore else store
+        val recovery = BackupRestoreRecovery(context, database, selectedStore, UserPreferences(context),
+            File(targetRoot, if (database === targetDatabase) "target.json" else "source.json"),
+            File(context.cacheDir, "restore-work-${database.hashCode()}"))
+        return LocalBackupRepository(
         context = context,
-        tripRepository = LocalTripRepository(database.tripDao(), store),
+        tripRepository = LocalTripRepository(database.tripDao(), selectedStore),
         templateRepository = LocalChecklistTemplateRepository(database.checklistTemplateDao()),
         attachmentDao = database.attachmentDao(),
-        attachmentStore = store,
+        attachmentStore = selectedStore,
         userPreferences = UserPreferences(context),
+        database = database,
+        recovery = recovery,
     )
+    }
 
     private fun sampleTrip() = Trip(
         id = tripId,
