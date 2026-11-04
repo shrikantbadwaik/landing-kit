@@ -148,13 +148,6 @@ class LandingKitViewModel @Inject constructor(
         }
     }
 
-    internal fun restoreKit(trip: Trip) {
-        viewModelScope.launch {
-            repository.saveTrip(trip)
-            arrivalReminderScheduler.sync(trip)
-        }
-    }
-
     internal fun setArrivalReminderEnabled(
         trip: Trip,
         enabled: Boolean,

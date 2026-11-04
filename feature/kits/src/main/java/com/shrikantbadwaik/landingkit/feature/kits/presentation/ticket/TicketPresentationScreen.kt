@@ -91,12 +91,10 @@ internal fun TicketPresentationScreen(
                 .thenBy { it.id },
         )
     }
-    val firstAttachmentId = orderedAttachments
-        .firstOrNull { it.isQuickAccess }
-        ?.id
-        ?: initialAttachmentId.takeIf { candidate ->
-            orderedAttachments.any { it.id == candidate }
-        }
+    val firstAttachmentId = initialAttachmentId.takeIf { candidate ->
+        orderedAttachments.any { it.id == candidate }
+    }
+        ?: orderedAttachments.firstOrNull { it.isQuickAccess }?.id
         ?: orderedAttachments.first().id
     var selectedAttachmentId by rememberSaveable { mutableStateOf(firstAttachmentId) }
     val attachment = orderedAttachments.firstOrNull { it.id == selectedAttachmentId }

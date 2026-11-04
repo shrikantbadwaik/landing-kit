@@ -89,16 +89,16 @@ class TicketPresentationAccessibilityTest {
             .assertWidthIsAtLeast(48.dp)
             .assertHeightIsAtLeast(48.dp)
         composeRule.onNodeWithText(
-            activity.getString(R.string.ticket_presenter_position, 1, 2),
+            activity.getString(R.string.ticket_presenter_position, 2, 2),
         ).assertExists()
         composeRule.onNodeWithContentDescription(
-            activity.getString(R.string.ticket_presenter_next_description),
+            activity.getString(R.string.ticket_presenter_previous_description),
         ).performClick()
         composeRule.waitUntil { preparedAttachmentIds.size >= 2 }
-        assertEquals(attachment.id, preparedAttachmentIds[0])
-        assertEquals(newerAttachment.id, preparedAttachmentIds[1])
+        assertEquals(newerAttachment.id, preparedAttachmentIds[0])
+        assertEquals(attachment.id, preparedAttachmentIds[1])
         composeRule.onNodeWithText(
-            activity.getString(R.string.ticket_presenter_position, 2, 2),
+            activity.getString(R.string.ticket_presenter_position, 1, 2),
         ).assertExists()
         composeRule.runOnIdle {
             assertEquals(1f, activity.window.attributes.screenBrightness)

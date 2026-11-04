@@ -613,6 +613,8 @@ These are bounded 7.0 contracts and 7.1A/7.1B verification cases, not additional
 
 Phase 7.0 contains three required gates, not a serial work queue. Problem validation precedes final architecture approval, although behavioural design may be explored alongside research. Existing reliability repairs in 7.0C can proceed immediately and independently because they benefit the current product. No migration implementation begins until all three gates pass.
 
+Working evidence, research protocol, and acceptance fixtures: [Phase 7 validation](phase-7-validation.md). The supplied Tokyo accommodation-change scenario is an acceptance fixture, not completed traveller validation.
+
 ##### 7.0A — Problem-validation gate
 
 Goal: establish that grouping several arrival packs solves demonstrated traveller problems without turning preparation into itinerary management.
@@ -656,6 +658,8 @@ Exit condition — contract gate: product behaviour, creation/replacement comman
 Goal: repair and verify existing behaviours that would create data loss, privacy, or recovery risk when shared arrival relationships are introduced.
 
 Code inspection on 4 November 2026 identified the concerns below; the review did not reproduce them on-device. Reproduction, correction, and failure testing are part of this gate.
+
+First repair slice on 4 November 2026: removed the misleading Undo path, added missing-trip/document ticket recovery, and made explicit document targets take precedence over pinned files. Five focused emulator tests, 53 unit tests, and the debug build passed; feature lint completed with zero errors and 13 warnings. [Delivery evidence and remaining verification](phase-7-validation.md#first-reliability-delivery--4-november-2026) record the bounded coverage. The reliability gate remains open.
 
 - [ ] Resolve trip Delete/Undo semantics. Current deletion removes encrypted evidence before the snackbar can restore only the captured structured `Trip`; either implement a genuinely recoverable trash operation or remove the misleading Undo path while retaining explicit irreversible confirmation.
 - [ ] Distinguish loading from a completed empty/missing result in ticket presentation. A stale trip or deleted attachment route must show honest recovery instead of an indefinite `LoadingScreen`.

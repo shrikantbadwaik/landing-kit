@@ -16,6 +16,9 @@
     <string name="missing_kit_title">This trip isn’t on this device.</string>
     <string name="missing_kit_description">It may have been deleted, or this link may be out of date. Your other offline arrivals are still safe.</string>
     <string name="missing_kit_home_action">Back to my arrivals</string>
+    <string name="missing_ticket_header">DOCUMENT UNAVAILABLE</string>
+    <string name="missing_ticket_title">This document isn’t on this device.</string>
+    <string name="missing_ticket_description">It may have been removed, or this link may be out of date. Choose an arrival to find its saved documents.</string>
 
     <!-- Home -->
     <string name="brand_name">TRAVEL WITH THIKANA</string>
@@ -486,11 +489,10 @@
     <string name="kit_delete_action">Delete trip  →</string>
     <string name="kit_delete_dialog_label">REMOVE OFFLINE TRIP</string>
     <string name="kit_delete_dialog_title">Let this trip go?</string>
-    <string name="kit_delete_dialog_description">%1$s and its checklist will be removed from this device. This can’t be undone.</string>
+    <string name="kit_delete_dialog_description">%1$s, its checklist, and its saved document copies will be removed from this device. This can’t be undone.</string>
     <string name="kit_keep_action">Keep my trip</string>
     <string name="kit_delete_permanently">Delete permanently</string>
     <string name="kit_deleted_message">%1$s trip deleted</string>
-    <string name="kit_undo_action">UNDO</string>
 
     <!-- Default checklist content persisted with a new trip -->
     <string name="checklist_download_tickets">Download tickets and booking</string>

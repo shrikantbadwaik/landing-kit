@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,6 +43,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.shrikantbadwaik.landingkit.core.designsystem.LandingKitColors
 import com.shrikantbadwaik.landingkit.core.model.ChecklistTemplate
+import com.shrikantbadwaik.landingkit.core.model.KitAttachment
 import com.shrikantbadwaik.landingkit.core.model.Trip
 import com.shrikantbadwaik.landingkit.feature.kits.LandingKitViewModel
 import com.shrikantbadwaik.landingkit.feature.kits.PendingSharedAttachments
@@ -62,7 +62,7 @@ import com.shrikantbadwaik.landingkit.feature.kits.presentation.handoff.HandoffS
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.offlinecheck.OfflineCheckScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.print.PrintableSummaryScreen
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.share.ShareSummaryScreen
-import com.shrikantbadwaik.landingkit.feature.kits.presentation.ticket.TicketPresentationScreen
+import com.shrikantbadwaik.landingkit.feature.kits.presentation.ticket.TicketPresentationRouteContent
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.curatedChecklistTemplates
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.defaultChecklistContent
 import com.shrikantbadwaik.landingkit.feature.kits.presentation.resource.sampleTripContent
@@ -97,7 +97,6 @@ internal fun LandingKitNavHost(
     val checklistContent = defaultChecklistContent()
     val curatedTemplates = curatedChecklistTemplates()
     val sampleContent = sampleTripContent(checklistContent)
-    val undoLabel = stringResource(R.string.kit_undo_action)
     val returnHome = {
         if (!navController.popBackStack(KitRoute.Home, inclusive = false)) {
             navController.navigate(KitRoute.Home) {
@@ -255,14 +254,10 @@ internal fun LandingKitNavHost(
                                 animatedTripIds = animatedTripIds - trip.id
                                 navController.popBackStack()
                                 scope.launch {
-                                    val result = snackbarHostState.showSnackbar(
+                                    snackbarHostState.showSnackbar(
                                         message = checkNotNull(deletedMessage),
-                                        actionLabel = undoLabel,
                                         duration = SnackbarDuration.Long,
                                     )
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        viewModel.restoreKit(trip)
-                                    }
                                 }
                             }
                         },
@@ -469,22 +464,20 @@ internal fun LandingKitNavHost(
                 popExitTransition = { fadeOut(tween(140)) },
             ) { backStackEntry ->
                 val route = backStackEntry.toRoute<KitRoute.TicketPresentation>()
-                val attachments by remember(route.tripId) {
+                val attachments: List<KitAttachment>? by remember(route.tripId) {
                     viewModel.attachments(route.tripId)
-                }.collectAsStateWithLifecycle(initialValue = emptyList())
+                }.collectAsStateWithLifecycle(initialValue = null)
 
-                if (attachments.isEmpty()) {
-                    LoadingScreen()
-                } else {
-                    TicketPresentationScreen(
-                        attachments = attachments,
-                        initialAttachmentId = route.attachmentId,
-                        attachmentProtectionEnabled = attachmentProtectionEnabled,
-                        isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
-                        onPrepareAttachment = viewModel::prepareAttachment,
-                        onExit = { navController.popBackStack() },
-                    )
-                }
+                TicketPresentationRouteContent(
+                    tripExists = trips.any { it.id == route.tripId },
+                    attachments = attachments,
+                    initialAttachmentId = route.attachmentId,
+                    attachmentProtectionEnabled = attachmentProtectionEnabled,
+                    isAttachmentAccessUnlocked = isAttachmentAccessUnlocked,
+                    onPrepareAttachment = viewModel::prepareAttachment,
+                    onExit = { navController.popBackStack() },
+                    onHome = returnHome,
+                )
             }
 
             composable<KitRoute.Handoff> { backStackEntry ->

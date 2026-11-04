@@ -23,6 +23,31 @@ import com.shrikantbadwaik.landingkit.feature.kits.R
 
 @Composable
 internal fun MissingKitScreen(onHome: () -> Unit) {
+    UnavailableContentScreen(
+        header = stringResource(R.string.missing_kit_header),
+        title = stringResource(R.string.missing_kit_title),
+        description = stringResource(R.string.missing_kit_description),
+        onHome = onHome,
+    )
+}
+
+@Composable
+internal fun MissingTicketScreen(onHome: () -> Unit) {
+    UnavailableContentScreen(
+        header = stringResource(R.string.missing_ticket_header),
+        title = stringResource(R.string.missing_ticket_title),
+        description = stringResource(R.string.missing_ticket_description),
+        onHome = onHome,
+    )
+}
+
+@Composable
+private fun UnavailableContentScreen(
+    header: String,
+    title: String,
+    description: String,
+    onHome: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -34,7 +59,7 @@ internal fun MissingKitScreen(onHome: () -> Unit) {
     ) {
         ScreenHeader(
             onBack = onHome,
-            label = stringResource(R.string.missing_kit_header),
+            label = header,
         )
         Spacer(Modifier.height(34.dp))
         Card(
@@ -53,12 +78,12 @@ internal fun MissingKitScreen(onHome: () -> Unit) {
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = stringResource(R.string.missing_kit_title),
+                    text = title,
                     style = MaterialTheme.typography.headlineSmall,
                 )
                 Spacer(Modifier.height(9.dp))
                 Text(
-                    text = stringResource(R.string.missing_kit_description),
+                    text = description,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .76f),
                 )
